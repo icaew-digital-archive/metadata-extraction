@@ -1,0 +1,365 @@
+{
+  "DublinCoreElements": [
+    {
+      "term": "contributor",
+      "uri": "http://purl.org/dc/elements/1.1/contributor",
+      "label": "Contributor",
+      "definition": "An entity responsible for making contributions to the resource.",
+      "comment": "Examples include a person, an organization, or a service."
+    },
+    {
+      "term": "coverage",
+      "uri": "http://purl.org/dc/elements/1.1/coverage",
+      "label": "Coverage",
+      "definition": "The spatial or temporal topic of the resource.",
+      "comment": "May be a named place, geographic coordinates, or time period."
+    },
+    {
+      "term": "creator",
+      "uri": "http://purl.org/dc/elements/1.1/creator",
+      "label": "Creator",
+      "definition": "An entity primarily responsible for making the resource.",
+      "comment": "Examples include a person, an organization, or a service."
+    },
+    {
+      "term": "date",
+      "uri": "http://purl.org/dc/elements/1.1/date",
+      "label": "Date",
+      "definition": "A point or period of time associated with an event in the resource's lifecycle.",
+      "comment": "Recommended best practice is to use an encoding scheme like W3CDTF."
+    },
+    {
+      "term": "description",
+      "uri": "http://purl.org/dc/elements/1.1/description",
+      "label": "Description",
+      "definition": "An account of the resource.",
+      "comment": "May include an abstract, table of contents, or graphical representation."
+    },
+    {
+      "term": "format",
+      "uri": "http://purl.org/dc/elements/1.1/format",
+      "label": "Format",
+      "definition": "The file format, physical medium, or dimensions of the resource.",
+      "comment": "Use controlled vocabularies like MIME."
+    },
+    {
+      "term": "identifier",
+      "uri": "http://purl.org/dc/elements/1.1/identifier",
+      "label": "Identifier",
+      "definition": "An unambiguous reference to the resource within a given context.",
+      "comment": "Should conform to a formal identification system."
+    },
+    {
+      "term": "language",
+      "uri": "http://purl.org/dc/elements/1.1/language",
+      "label": "Language",
+      "definition": "A language of the resource.",
+      "comment": "Use controlled vocabularies like RFC 4646."
+    },
+    {
+      "term": "publisher",
+      "uri": "http://purl.org/dc/elements/1.1/publisher",
+      "label": "Publisher",
+      "definition": "An entity responsible for making the resource available.",
+      "comment": "Examples include a person, an organization, or a service."
+    },
+    {
+      "term": "relation",
+      "uri": "http://purl.org/dc/elements/1.1/relation",
+      "label": "Relation",
+      "definition": "A related resource.",
+      "comment": "Identify the related resource using a formal identification system."
+    },
+    {
+      "term": "rights",
+      "uri": "http://purl.org/dc/elements/1.1/rights",
+      "label": "Rights",
+      "definition": "Information about rights held in and over the resource.",
+      "comment": "Includes intellectual property rights and permissions."
+    },
+    {
+      "term": "source",
+      "uri": "http://purl.org/dc/elements/1.1/source",
+      "label": "Source",
+      "definition": "A related resource from which the described resource is derived.",
+      "comment": "Identify the source using a formal identification system."
+    },
+    {
+      "term": "subject",
+      "uri": "http://purl.org/dc/elements/1.1/subject",
+      "label": "Subject",
+      "definition": "The topic of the resource.",
+      "comment": "Typically represented using keywords, key phrases, or classification codes."
+    },
+    {
+      "term": "title",
+      "uri": "http://purl.org/dc/elements/1.1/title",
+      "label": "Title",
+      "definition": "A name given to the resource.",
+      "comment": "The name by which the resource is formally known."
+    },
+    {
+      "term": "type",
+      "uri": "http://purl.org/dc/elements/1.1/type",
+      "label": "Type",
+      "definition": "The nature or genre of the resource.",
+      "comment": "Use controlled vocabularies like DCMI Type Vocabulary."
+    }
+  ],
+  "DCMI_Type_Vocabulary": [
+    {
+      "term": "Collection",
+      "uri": "http://purl.org/dc/dcmitype/Collection",
+      "label": "Collection",
+      "definition": "An aggregation of resources.",
+      "comment": "A collection is described as a group; its parts may also be separately described."
+    },
+    {
+      "term": "Dataset",
+      "uri": "http://purl.org/dc/dcmitype/Dataset",
+      "label": "Dataset",
+      "definition": "Data encoded in a defined structure.",
+      "comment": "Examples include lists, tables, and databases. A dataset may be useful for direct machine processing."
+    },
+    {
+      "term": "Event",
+      "uri": "http://purl.org/dc/dcmitype/Event",
+      "label": "Event",
+      "definition": "A non-persistent, time-based occurrence.",
+      "comment": "Metadata for an event provides descriptive information that is the basis for discovery of the purpose, location, duration, and responsible agents associated with an event. Examples include webcasts, exhibitions, and conferences."
+    },
+    {
+      "term": "Image",
+      "uri": "http://purl.org/dc/dcmitype/Image",
+      "label": "Image",
+      "definition": "A visual representation other than text.",
+      "comment": "Examples include paintings, drawings, graphic designs, plans, and photographs. Notable subtypes are 'MovingImage' and 'StillImage'."
+    },
+    {
+      "term": "InteractiveResource",
+      "uri": "http://purl.org/dc/dcmitype/InteractiveResource",
+      "label": "Interactive Resource",
+      "definition": "A resource requiring interaction from the user to be understood, executed, or experienced.",
+      "comment": "Examples include forms on web pages, applets, multimedia learning objects, chat services, or virtual reality environments."
+    },
+    {
+      "term": "MovingImage",
+      "uri": "http://purl.org/dc/dcmitype/MovingImage",
+      "label": "Moving Image",
+      "definition": "A series of visual representations imparting an impression of motion when shown in succession.",
+      "comment": "Examples include animations, movies, television programs, videos, or visual output from a simulation. Instances of 'MovingImage' are also instances of the broader 'Image' type."
+    },
+    {
+      "term": "PhysicalObject",
+      "uri": "http://purl.org/dc/dcmitype/PhysicalObject",
+      "label": "Physical Object",
+      "definition": "An inanimate, three-dimensional object or substance.",
+      "comment": "Examples include artifacts, specimens, or furniture. Note that digital representations of physical objects are not instances of the 'PhysicalObject' type."
+    },
+    {
+      "term": "Service",
+      "uri": "http://purl.org/dc/dcmitype/Service",
+      "label": "Service",
+      "definition": "A system that provides one or more functions.",
+      "comment": "Examples include a photocopying service, a banking service, an authentication service, or an interlibrary loan service."
+    },
+    {
+      "term": "Software",
+      "uri": "http://purl.org/dc/dcmitype/Software",
+      "label": "Software",
+      "definition": "A computer program in source or compiled form.",
+      "comment": "Examples include application software, operating systems, or scripts. Note that software is distinct from data or documentation."
+    },
+    {
+      "term": "Sound",
+      "uri": "http://purl.org/dc/dcmitype/Sound",
+      "label": "Sound",
+      "definition": "A resource primarily intended to be heard.",
+      "comment": "Examples include music files, audio compact discs, and recorded speeches."
+    },
+    {
+      "term": "StillImage",
+      "uri": "http://purl.org/dc/dcmitype/StillImage",
+      "label": "Still Image",
+      "definition": "A static visual representation.",
+      "comment": "Examples include paintings, drawings, graphic designs, plans, and photographs. Instances of 'StillImage' are also instances of the broader 'Image' type."
+    },
+    {
+      "term": "Text",
+      "uri": "http://purl.org/dc/dcmitype/Text",
+      "label": "Text",
+      "definition": "A resource consisting primarily of words for reading.",
+      "comment": "Examples include books, articles, letters, and dissertations. Note that spoken word recordings are instances of the 'Sound' type."
+    }
+  ],
+  "W3C_DateTime": {
+    "title": "Date and Time Formats",
+    "uri": "https://www.w3.org/TR/NOTE-datetime",
+    "definition": "A W3C profile of ISO 8601 that specifies a standard format for representing dates and times in Internet-related applications.",
+    "standard_based_on": "ISO 8601",
+    "recommended_format": "YYYY-MM-DDThh:mm:ssTZD",
+    "components": {
+      "date": "YYYY-MM-DD (e.g., 2023-02-07)",
+      "time": "hh:mm:ss (e.g., 14:30:00)",
+      "timezone": "TZD (e.g., Z for UTC or +02:00 for a specific offset)"
+    },
+    "examples": {
+      "full_date": "2023-02-07",
+      "full_datetime": "2023-02-07T14:30:00Z",
+      "datetime_with_offset": "2023-02-07T14:30:00+02:00"
+    },
+    "usage_notes": [
+      "Dates should be in YYYY-MM-DD format.",
+      "Times should be in hh:mm:ss format using a 24-hour system.",
+      "Time zones should be indicated using UTC (Z) or a numeric offset (+hh:mm).",
+      "This format is widely used in web standards, metadata, and APIs."
+    ]
+  },
+  "basic_languages": [
+    {
+      "iso_639_2_code": "eng",
+      "iso_639_1_code": "en",
+      "english_name": "English"
+    },
+    {
+      "iso_639_2_code": "spa",
+      "iso_639_1_code": "es",
+      "english_name": "Spanish"
+    },
+    {
+      "iso_639_2_code": "zho",
+      "iso_639_1_code": "zh",
+      "english_name": "Chinese (Mandarin)"
+    },
+    {
+      "iso_639_2_code": "hin",
+      "iso_639_1_code": "hi",
+      "english_name": "Hindi"
+    },
+    {
+      "iso_639_2_code": "arb",
+      "iso_639_1_code": "ar",
+      "english_name": "Arabic"
+    },
+    {
+      "iso_639_2_code": "por",
+      "iso_639_1_code": "pt",
+      "english_name": "Portuguese"
+    },
+    {
+      "iso_639_2_code": "ben",
+      "iso_639_1_code": "bn",
+      "english_name": "Bengali"
+    },
+    {
+      "iso_639_2_code": "rus",
+      "iso_639_1_code": "ru",
+      "english_name": "Russian"
+    },
+    {
+      "iso_639_2_code": "jpn",
+      "iso_639_1_code": "ja",
+      "english_name": "Japanese"
+    },
+    {
+      "iso_639_2_code": "pan",
+      "iso_639_1_code": "pa",
+      "english_name": "Punjabi"
+    },
+    {
+      "iso_639_2_code": "deu",
+      "iso_639_1_code": "de",
+      "english_name": "German"
+    },
+    {
+      "iso_639_2_code": "jav",
+      "iso_639_1_code": "jv",
+      "english_name": "Javanese"
+    },
+    {
+      "iso_639_2_code": "wuu",
+      "iso_639_1_code": null,
+      "english_name": "Wu Chinese (Shanghainese)"
+    },
+    {
+      "iso_639_2_code": "mal",
+      "iso_639_1_code": "ml",
+      "english_name": "Malayalam"
+    },
+    {
+      "iso_639_2_code": "tel",
+      "iso_639_1_code": "te",
+      "english_name": "Telugu"
+    },
+    {
+      "iso_639_2_code": "tur",
+      "iso_639_1_code": "tr",
+      "english_name": "Turkish"
+    },
+    {
+      "iso_639_2_code": "fra",
+      "iso_639_1_code": "fr",
+      "english_name": "French"
+    },
+    {
+      "iso_639_2_code": "mar",
+      "iso_639_1_code": "mr",
+      "english_name": "Marathi"
+    },
+    {
+      "iso_639_2_code": "tam",
+      "iso_639_1_code": "ta",
+      "english_name": "Tamil"
+    },
+    {
+      "iso_639_2_code": "urd",
+      "iso_639_1_code": "ur",
+      "english_name": "Urdu"
+    },
+    {
+      "iso_639_2_code": "vie",
+      "iso_639_1_code": "vi",
+      "english_name": "Vietnamese"
+    },
+    {
+      "iso_639_2_code": "ita",
+      "iso_639_1_code": "it",
+      "english_name": "Italian"
+    },
+    {
+      "iso_639_2_code": "yue",
+      "iso_639_1_code": null,
+      "english_name": "Cantonese"
+    },
+    {
+      "iso_639_2_code": "tha",
+      "iso_639_1_code": "th",
+      "english_name": "Thai"
+    },
+    {
+      "iso_639_2_code": "guj",
+      "iso_639_1_code": "gu",
+      "english_name": "Gujarati"
+    },
+    {
+      "iso_639_2_code": "hak",
+      "iso_639_1_code": null,
+      "english_name": "Hakka Chinese"
+    },
+    {
+      "iso_639_2_code": "pol",
+      "iso_639_1_code": "pl",
+      "english_name": "Polish"
+    },
+    {
+      "iso_639_2_code": "ukr",
+      "iso_639_1_code": "uk",
+      "english_name": "Ukrainian"
+    },
+    {
+      "iso_639_2_code": "fas",
+      "iso_639_1_code": "fa",
+      "english_name": "Persian"
+    }
+  ]
+}
