@@ -1,14 +1,35 @@
 import os
 import csv
 import json
+import subprocess
 from tqdm import tqdm
 from multiprocessing import Pool
 from config import DOCUMENTS_FOLDER, OUTPUT_CSV, log_message
-from fetch_dublin_core import fetch_dublin_core_definitions
+from context import load_context
 from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
 from metadata_generation import generate_metadata, validate_and_flag_metadata
 from file_metadata import get_file_metadata
+
+SEMAPHORE_HELPER_SCRIPT = "semaphore-helper-single.py"  # Path to the helper script
+
+
+def run_semaphore_helper(file_path):
+    """Run semaphore-helper.py and return only the topic names as a list of strings."""
+    try:
+        result = subprocess.run(
+            ["python3", SEMAPHORE_HELPER_SCRIPT, file_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        semaphore_output = json.loads(result.stdout)
+        
+        # Extract only topic names, ensuring we get strings and not dicts
+        return [topic["topic"] if isinstance(topic, dict) else topic for topic in semaphore_output.get("topics", [])]
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+        log_message(f"Error running Semaphore classification for {file_path}: {e}")
+        return []  # Return empty list if an error occurs
 
 
 def process_document(document_file):
@@ -26,18 +47,27 @@ def process_document(document_file):
             return None
 
         dublin_core_metadata = json.loads(
-            generate_metadata(text, dublin_core_definitions))
+            generate_metadata(text, load_context()))
         file_properties = get_file_metadata(document_file)
 
+        # Run Semaphore classification and get only topic names
+        topics = run_semaphore_helper(document_file)
+        
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
+            "Topics": topics,  # Store only topic names as a list
             "File Properties": file_properties
         }
+
+        # Ensure format is set correctly
+        if "format" not in structured_metadata["Dublin Core"]:
+            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get("format", "Unknown")
+
 
         validated_metadata = validate_and_flag_metadata(
             json.dumps(structured_metadata, indent=4))
 
-        return {"filename": os.path.basename(document_file), "metadata": validated_metadata}
+        return {"filename": os.path.basename(document_file), "metadata": validated_metadata, "topics": topics}
     except Exception as e:
         log_message(f"Error processing {document_file}: {e}")
         return None
@@ -45,8 +75,8 @@ def process_document(document_file):
 
 def main():
     """Main execution function."""
-    global dublin_core_definitions
-    dublin_core_definitions = fetch_dublin_core_definitions()
+    global load_context
+    context_data = load_context()
     
     document_files = [
         os.path.join(root, file)
@@ -59,13 +89,16 @@ def main():
     with Pool(processes=4) as pool:
         metadata_list = list(filter(None, pool.map(process_document, document_files)))
 
-    fieldnames = ["filename", "metadata"]
+    fieldnames = ["filename", "metadata", "topics"]
     with open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for entry in metadata_list:
-            writer.writerow(
-                {"filename": entry["filename"], "metadata": entry["metadata"]})
+            writer.writerow({
+                "filename": entry["filename"],
+                "metadata": entry["metadata"],
+                "topics": ", ".join(entry["topics"])  # Ensure topics are properly formatted as strings
+            })
 
     log_message(f"Metadata saved to {OUTPUT_CSV}")
 
