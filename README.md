@@ -20,19 +20,14 @@
 
 ---
 
-## **Workflow Overview**  
-The following diagram illustrates the **data flow** in the system:  
+## **Workflow Overview**
 
 ![Data Flow Diagram](flow.png)  
 
 ---
 
 ## **Requirements Notice**  
-To run this project, ensure you have **Python 3.8+** installed and install the required dependencies using:  
-
-```bash
-pip install -r requirements.txt
-```
+To run this project, ensure you have **Python 3.8+** installed.
 
 The system relies on the following key libraries:  
 - **`pdfplumber`** – Extracts text from PDFs.  
