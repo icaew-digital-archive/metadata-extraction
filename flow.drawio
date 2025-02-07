@@ -25,7 +25,7 @@
         <mxCell id="YqTtH2iaWzKBEMwUmTm3-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="YqTtH2iaWzKBEMwUmTm3-1" target="YqTtH2iaWzKBEMwUmTm3-6">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="YqTtH2iaWzKBEMwUmTm3-1" value="AI-Power Dublin Core Metadata Generation (OpenAI API&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;verticalAlign=middle;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="YqTtH2iaWzKBEMwUmTm3-1" value="AI-Powered Dublin Core Metadata Generation (OpenAI API&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;verticalAlign=middle;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="270" y="270" width="140" height="90" as="geometry" />
         </mxCell>
         <mxCell id="YqTtH2iaWzKBEMwUmTm3-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="YqTtH2iaWzKBEMwUmTm3-2" target="YqTtH2iaWzKBEMwUmTm3-1">
