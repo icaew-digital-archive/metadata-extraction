@@ -20,7 +20,7 @@
 
 ---
 
-## **Requirements Notice**  
+## **Requirements**  
 To run this project, ensure you have **Python 3.8+** installed.
 
 The system relies on the following key libraries:  
