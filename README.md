@@ -1,4 +1,4 @@
-# **Dublin Core Metadata Extraction**  
+# **Dublin Core Metadata Extraction [EXPERIMENTAL]**  
 
 ## **Overview**  
 **Dublin Core Metadata Extraction** is an **AI-powered system** that automates **document metadata extraction, validation, and structuring** based on **Dublin Core standards**. It intelligently **analyzes PDFs and Word documents**, extracting key attributes while ensuring metadata is **accurate, normalized, and integration-ready**.  
