@@ -52,7 +52,7 @@ def validate_and_flag_metadata(metadata_json):
         return metadata_json
 
 
-def generate_metadata(text, dublin_core_definitions, ocr_text=None):
+def generate_metadata(text, context_data, ocr_text=None):
     """ Generate metadata using OpenAI and validate it """
     if not text.strip() and not ocr_text:
         log_message("Skipping metadata generation due to empty text.")
@@ -65,11 +65,11 @@ def generate_metadata(text, dublin_core_definitions, ocr_text=None):
     system_message = f"""
     You are an expert in metadata extraction. Use the Dublin Core Metadata Element Set and related standards to describe documents.
     Here are the relevant metadata standards you must follow:
-    - Dublin Core Elements: {dublin_core_definitions.get('Dublin Core Elements', '')}
-    - Format: {dublin_core_definitions.get('Format', '')}
-    - Date: {dublin_core_definitions.get('Date', '')}
-    - Type: {dublin_core_definitions.get('Type', '')}
-    - Language: {dublin_core_definitions.get('Language', '')}
+- Dublin Core Elements: {context_data.get('DublinCoreElements', '')}
+- Format: "Formats should use controlled vocabularies like MIME (IANA Media Types)."
+- Date: {context_data.get('W3C_DateTime', '')}
+- Type: {context_data.get('DCMI_Type_Vocabulary', '')}
+- Language: {context_data.get('basic_languages', '')}
 
     **STRICT RULES:**
     - **Title**: Document title must be clearly extracted from the text.
