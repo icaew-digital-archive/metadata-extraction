@@ -8,7 +8,7 @@ from config import DOCUMENTS_FOLDER, OUTPUT_CSV, log_message
 from context import load_context
 from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
-from metadata_generation import generate_metadata, validate_and_flag_metadata
+from metadata_generation import generate_metadata
 from file_metadata import get_file_metadata
 
 SEMAPHORE_HELPER_SCRIPT = "semaphore-helper-single.py"  # Path to the helper script
@@ -24,11 +24,12 @@ def run_semaphore_helper(file_path):
             check=True
         )
         semaphore_output = json.loads(result.stdout)
-        
+
         # Extract only topic names, ensuring we get strings and not dicts
         return [topic["topic"] if isinstance(topic, dict) else topic for topic in semaphore_output.get("topics", [])]
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-        log_message(f"Error running Semaphore classification for {file_path}: {e}")
+        log_message(
+            f"Error running Semaphore classification for {file_path}: {e}")
         return []  # Return empty list if an error occurs
 
 
@@ -52,7 +53,7 @@ def process_document(document_file):
 
         # Run Semaphore classification and get only topic names
         topics = run_semaphore_helper(document_file)
-        
+
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
             "Topics": topics,  # Store only topic names as a list
@@ -61,11 +62,10 @@ def process_document(document_file):
 
         # Ensure format is set correctly
         if "format" not in structured_metadata["Dublin Core"]:
-            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get("format", "Unknown")
+            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get(
+                "format", "Unknown")
 
-
-        validated_metadata = validate_and_flag_metadata(
-            json.dumps(structured_metadata, indent=4))
+        validated_metadata = structured_metadata
 
         return {"filename": os.path.basename(document_file), "metadata": validated_metadata, "topics": topics}
     except Exception as e:
@@ -77,7 +77,7 @@ def main():
     """Main execution function."""
     global load_context
     context_data = load_context()
-    
+
     document_files = [
         os.path.join(root, file)
         for root, _, files in os.walk(DOCUMENTS_FOLDER)
@@ -87,17 +87,20 @@ def main():
     log_message(f"Found {len(document_files)} documents")
 
     with Pool(processes=4) as pool:
-        metadata_list = list(filter(None, pool.map(process_document, document_files)))
+        metadata_list = list(
+            filter(None, pool.map(process_document, document_files)))
 
     fieldnames = ["filename", "metadata", "topics"]
     with open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for entry in metadata_list:
+            formatted_metadata = json.dumps(
+                entry["metadata"], indent=4, ensure_ascii=False)
             writer.writerow({
                 "filename": entry["filename"],
-                "metadata": entry["metadata"],
-                "topics": ", ".join(entry["topics"])  # Ensure topics are properly formatted as strings
+                "metadata": formatted_metadata,  # ✅ Now formatted with newlines
+                "topics": ", ".join(entry["topics"])
             })
 
     log_message(f"Metadata saved to {OUTPUT_CSV}")
