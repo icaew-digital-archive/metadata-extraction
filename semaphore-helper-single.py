@@ -27,6 +27,10 @@ SEMAPHORE_JAVA_CLIENT = os.getenv('SEMAPHORE_JAVA_CLIENT')
 SEMAPHORE_CLOUD_API_KEY = os.getenv('SEMAPHORE_CLOUD_API_KEY')
 SEMAPHORE_URL = os.getenv('SEMAPHORE_URL')
 
+if not all([SEMAPHORE_JAVA_CLIENT, SEMAPHORE_CLOUD_API_KEY, SEMAPHORE_URL]):
+    raise ValueError(
+        "Missing Semaphore environment variables. Ensure they are set before running the script.")
+
 
 def parse_arguments():
     """Parse command-line arguments to get the file path."""
@@ -40,7 +44,8 @@ def parse_arguments():
 def process_file(file_path):
     """Run Semaphore classification on a single file."""
     if not os.path.exists(file_path):
-        print(json.dumps({"error": f"File '{file_path}' does not exist."}, indent=4))
+        print(json.dumps(
+            {"error": f"File '{file_path}' does not exist."}, indent=4))
         return
 
     semantic_command = f'java -jar "{SEMAPHORE_JAVA_CLIENT}" --cloud-api-key={SEMAPHORE_CLOUD_API_KEY} --url={SEMAPHORE_URL} --threshold={SEMAPHORE_THRESHOLD} "{file_path}"'
@@ -76,7 +81,8 @@ def process_semantic_result(output):
 
     matches = sorted(set(matches), key=lambda x: float(x[1]), reverse=True)
 
-    topics = [{"topic": value, "score": float(score)} for value, score in matches[:MAX_TOPICS]]
+    topics = [{"topic": value, "score": float(
+        score)} for value, score in matches[:MAX_TOPICS]]
 
     return {"topics": topics}
 
