@@ -13,28 +13,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("Missing OpenAI API Key. Please set it in the .env file.")
 
+# OpenAI API Configuration
+OPENAI_MODEL = "gpt-4o"  # Change to "gpt-4-turbo" or another model if needed
+
 # Paths
 DOCUMENTS_FOLDER = "/home/digital-archivist/Downloads/pdfs"
 OUTPUT_CSV = "metadata_output.csv"
 LOG_FILE = "metadata_extraction.log"
-
-# Logging configuration
-log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler = logging.FileHandler(LOG_FILE)
-file_handler.setFormatter(log_formatter)
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
-
-def log_message(message):
-    logger.info(message)
-    print(message)
 
 PREFER_FILE_METADATA_FORMAT = False  # Set to False to use OpenAI-detected format
 
@@ -67,6 +52,8 @@ METADATA_PROMPT_SETTINGS = {
 USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
 
 # Default classification function (Semaphore)
+
+
 def custom_classification(file_path):
     """User-defined classification function. Default: Uses Semaphore."""
     try:
@@ -84,3 +71,22 @@ def custom_classification(file_path):
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         log_message(f"Error running classification for {file_path}: {e}")
         return []  # Return empty list if an error occurs
+
+
+# Logging configuration
+log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+file_handler = logging.FileHandler(LOG_FILE)
+file_handler.setFormatter(log_formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+
+def log_message(message):
+    logger.info(message)
+    print(message)

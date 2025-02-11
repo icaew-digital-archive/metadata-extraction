@@ -3,8 +3,7 @@ from typing import List
 from pydantic import BaseModel
 from datetime import datetime
 from openai import OpenAI
-from config import OPENAI_API_KEY, log_message
-from config import METADATA_PROMPT_SETTINGS
+from config import *
 
 from file_metadata import VALID_MIME_TYPES
 
@@ -114,7 +113,7 @@ def generate_metadata(text, context_data, ocr_text=None):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": prompt_instructions},
                 {"role": "user", "content": combined_text}
