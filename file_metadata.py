@@ -1,10 +1,7 @@
 import os
 import time
 import hashlib
-import mimetypes
 import magic
-import fitz
-from PIL import Image
 
 VALID_MIME_TYPES = {
     "application/pdf",
