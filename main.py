@@ -1,8 +1,6 @@
 import os
 import csv
 import json
-import subprocess
-from tqdm import tqdm
 from multiprocessing import Pool
 from config import DOCUMENTS_FOLDER, OUTPUT_CSV, log_message
 from config import USE_CUSTOM_CLASSIFICATION, custom_classification
@@ -11,27 +9,6 @@ from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
 from metadata_generation import generate_metadata
 from file_metadata import get_file_metadata
-
-SEMAPHORE_HELPER_SCRIPT = "semaphore-helper-single.py"  # Path to the helper script
-
-
-def run_semaphore_helper(file_path):
-    """Run semaphore-helper.py and return only the topic names as a list of strings."""
-    try:
-        result = subprocess.run(
-            ["python3", SEMAPHORE_HELPER_SCRIPT, file_path],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        semaphore_output = json.loads(result.stdout)
-
-        # Extract only topic names, ensuring we get strings and not dicts
-        return [topic["topic"] if isinstance(topic, dict) else topic for topic in semaphore_output.get("topics", [])]
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-        log_message(
-            f"Error running Semaphore classification for {file_path}: {e}")
-        return []  # Return empty list if an error occurs
 
 
 def process_document(document_file):
@@ -44,17 +21,18 @@ def process_document(document_file):
         elif document_file.endswith((".docx", ".doc")):
             text = extract_text_from_doc(document_file)
 
-        # 🔹 Now, if no text was extracted, OCR has already been attempted inside extract_text_from_pdf()
-
         if not text.strip():
-            log_message(f"No text extracted from {document_file} after OCR, skipping metadata generation.")
+            log_message(
+                f"No text extracted from {document_file} after OCR, skipping metadata generation.")
             return None
 
-        dublin_core_metadata = json.loads(generate_metadata(text, load_context()))
+        dublin_core_metadata = json.loads(
+            generate_metadata(text, load_context()))
         file_properties = get_file_metadata(document_file)
 
         # Run classification if enabled
-        topics = custom_classification(document_file) if USE_CUSTOM_CLASSIFICATION else []
+        topics = custom_classification(
+            document_file) if USE_CUSTOM_CLASSIFICATION else []
 
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
@@ -64,7 +42,8 @@ def process_document(document_file):
 
         # Ensure format is set correctly
         if "format" not in structured_metadata["Dublin Core"]:
-            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get("format", "Unknown")
+            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get(
+                "format", "Unknown")
 
         return {
             "filename": os.path.basename(document_file),
@@ -102,7 +81,7 @@ def main():
                 entry["metadata"], indent=4, ensure_ascii=False)
             writer.writerow({
                 "filename": entry["filename"],
-                "metadata": formatted_metadata,  # ✅ Now formatted with newlines
+                "metadata": formatted_metadata,
             })
 
     log_message(f"Metadata saved to {OUTPUT_CSV}")
