@@ -1,7 +1,7 @@
 import json
 from typing import List
 from pydantic import BaseModel
-from dateutil import parser
+from datetime import datetime
 from openai import OpenAI
 from config import OPENAI_API_KEY, log_message
 from config import METADATA_PROMPT_SETTINGS
@@ -17,9 +17,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 def normalize_date(date_str):
     """Convert date to ISO 8601 format (YYYY-MM-DD)."""
     try:
-        parsed_date = parser.parse(date_str, fuzzy=True)
-        return parsed_date.strftime("%Y-%m-%d")
-    except (ValueError, TypeError):
+        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
         return date_str  # Return original value if parsing fails
 
 # ✅ Define Metadata Extraction Schema with Pydantic
