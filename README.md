@@ -26,7 +26,6 @@ Ensure you have **Python 3.8+** installed.
 ### **Required Libraries**
 The system relies on the following key libraries:
 - **`pdfplumber`** – Extracts text from PDFs.
-- **`pytesseract`** – Performs OCR for scanned documents.
 - **`docx2txt` & `textract`** – Extracts text from Word documents.
 - **`openai`** – AI-powered metadata generation.
 - **`pydantic`** – Validates structured metadata fields.
