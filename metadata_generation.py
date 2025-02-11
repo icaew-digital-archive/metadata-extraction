@@ -1,9 +1,11 @@
 import json
 from typing import List
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from dateutil import parser
 from openai import OpenAI
 from config import OPENAI_API_KEY, log_message
+from config import METADATA_PROMPT_SETTINGS
+
 from file_metadata import VALID_MIME_TYPES
 
 # Initialize OpenAI client
@@ -81,8 +83,6 @@ metadata_schema = {
     }
 }
 
-# ✅ Function: Generate Metadata with OpenAI
-
 
 def generate_metadata(text, context_data, ocr_text=None):
     """Generate structured metadata using OpenAI's JSON Schema enforcement."""
@@ -95,63 +95,54 @@ def generate_metadata(text, context_data, ocr_text=None):
     if ocr_text:
         combined_text += f"\n[OCR Extracted Content]\n{ocr_text}"
 
+    # Generate a list of fields that should be included
+    included_fields = [
+        field for field, enabled in METADATA_PROMPT_SETTINGS["include_fields"].items() if enabled
+    ]
+    included_fields_str = ", ".join(included_fields)
+
+    # Dynamically modify the JSON schema to include only the selected fields
+    custom_metadata_schema = {
+        "name": "metadata_extraction",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {key: metadata_schema["schema"]["properties"][key] for key in included_fields},
+            "required": included_fields,
+            "additionalProperties": False
+        }
+    }
+
+    # Construct the prompt with explicit field inclusion
+    prompt_instructions = f"""
+    Extract structured Dublin Core metadata following these guidelines:
+    {json.dumps(context_data)}
+
+    Additional Constraints:
+    - Description length should be limited to {METADATA_PROMPT_SETTINGS["description_length"]} characters.
+    - Provide a {METADATA_PROMPT_SETTINGS["verbosity"]} metadata output.
+    - Only extract and return the following metadata fields: {included_fields_str}.
+    - Do NOT include any fields that are not explicitly listed.
+    """
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are an expert in metadata extraction. Extract structured Dublin Core metadata."},
+                {"role": "system", "content": prompt_instructions},
                 {"role": "user", "content": combined_text}
             ],
             response_format={
                 "type": "json_schema",
-                "json_schema": metadata_schema
+                "json_schema": custom_metadata_schema
             }
         )
 
         metadata_json = response.choices[0].message.content
         log_message(f"Generated structured metadata: {metadata_json}")
-        return metadata_json
+
+        return metadata_json  # Returning raw OpenAI response directly, no extra validation
 
     except Exception as e:
         log_message(f"Error during OpenAI structured request: {e}")
         return "{}"
-
-# ✅ Function: Parse and Validate OpenAI’s Response
-
-
-def parse_metadata_response(response_content):
-    """Safely parse and validate the OpenAI response using Pydantic."""
-    try:
-        metadata = MetadataExtraction.parse_raw(response_content)
-
-        # ✅ Normalize the date to ISO 8601 format
-        metadata_dict = metadata.dict()
-        metadata_dict["date"] = normalize_date(metadata_dict["date"])
-
-        return metadata_dict  # ✅ Ensure final output is a properly formatted dictionary
-    except ValidationError as e:
-        log_message(f"Metadata validation error: {e.json()}")
-        return None
-
-
-# ✅ Example Execution & Testing
-if __name__ == "__main__":
-    sample_text = """
-    Title: The Future of AI in Research
-    Author: Dr. John Smith
-    Abstract: This paper explores the advancements in AI and its impact on research methodologies.
-    Keywords: AI, Research, Machine Learning, Automation
-    """
-
-    try:
-        response_content = generate_metadata(sample_text, context_data={})
-        parsed_metadata = parse_metadata_response(response_content)
-
-        if parsed_metadata:
-            print("✅ Successfully extracted structured metadata:")
-            # ✅ Fix Unicode display
-            print(json.dumps(parsed_metadata, indent=4, ensure_ascii=False))
-        else:
-            print("❌ Failed to parse metadata.")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
