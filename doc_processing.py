@@ -2,6 +2,7 @@ import docx2txt
 import textract
 from config import log_message
 
+
 def extract_text_from_doc(file_path):
     """Extract text from .docx and .doc files."""
     try:
@@ -9,7 +10,8 @@ def extract_text_from_doc(file_path):
         if file_extension == "docx":
             return docx2txt.process(file_path)
         elif file_extension == "doc":
-            return textract.process(file_path).decode("utf-8")  # Textract handles older .doc files
+            # Textract handles older .doc files
+            return textract.process(file_path).decode("utf-8")
     except Exception as e:
         log_message(f"Error extracting text from {file_path}: {e}")
         return ""
