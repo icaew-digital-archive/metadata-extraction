@@ -5,6 +5,7 @@ import subprocess
 from tqdm import tqdm
 from multiprocessing import Pool
 from config import DOCUMENTS_FOLDER, OUTPUT_CSV, log_message
+from config import USE_CUSTOM_CLASSIFICATION, custom_classification
 from context import load_context
 from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
@@ -39,35 +40,37 @@ def process_document(document_file):
         text = ""
         if document_file.endswith(".pdf"):
             text = extract_text_from_pdf(document_file)
+
         elif document_file.endswith((".docx", ".doc")):
             text = extract_text_from_doc(document_file)
 
+        # 🔹 Now, if no text was extracted, OCR has already been attempted inside extract_text_from_pdf()
+
         if not text.strip():
-            log_message(
-                f"No text extracted from {document_file}, skipping metadata generation.")
+            log_message(f"No text extracted from {document_file} after OCR, skipping metadata generation.")
             return None
 
-        dublin_core_metadata = json.loads(
-            generate_metadata(text, load_context()))
+        dublin_core_metadata = json.loads(generate_metadata(text, load_context()))
         file_properties = get_file_metadata(document_file)
 
-        # Run Semaphore classification and get only topic names
-        topics = run_semaphore_helper(document_file)
+        # Run classification if enabled
+        topics = custom_classification(document_file) if USE_CUSTOM_CLASSIFICATION else []
 
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
-            "Topics": topics,  # Store only topic names as a list
+            "Topics": topics,
             "File Properties": file_properties
         }
 
         # Ensure format is set correctly
         if "format" not in structured_metadata["Dublin Core"]:
-            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get(
-                "format", "Unknown")
+            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get("format", "Unknown")
 
-        validated_metadata = structured_metadata
-
-        return {"filename": os.path.basename(document_file), "metadata": validated_metadata, "topics": topics}
+        return {
+            "filename": os.path.basename(document_file),
+            "metadata": structured_metadata,
+            "topics": topics
+        }
     except Exception as e:
         log_message(f"Error processing {document_file}: {e}")
         return None
@@ -90,7 +93,7 @@ def main():
         metadata_list = list(
             filter(None, pool.map(process_document, document_files)))
 
-    fieldnames = ["filename", "metadata", "topics"]
+    fieldnames = ["filename", "metadata"]
     with open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -100,7 +103,6 @@ def main():
             writer.writerow({
                 "filename": entry["filename"],
                 "metadata": formatted_metadata,  # ✅ Now formatted with newlines
-                "topics": ", ".join(entry["topics"])
             })
 
     log_message(f"Metadata saved to {OUTPUT_CSV}")
