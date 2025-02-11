@@ -33,3 +33,28 @@ logger.addHandler(console_handler)
 def log_message(message):
     logger.info(message)
     print(message)
+
+# Metadata Extraction Settings
+METADATA_PROMPT_SETTINGS = {
+    "description_length": 200,  # Max length of description in characters
+    "verbosity": "detailed",  # Options: 'brief', 'detailed'
+
+    # Select which Dublin Core fields should be included in the metadata
+    "include_fields": {
+        "title": True,
+        "creator": True,
+        "subject": False,
+        "description": True,
+        "publisher": False,
+        "contributor": False,
+        "date": False,
+        "type": False,
+        "format": False,
+        "identifier": True,
+        "source": True,
+        "language": True,
+        "relation": True,
+        "coverage": True,
+        "rights": True
+    }
+}
