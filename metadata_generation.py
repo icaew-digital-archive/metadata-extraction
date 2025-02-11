@@ -1,59 +1,92 @@
-# metadata_generation.py
-from openai import OpenAI
 import json
-import re
+from typing import List
+from pydantic import BaseModel, ValidationError
 from dateutil import parser
+from openai import OpenAI
 from config import OPENAI_API_KEY, log_message
 from file_metadata import VALID_MIME_TYPES
 
-
-def normalize_date(date_str):
-    """Convert date to ISO 8601 format."""
-    try:
-        parsed_date = parser.parse(date_str, fuzzy=True)
-        return parsed_date.strftime("%Y-%m-%d"), True
-    except (ValueError, TypeError):
-        return date_str, False
-
-
+# Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-
-def clean_json_output(content):
-    """Remove Markdown formatting from JSON."""
-    json_content = re.sub(r"```json(.*?)```", r"\1",
-                          content, flags=re.DOTALL).strip()
-    return json_content if json_content.startswith('{') else "{}"
+# ✅ Function: Normalize Date Format
 
 
-def validate_and_flag_metadata(metadata_json):
-    """Validate metadata fields."""
+def normalize_date(date_str):
+    """Convert date to ISO 8601 format (YYYY-MM-DD)."""
     try:
-        metadata = json.loads(metadata_json)
-        validation_flags = {}
+        parsed_date = parser.parse(date_str, fuzzy=True)
+        return parsed_date.strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return date_str  # Return original value if parsing fails
 
-        # In metadata_generation.py, inside validate_and_flag_metadata()
-        if "date" in metadata and metadata["date"]:
-            normalized_date, was_parsed = normalize_date(metadata["date"])
-            if was_parsed:
-                # Remove metadata["parsed_date"] = True
-                metadata["date"] = normalized_date
+# ✅ Define Metadata Extraction Schema with Pydantic
 
-        if "format" in metadata and metadata["format"] not in VALID_MIME_TYPES:
-            validation_flags["format"] = f"Invalid format detected: {metadata['format']}"
 
-        if validation_flags:
-            metadata["validation_warnings"] = validation_flags
-            log_message(f"⚠️ Validation Warnings: {validation_flags}")
+class MetadataExtraction(BaseModel):
+    title: str
+    creator: List[str]
+    subject: List[str]
+    description: str
+    publisher: str
+    contributor: List[str]
+    date: str  # ISO 8601 format
+    type: str
+    format: str
+    identifier: str
+    source: str
+    language: str
+    relation: List[str]
+    coverage: str
+    rights: str
 
-        return json.dumps(metadata, indent=4)
-    except json.JSONDecodeError as e:
-        log_message(f"Error decoding JSON: {e}")
-        return metadata_json
+
+# ✅ Define JSON Schema for OpenAI Structured Outputs
+metadata_schema = {
+    "name": "metadata_extraction",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "description": "Document title"},
+            "creator": {"type": "array", "items": {"type": "string"}, "description": "Authors or creators"},
+            "subject": {"type": "array", "items": {"type": "string"}, "description": "Relevant topics or keywords"},
+            "description": {"type": "string", "description": "Brief summary of the document"},
+            "publisher": {"type": "string", "description": "Publishing entity"},
+            "contributor": {"type": "array", "items": {"type": "string"}, "description": "Other contributors"},
+            "date": {"type": "string", "description": "Publication date in ISO 8601 format (YYYY-MM-DD)"},
+            "type": {
+                "type": "string",
+                "enum": ["Text", "Image", "Dataset", "InteractiveResource"],
+                "description": "Dublin Core document type"
+            },
+            "format": {
+                "type": "string",
+                "enum": list(VALID_MIME_TYPES),
+                "description": "MIME type of the document"
+            },
+            "identifier": {"type": "string", "description": "Unique identifier (e.g., ISBN, DOI)"},
+            "source": {"type": "string", "description": "Original document source"},
+            "language": {"type": "string", "description": "ISO 639-1 language code"},
+            "relation": {"type": "array", "items": {"type": "string"}, "description": "Related documents"},
+            "coverage": {"type": "string", "description": "Geographic or temporal coverage"},
+            "rights": {"type": "string", "description": "Copyright or usage rights"}
+        },
+        "required": [
+            "title", "creator", "subject", "description", "publisher", "contributor",
+            "date", "type", "format", "identifier", "source", "language",
+            "relation", "coverage", "rights"
+        ],
+        "additionalProperties": False
+    }
+}
+
+# ✅ Function: Generate Metadata with OpenAI
 
 
 def generate_metadata(text, context_data, ocr_text=None):
-    """ Generate metadata using OpenAI and validate it """
+    """Generate structured metadata using OpenAI's JSON Schema enforcement."""
+
     if not text.strip() and not ocr_text:
         log_message("Skipping metadata generation due to empty text.")
         return "{}"
@@ -62,75 +95,63 @@ def generate_metadata(text, context_data, ocr_text=None):
     if ocr_text:
         combined_text += f"\n[OCR Extracted Content]\n{ocr_text}"
 
-    system_message = f"""
-    You are an expert in metadata extraction. Use the Dublin Core Metadata Element Set and related standards to describe documents.
-    Here are the relevant metadata standards you must follow:
-- Dublin Core Elements: {context_data.get('DublinCoreElements', '')}
-- Format: "Formats should use controlled vocabularies like MIME (IANA Media Types)."
-- Date: {context_data.get('W3C_DateTime', '')}
-- Type: {context_data.get('DCMI_Type_Vocabulary', '')}
-- Language: {context_data.get('basic_languages', '')}
-
-    **STRICT RULES:**
-    - **Title**: Document title must be clearly extracted from the text.
-    - **Creator**: Must be an individual or organization listed explicitly.
-    - **Subject**: List relevant subjects or keywords from the document.
-    - **Description**: A summary of the document's content.
-    - **Publisher**: If available, the entity responsible for publishing.
-    - **Contributor**: Individuals or organizations that contributed to the document.
-    - **Date**: Must be in ISO 8601 format (YYYY-MM-DD or YYYY-MM).
-    - **Type**: Must be one of the official Dublin Core Types.
-    - **Format**: Must be a valid IANA Media Type.
-    - **Identifier**: If available, a unique identifier (e.g., ISBN, DOI).
-    - **Source**: If available, the original source of the document.
-    - **Language**: Must use an ISO 639-1 language code.
-    - **Relation**: Any related documents or links.
-    - **Coverage**: Geographic or temporal coverage of the document.
-    - **Rights**: Copyright or usage rights information.
-
-    **Example Correct Output:**
-    ```json
-    {{
-    "title": "Sample Document",
-    "creator": ["John Doe"],
-    "subject": ["Metadata Extraction", "AI"],
-    "description": "This is a sample document following Dublin Core standards.",
-    "publisher": "OpenAI Press",
-    "contributor": ["Jane Smith"],
-    "date": "2023-05-10",
-    "type": "Text",
-    "format": "application/pdf",
-    "identifier": "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
-    "source": "https://example.com/sample-document",
-    "language": "en",
-    "relation": ["https://example.com/related-resource"],
-    "coverage": "Global",
-    "rights": "© 2023 OpenAI. All rights reserved."
-    }}
-    ```
-    """
-
-    user_prompt = f"""
-    Analyse the document and generate metadata for the following 15 elements:
-    {text}
-    Provide the metadata in JSON format, adhering strictly to the Dublin Core rules. Use British English spellings where possible.
-    """
-
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "system", "content": system_message},
-                      {"role": "user", "content": user_prompt}]
+            messages=[
+                {"role": "system", "content": "You are an expert in metadata extraction. Extract structured Dublin Core metadata."},
+                {"role": "user", "content": combined_text}
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": metadata_schema
+            }
         )
 
-        if response and response.choices:
-            metadata_json = clean_json_output(
-                response.choices[0].message.content)
-            validated_metadata = validate_and_flag_metadata(metadata_json)
-            log_message(f"Generated metadata: {validated_metadata}")
-            return validated_metadata
+        metadata_json = response.choices[0].message.content
+        log_message(f"Generated structured metadata: {metadata_json}")
+        return metadata_json
 
     except Exception as e:
-        log_message(f"Error during OpenAI request: {e}")
+        log_message(f"Error during OpenAI structured request: {e}")
+        return "{}"
 
-    return "{}"
+# ✅ Function: Parse and Validate OpenAI’s Response
+
+
+def parse_metadata_response(response_content):
+    """Safely parse and validate the OpenAI response using Pydantic."""
+    try:
+        metadata = MetadataExtraction.parse_raw(response_content)
+
+        # ✅ Normalize the date to ISO 8601 format
+        metadata_dict = metadata.dict()
+        metadata_dict["date"] = normalize_date(metadata_dict["date"])
+
+        return metadata_dict  # ✅ Ensure final output is a properly formatted dictionary
+    except ValidationError as e:
+        log_message(f"Metadata validation error: {e.json()}")
+        return None
+
+
+# ✅ Example Execution & Testing
+if __name__ == "__main__":
+    sample_text = """
+    Title: The Future of AI in Research
+    Author: Dr. John Smith
+    Abstract: This paper explores the advancements in AI and its impact on research methodologies.
+    Keywords: AI, Research, Machine Learning, Automation
+    """
+
+    try:
+        response_content = generate_metadata(sample_text, context_data={})
+        parsed_metadata = parse_metadata_response(response_content)
+
+        if parsed_metadata:
+            print("✅ Successfully extracted structured metadata:")
+            # ✅ Fix Unicode display
+            print(json.dumps(parsed_metadata, indent=4, ensure_ascii=False))
+        else:
+            print("❌ Failed to parse metadata.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
