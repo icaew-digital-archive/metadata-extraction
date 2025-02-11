@@ -2,8 +2,7 @@ import os
 import csv
 import json
 from multiprocessing import Pool
-from config import DOCUMENTS_FOLDER, OUTPUT_CSV, log_message
-from config import USE_CUSTOM_CLASSIFICATION, custom_classification
+from config import *
 from context import load_context
 from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
@@ -40,10 +39,9 @@ def process_document(document_file):
             "File Properties": file_properties
         }
 
-        # Ensure format is set correctly
-        if "format" not in structured_metadata["Dublin Core"]:
-            structured_metadata["Dublin Core"]["format"] = structured_metadata["File Properties"].get(
-                "format", "Unknown")
+        # Ensure format is set correctly based on preference
+        if PREFER_FILE_METADATA_FORMAT:
+            structured_metadata["Dublin Core"]["format"] = file_properties.get("format", "Unknown")
 
         return {
             "filename": os.path.basename(document_file),
