@@ -82,9 +82,3 @@ def custom_classification(file_path):
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         log_message(f"Error running classification for {file_path}: {e}")
         return []  # Return empty list if an error occurs
-    
-
-# PDF Processing Settings
-PDF_PROCESSING_SETTINGS = {
-    "fallback_to_image": True  # Set to False to disable image fallback when text extraction fails
-}
