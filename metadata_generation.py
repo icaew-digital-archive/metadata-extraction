@@ -11,19 +11,7 @@ from file_metadata import VALID_MIME_TYPES
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# ✅ Function: Normalize Date Format
-
-
-def normalize_date(date_str):
-    """Convert date to ISO 8601 format (YYYY-MM-DD)."""
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
-    except ValueError:
-        return date_str  # Return original value if parsing fails
-
 # ✅ Define Metadata Extraction Schema with Pydantic
-
-
 class MetadataExtraction(BaseModel):
     title: str
     creator: List[str]
