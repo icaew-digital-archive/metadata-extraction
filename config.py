@@ -2,6 +2,8 @@
 import os
 import logging
 from dotenv import load_dotenv
+import subprocess
+import json
 
 # Load environment variables
 load_dotenv(override=True)
@@ -43,18 +45,46 @@ METADATA_PROMPT_SETTINGS = {
     "include_fields": {
         "title": True,
         "creator": True,
-        "subject": False,
+        "subject": True,
         "description": True,
-        "publisher": False,
-        "contributor": False,
-        "date": False,
-        "type": False,
-        "format": False,
+        "publisher": True,
+        "contributor": True,
+        "date": True,
+        "type": True,
+        "format": True,
         "identifier": True,
         "source": True,
         "language": True,
         "relation": True,
         "coverage": True,
-        "rights": True
+        "rights": False
     }
+}
+
+# Enable or disable custom classification (can be Semaphore or another method)
+USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
+
+# Default classification function (Semaphore)
+def custom_classification(file_path):
+    """User-defined classification function. Default: Uses Semaphore."""
+    try:
+        SEMAPHORE_HELPER_SCRIPT = "semaphore-helper-single.py"
+        result = subprocess.run(
+            ["python3", SEMAPHORE_HELPER_SCRIPT, file_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        semaphore_output = json.loads(result.stdout)
+
+        # Extract only topic names, ensuring we get strings and not dicts
+        return [topic["topic"] if isinstance(topic, dict) else topic for topic in semaphore_output.get("topics", [])]
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+        log_message(f"Error running classification for {file_path}: {e}")
+        return []  # Return empty list if an error occurs
+    
+
+# PDF Processing Settings
+PDF_PROCESSING_SETTINGS = {
+    "fallback_to_image": True  # Set to False to disable image fallback when text extraction fails
 }
