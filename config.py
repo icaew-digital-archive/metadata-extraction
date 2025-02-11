@@ -36,6 +36,8 @@ def log_message(message):
     logger.info(message)
     print(message)
 
+PREFER_FILE_METADATA_FORMAT = False  # Set to False to use OpenAI-detected format
+
 # Metadata Extraction Settings
 METADATA_PROMPT_SETTINGS = {
     "description_length": 200,  # Max length of description in characters
@@ -57,7 +59,7 @@ METADATA_PROMPT_SETTINGS = {
         "language": True,
         "relation": True,
         "coverage": True,
-        "rights": False
+        "rights": True
     }
 }
 
