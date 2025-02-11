@@ -4,6 +4,7 @@ from config import log_message
 
 DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), "context.json")
 
+
 def load_context():
     """Load Dublin Core metadata definitions from a local JSON file."""
     try:
