@@ -17,9 +17,9 @@ if not OPENAI_API_KEY:
 OPENAI_MODEL = "gpt-4o"  # Change to "gpt-4-turbo" or another model if needed
 
 # Paths
-DOCUMENTS_FOLDER = "/home/digital-archivist/Downloads/pdfs"
-OUTPUT_CSV = "metadata_output.csv"
-LOG_FILE = "metadata_extraction.log"
+DOCUMENTS_FOLDER = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/small-batch"
+OUTPUT_CSV = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_output.csv"
+LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_extraction.log"
 
 PREFER_FILE_METADATA_FORMAT = True  # Set to False to use OpenAI-detected format
 
