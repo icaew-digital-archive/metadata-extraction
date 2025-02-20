@@ -1,16 +1,20 @@
-# **Dublin Core Metadata Extraction [EXPERIMENTAL]**
+# **AI Dublin Core Metadata Extraction [EXPERIMENTAL]**
 
-## **Overview**
-**Dublin Core Metadata Extraction** is an **AI-powered system** that automates **document metadata extraction, classification, validation, and structuring** based on [**Dublin Core standards**](https://www.dublincore.org/specifications/dublin-core/dces/). It intelligently **analyzes PDFs and Word documents**, extracting key attributes while ensuring metadata is **accurate, structured, and integration-ready**.
+## **Project Overview**
+This project explores the automation of **document metadata extraction, classification, validation, and structuring** based on the [Dublin Core Metadata Standard](https://www.dublincore.org/specifications/dublin-core/dces/). It processes **PDFs and Word documents** using IBM's **Docling** for text extraction and **OpenAI’s GPT-4** for AI-driven metadata generation.
+
+This is an **experimental system**, aimed at evaluating different techniques for metadata extraction and enrichment, and is not yet intended for production use.
 
 ---
 
-## **Key Features**
-✅ **Hybrid Extraction** – Extracts text from **PDFs using `pdfplumber`**, and from **DOC/DOCX using `docx2txt`, `textract`, and LibreOffice conversion**.  
-✅ **AI-Driven Metadata Mapping** – Uses **OpenAI’s GPT-4** to extract and structure metadata into **Dublin Core fields**.  
-✅ **Context-Aware Metadata Extraction** – Dynamically loads **Dublin Core metadata definitions** from a structured **JSON file** (`context.json`).  
-✅ **Structured Output** – Saves metadata as **JSON and CSV**, ensuring compatibility with **archives, databases, and APIs**.  
-✅ **Optimized Processing** – Utilizes **multiprocessing** to speed up large-scale document analysis.  
+## **Current Capabilities**
+
+✅ **Text Extraction** – Uses **IBM Docling** for PDFs and Word documents.
+✅ **AI-Powered Metadata Generation** – Leverages **OpenAI’s GPT-4** to extract and structure metadata into Dublin Core fields.  
+✅ **Context-Based Metadata Mapping** – Loads metadata definitions dynamically from a structured **JSON file** (`context.json`).  
+✅ **Structured Output Formats** – Outputs metadata in **JSON and CSV**, making it compatible with archives and databases.  
+✅ **Parallel Processing Support** – Uses **multiprocessing** for processing large numbers of documents efficiently.  
+✅ **External Processing** – Currently integrating with **Semaphore** for topic classification.  
 
 ---
 
@@ -18,17 +22,20 @@
 
 ![Data Flow Diagram](flow.png)
 
+
+## **How It Works**
+
+1️⃣ **Extract text** from PDFs and DOCX files using IBM Docling.  
+2️⃣ **Generate metadata** using OpenAI’s GPT-4 with structured Dublin Core mappings.  
+3️⃣ **Perform optional topic classification** using Semaphore’s API (if enabled).  
+4️⃣ **Store results** in structured JSON/CSV formats for further evaluation.  
+
 ---
 
-## **Requirements**
-Ensure you have **Python 3.8+** installed.
-
-### **Required Libraries**
-The system relies on the following key libraries:
-- **`pdfplumber`** – Extracts text from PDFs.
-- **`docx2txt` & `textract`** – Extracts text from Word documents.
-- **`openai`** – AI-powered metadata generation.
-- **`pydantic`** – Validates structured metadata fields.
-- **`python-dotenv`** – Manages API keys securely.
+## **Current Development Focus**
+- Improving **accuracy and consistency** of metadata extraction.
+- Evaluating the effectiveness of **AI-driven metadata structuring**.
+- Testing **performance optimizations** for handling large-scale document processing.
+- Exploring additional **classification methods** beyond Semaphore.
 
 ---
