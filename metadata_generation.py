@@ -105,7 +105,8 @@ def generate_metadata(text, context_data, ocr_text=None):
     {json.dumps(context_data)}
 
     Additional Constraints:
-    - Description length should be limited to {METADATA_PROMPT_SETTINGS["description_length"]} characters.
+    - Description length should be at least {METADATA_PROMPT_SETTINGS["description_length_min"]} characters.
+    - Description length should be limited to {METADATA_PROMPT_SETTINGS["description_length_max"]} characters.
     - Provide a {METADATA_PROMPT_SETTINGS["verbosity"]} metadata output.
     - Only extract and return the following metadata fields: {included_fields_str}.
     - Do NOT include any fields that are not explicitly listed.
