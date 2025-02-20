@@ -66,7 +66,7 @@ def main():
 
     log_message(f"Found {len(document_files)} documents")
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=1) as pool:
         metadata_list = list(
             filter(None, pool.map(process_document, document_files)))
 
