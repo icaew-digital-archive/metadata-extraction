@@ -1,5 +1,4 @@
 # pdf_processing.py
-import pdfplumber
 from docling.document_converter import DocumentConverter
 
 from config import log_message
