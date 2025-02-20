@@ -18,7 +18,7 @@ def process_document(document_file):
             document_file)  # Extract file properties first
         text = ""
 
-        if document_file.endswith((".pdf", ".docx", ".jpg")):
+        if document_file.endswith((".pdf", ".docx", ".jpg", ".png")):
             text = extract_text_from_pdf(document_file)
 
         if not text.strip():
@@ -31,7 +31,7 @@ def process_document(document_file):
             }
 
         dublin_core_metadata = json.loads(
-            generate_metadata(text, load_context()))
+            generate_metadata(text))
 
         topics = custom_classification(
             document_file) if USE_CUSTOM_CLASSIFICATION else []
