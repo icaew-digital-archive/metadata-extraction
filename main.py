@@ -14,32 +14,33 @@ from pdf_processing import extract_text_from_pdf
 def process_document(document_file):
     """Process a single document, extracting metadata and file properties."""
     try:
-        file_properties = get_file_metadata(document_file)  # Extract file properties first
+        file_properties = get_file_metadata(
+            document_file)  # Extract file properties first
         text = ""
 
-        if document_file.endswith((".pdf", ".docx")):
+        if document_file.endswith((".pdf", ".docx", ".jpg")):
             text = extract_text_from_pdf(document_file)
 
         if not text.strip():
-            log_message(f"No text extracted from {document_file}, returning only file properties.")
+            log_message(
+                f"No text extracted from {document_file}, returning only file properties.")
             return {
                 "filename": os.path.basename(document_file),
                 "metadata": {"File Properties": file_properties},
                 "topics": []
             }
 
-        dublin_core_metadata = json.loads(generate_metadata(text, load_context()))
+        dublin_core_metadata = json.loads(
+            generate_metadata(text, load_context()))
 
-        topics = custom_classification(document_file) if USE_CUSTOM_CLASSIFICATION else []
+        topics = custom_classification(
+            document_file) if USE_CUSTOM_CLASSIFICATION else []
 
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
             "Topics": topics,
             "File Properties": file_properties
         }
-
-        if PREFER_FILE_METADATA_FORMAT:
-            structured_metadata["Dublin Core"]["format"] = file_properties.get("format", "Unknown")
 
         return {
             "filename": os.path.basename(document_file),
@@ -51,14 +52,13 @@ def process_document(document_file):
         return None
 
 
-
 def main():
     """Main execution function."""
 
     document_files = [
         os.path.join(root, file)
         for root, _, files in os.walk(DOCUMENTS_FOLDER)
-        for file in files if file.endswith((".pdf", ".docx", ".doc"))
+        for file in files if file.endswith((".pdf", ".docx", ".jpg", ".png"))
     ]
 
     log_message(f"Found {len(document_files)} documents")

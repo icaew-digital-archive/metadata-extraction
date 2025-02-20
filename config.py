@@ -22,8 +22,6 @@ DOCUMENTS_FOLDER = "/home/digital-archivist/Documents/custom scripts/dublin-core
 OUTPUT_CSV = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_output.csv"
 LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_extraction.log"
 
-PREFER_FILE_METADATA_FORMAT = True  # Set to False to use OpenAI-detected format
-
 # Metadata Extraction Settings
 METADATA_PROMPT_SETTINGS = {
     "description_length_min": 200,  # Max length of description in characters
@@ -71,6 +69,7 @@ def log_message(message):
 
 
 METADATA_CONTEXT_FILE = os.path.join(os.path.dirname(__file__), "context.json")
+
 
 # Enable or disable custom classification (can be Semaphore or another method)
 USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
