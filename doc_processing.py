@@ -32,7 +32,6 @@ def convert_doc_to_docx(file_path):
 
 def extract_text_from_doc(file_path):
     """Extract text from .docx and .doc files using multiple fallbacks."""
-    converted_docx = None  # Track if a conversion was done
 
     try:
         file_extension = file_path.lower().rsplit('.', 1)[-1]
