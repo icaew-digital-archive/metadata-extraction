@@ -1,4 +1,10 @@
 import json
+from openai import OpenAI
+from config import *
+from context import load_context
+
+
+import json
 from typing import List
 from pydantic import BaseModel
 from datetime import datetime
@@ -11,6 +17,8 @@ from file_metadata import VALID_MIME_TYPES
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ✅ Define Metadata Extraction Schema with Pydantic
+
+
 class MetadataExtraction(BaseModel):
     title: str
     creator: List[str]
@@ -70,24 +78,39 @@ metadata_schema = {
 }
 
 
-def generate_metadata(text, context_data, ocr_text=None):
-    """Generate structured metadata using OpenAI's JSON Schema enforcement."""
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+
+def generate_metadata(text, ocr_text=None):
+    """Generate structured metadata using OpenAI’s JSON Schema enforcement."""
 
     if not text.strip() and not ocr_text:
         log_message("Skipping metadata generation due to empty text.")
         return "{}"
 
+    # Load refined Dublin Core context
+    context_data = load_context()
+    dublin_core_metadata = context_data.get("dublin_core", {})
+
+    # Extract field definitions and comments for inclusion
+    metadata_guidelines = "\n".join([
+        f"- **{field.capitalize()}**: {info['definition']} ({info['comment']})"
+        for field, info in dublin_core_metadata.items()
+    ])
+
+    # Merge OCR text if available
     combined_text = text.strip()
     if ocr_text:
         combined_text += f"\n[OCR Extracted Content]\n{ocr_text}"
 
-    # Generate a list of fields that should be included
+    # Generate a list of selected metadata fields
     included_fields = [
         field for field, enabled in METADATA_PROMPT_SETTINGS["include_fields"].items() if enabled
     ]
     included_fields_str = ", ".join(included_fields)
 
-    # Dynamically modify the JSON schema to include only the selected fields
+    # Modify JSON schema dynamically for required fields
     custom_metadata_schema = {
         "name": "metadata_extraction",
         "strict": True,
@@ -99,17 +122,20 @@ def generate_metadata(text, context_data, ocr_text=None):
         }
     }
 
-    # Construct the prompt with explicit field inclusion
+    # Construct a refined prompt
     prompt_instructions = f"""
-    Extract structured Dublin Core metadata following these guidelines:
-    {json.dumps(context_data)}
+    Extract structured Dublin Core metadata from the document text.
 
-    Additional Constraints:
-    - Description length should be at least {METADATA_PROMPT_SETTINGS["description_length_min"]} characters.
-    - Description length should be limited to {METADATA_PROMPT_SETTINGS["description_length_max"]} characters.
+    **Metadata Fields to Extract:** {included_fields_str}
+
+    **Dublin Core Metadata Definitions:**
+    {metadata_guidelines}
+
+    **Guidelines:**
+    - Metadata should be structured in JSON format.
+    - Ensure descriptions are at least {METADATA_PROMPT_SETTINGS["description_length_min"]} characters long.
+    - Limit descriptions to {METADATA_PROMPT_SETTINGS["description_length_max"]} characters.
     - Provide a {METADATA_PROMPT_SETTINGS["verbosity"]} metadata output.
-    - Only extract and return the following metadata fields: {included_fields_str}.
-    - Do NOT include any fields that are not explicitly listed.
     """
 
     try:
@@ -119,16 +145,14 @@ def generate_metadata(text, context_data, ocr_text=None):
                 {"role": "system", "content": prompt_instructions},
                 {"role": "user", "content": combined_text}
             ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": custom_metadata_schema
-            }
+            response_format={"type": "json_schema",
+                             "json_schema": custom_metadata_schema}
         )
 
         metadata_json = response.choices[0].message.content
         log_message(f"Generated structured metadata: {metadata_json}")
 
-        return metadata_json  # Returning raw OpenAI response directly, no extra validation
+        return metadata_json
 
     except Exception as e:
         log_message(f"Error during OpenAI structured request: {e}")
