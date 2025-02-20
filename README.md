@@ -9,7 +9,7 @@ This is an **experimental system**, aimed at evaluating different techniques for
 
 ## **Current Capabilities**
 
-✅ **Text Extraction** – Uses **IBM Docling** for PDFs and Word documents.
+✅ **Text Extraction** – Uses **IBM Docling** for PDFs and Word documents.  
 ✅ **AI-Powered Metadata Generation** – Leverages **OpenAI’s GPT-4** to extract and structure metadata into Dublin Core fields.  
 ✅ **Context-Based Metadata Mapping** – Loads metadata definitions dynamically from a structured **JSON file** (`context.json`).  
 ✅ **Structured Output Formats** – Outputs metadata in **JSON and CSV**, making it compatible with archives and databases.  
