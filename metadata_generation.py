@@ -1,12 +1,9 @@
 import json
-from typing import List
 
 from openai import OpenAI
-from pydantic import BaseModel
 
 from config import *
-from config import OPENAI_API_KEY, OPENAI_MODEL, log_message
-from context import load_context
+from context import *
 from metadata_prompt import get_prompt_instructions
 from metadata_schema import metadata_schema
 
@@ -20,9 +17,6 @@ def generate_metadata(text, ocr_text=None):
     if not text.strip() and not ocr_text:
         log_message("Skipping metadata generation due to empty text.")
         return "{}"
-
-    # Load refined Dublin Core context
-    context_data = load_context()
 
     # Merge OCR text if available
     combined_text = text.strip()
