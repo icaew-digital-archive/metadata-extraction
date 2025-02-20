@@ -143,4 +143,5 @@ node_modules/
 settings.json
 
 /csclient
-/test and archive files
+/test-and-output-files
+/test
