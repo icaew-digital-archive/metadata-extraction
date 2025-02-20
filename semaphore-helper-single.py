@@ -20,7 +20,6 @@ from dotenv import load_dotenv
 
 MAX_TOPICS = 10
 SEMAPHORE_THRESHOLD = '48'
-INCLUDE_SCORING = False
 
 # Load configuration from environment variables
 load_dotenv(override=True)
