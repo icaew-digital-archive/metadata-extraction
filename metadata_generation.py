@@ -11,52 +11,66 @@ from metadata_schema import metadata_schema
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def generate_metadata(text, ocr_text=None):
-    """Generate structured metadata using OpenAI’s JSON Schema enforcement."""
-
-    if not text.strip() and not ocr_text:
-        log_message("Skipping metadata generation due to empty text.")
-        return "{}"
-
-    # Merge OCR text if available
-    combined_text = text.strip()
-    if ocr_text:
-        combined_text += f"\n[OCR Extracted Content]\n{ocr_text}"
+def generate_metadata(text):
+    """Generate structured metadata using OpenAI’s JSON Schema enforcement,
+    respecting OUTPUT_EMPTY_FIELDS to include disabled fields as empty values."""
 
     # Get prompt instructions
     prompt_instructions = get_prompt_instructions()
 
-    # Dynamically modify JSON schema based on included fields
-    included_fields = [
+    # Get enabled fields from config
+    enabled_fields = [
         field for field, enabled in METADATA_PROMPT_SETTINGS["include_fields"].items() if enabled
     ]
+
+    # If OUTPUT_EMPTY_FIELDS is True, include all possible fields in the final output
+    if OUTPUT_EMPTY_FIELDS:
+        all_fields = metadata_schema["schema"]["properties"].keys()
+        included_fields = enabled_fields  # AI only extracts enabled fields
+        output_fields = all_fields  # Ensure all fields exist in the output
+    else:
+        included_fields = enabled_fields  # AI extracts only enabled fields
+        output_fields = enabled_fields  # Only enabled fields appear in final output
+
+    # Define the JSON schema for AI (only enabled fields for extraction)
     custom_metadata_schema = {
         "name": "metadata_extraction",
         "strict": True,
         "schema": {
             "type": "object",
-            "properties": {key: metadata_schema["schema"]["properties"][key] for key in included_fields},
-            "required": included_fields,
+            "properties": {
+                key: metadata_schema["schema"]["properties"][key] for key in included_fields
+            },
+            "required": included_fields,  # AI is only required to extract enabled fields
             "additionalProperties": False
         }
     }
+
+    # Ensure disabled fields appear as empty in the final output
+    # Fill disabled fields with ""
+    default_empty_metadata = {key: "" for key in output_fields}
 
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": prompt_instructions},
-                {"role": "user", "content": combined_text}
+                {"role": "user", "content": text}
             ],
             response_format={"type": "json_schema",
                              "json_schema": custom_metadata_schema}
         )
 
-        metadata_json = response.choices[0].message.content
-        log_message(f"Generated structured metadata: {metadata_json}")
+        metadata_json = json.loads(response.choices[0].message.content)
 
-        return metadata_json
+        # Merge AI-extracted metadata with empty defaults
+        final_metadata = {**default_empty_metadata, **metadata_json}
+
+        log_message(
+            f"Generated structured metadata: {json.dumps(final_metadata, indent=4)}")
+        return json.dumps(final_metadata)
 
     except Exception as e:
         log_message(f"Error during OpenAI structured request: {e}")
-        return "{}"
+        # Return empty metadata if AI call fails
+        return json.dumps(default_empty_metadata)

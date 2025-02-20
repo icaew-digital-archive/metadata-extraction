@@ -22,6 +22,9 @@ DOCUMENTS_FOLDER = "/home/digital-archivist/Documents/custom scripts/dublin-core
 OUTPUT_CSV = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_output.csv"
 LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_extraction.log"
 
+# Allows empty fields to be returned, replaced with ""
+OUTPUT_EMPTY_FIELDS = True
+
 # Metadata Extraction Settings
 METADATA_PROMPT_SETTINGS = {
     "description_length_min": 200,  # Max length of description in characters
@@ -38,12 +41,12 @@ METADATA_PROMPT_SETTINGS = {
         "contributor": True,
         "date": True,
         "type": True,
-        "format": True,
+        "format": False,
         "identifier": True,
         "source": True,
         "language": True,
         "relation": True,
-        "coverage": True,
+        "coverage": False,
         "rights": True
     }
 }
