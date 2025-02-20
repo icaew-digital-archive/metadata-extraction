@@ -18,11 +18,6 @@ This is an **experimental system**, aimed at evaluating different techniques for
 
 ---
 
-## **Workflow Overview**
-
-![Data Flow Diagram](flow.png)
-
-
 ## **How It Works**
 
 1️⃣ **Extract text** from PDFs and DOCX files using IBM Docling.  
