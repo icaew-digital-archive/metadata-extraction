@@ -1,7 +1,9 @@
 import os
 import subprocess
+
 import docx2txt
 import textract
+
 from config import log_message
 
 

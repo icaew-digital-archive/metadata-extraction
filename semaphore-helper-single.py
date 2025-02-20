@@ -11,10 +11,11 @@ Usage:
 """
 
 import argparse
-import subprocess
-import re
-import os
 import json
+import os
+import re
+import subprocess
+
 from dotenv import load_dotenv
 
 MAX_TOPICS = 10

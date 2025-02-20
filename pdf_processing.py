@@ -1,8 +1,8 @@
 # pdf_processing.py
 import pdfplumber
-from config import log_message
-
 from docling.document_converter import DocumentConverter
+
+from config import log_message
 
 
 def extract_text_from_pdf(pdf_path):

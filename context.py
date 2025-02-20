@@ -1,5 +1,6 @@
 import json
 import os
+
 from config import log_message
 
 DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), "context.json")

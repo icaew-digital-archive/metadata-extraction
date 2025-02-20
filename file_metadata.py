@@ -1,6 +1,7 @@
+import hashlib
 import os
 import time
-import hashlib
+
 import magic
 
 VALID_MIME_TYPES = {

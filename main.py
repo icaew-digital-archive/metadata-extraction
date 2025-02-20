@@ -1,13 +1,14 @@
-import os
 import csv
 import json
+import os
 from multiprocessing import Pool
+
 from config import *
 from context import load_context
-from pdf_processing import extract_text_from_pdf
 from doc_processing import extract_text_from_doc
-from metadata_generation import generate_metadata
 from file_metadata import get_file_metadata
+from metadata_generation import generate_metadata
+from pdf_processing import extract_text_from_pdf
 
 
 def process_document(document_file):
