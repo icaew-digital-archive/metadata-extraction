@@ -21,11 +21,12 @@ DOCUMENTS_FOLDER = "/home/digital-archivist/Downloads/pdfs"
 OUTPUT_CSV = "metadata_output.csv"
 LOG_FILE = "metadata_extraction.log"
 
-PREFER_FILE_METADATA_FORMAT = False  # Set to False to use OpenAI-detected format
+PREFER_FILE_METADATA_FORMAT = True  # Set to False to use OpenAI-detected format
 
 # Metadata Extraction Settings
 METADATA_PROMPT_SETTINGS = {
-    "description_length": 200,  # Max length of description in characters
+    "description_length_min": 200,  # Max length of description in characters
+    "description_length_max": 500,  # Max length of description in characters
     "verbosity": "detailed",  # Options: 'brief', 'detailed'
 
     # Select which Dublin Core fields should be included in the metadata
@@ -47,6 +48,26 @@ METADATA_PROMPT_SETTINGS = {
         "rights": True
     }
 }
+
+
+# Logging configuration
+log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+file_handler = logging.FileHandler(LOG_FILE)
+file_handler.setFormatter(log_formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+
+def log_message(message):
+    logger.info(message)
+    print(message)
+
 
 # Enable or disable custom classification (can be Semaphore or another method)
 USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
@@ -71,22 +92,3 @@ def custom_classification(file_path):
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         log_message(f"Error running classification for {file_path}: {e}")
         return []  # Return empty list if an error occurs
-
-
-# Logging configuration
-log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler = logging.FileHandler(LOG_FILE)
-file_handler.setFormatter(log_formatter)
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
-
-def log_message(message):
-    logger.info(message)
-    print(message)
