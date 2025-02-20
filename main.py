@@ -42,7 +42,8 @@ def process_document(document_file):
 
         # Ensure format is set correctly based on preference
         if PREFER_FILE_METADATA_FORMAT:
-            structured_metadata["Dublin Core"]["format"] = file_properties.get("format", "Unknown")
+            structured_metadata["Dublin Core"]["format"] = file_properties.get(
+                "format", "Unknown")
 
         return {
             "filename": os.path.basename(document_file),
@@ -56,8 +57,6 @@ def process_document(document_file):
 
 def main():
     """Main execution function."""
-    global load_context
-    context_data = load_context()
 
     document_files = [
         os.path.join(root, file)
