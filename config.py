@@ -70,6 +70,8 @@ def log_message(message):
     print(message)
 
 
+METADATA_CONTEXT_FILE = os.path.join(os.path.dirname(__file__), "context.json")
+
 # Enable or disable custom classification (can be Semaphore or another method)
 USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
 

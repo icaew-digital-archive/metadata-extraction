@@ -1,15 +1,12 @@
 import json
-import os
 
-from config import log_message
-
-DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), "context.json")
+from config import *
 
 
 def load_context():
     """Load Dublin Core metadata definitions from a local JSON file."""
     try:
-        with open(DATA_FILE_PATH, "r", encoding="utf-8") as file:
+        with open(METADATA_CONTEXT_FILE, "r", encoding="utf-8") as file:
             data = json.load(file)
         log_message("Loaded metadata context from local file.")
         return data
