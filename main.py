@@ -14,25 +14,23 @@ from pdf_processing import extract_text_from_pdf
 def process_document(document_file):
     """Process a single document, extracting metadata and file properties."""
     try:
+        file_properties = get_file_metadata(document_file)  # Extract file properties first
         text = ""
-        if document_file.endswith(".pdf"):
+
+        if document_file.endswith((".pdf", ".docx")):
             text = extract_text_from_pdf(document_file)
 
-        elif document_file.endswith((".docx", ".doc")):
-            text = extract_text_from_doc(document_file)
-
         if not text.strip():
-            log_message(
-                f"No text extracted from {document_file} after OCR, skipping metadata generation.")
-            return None
+            log_message(f"No text extracted from {document_file}, returning only file properties.")
+            return {
+                "filename": os.path.basename(document_file),
+                "metadata": {"File Properties": file_properties},
+                "topics": []
+            }
 
-        dublin_core_metadata = json.loads(
-            generate_metadata(text, load_context()))
-        file_properties = get_file_metadata(document_file)
+        dublin_core_metadata = json.loads(generate_metadata(text, load_context()))
 
-        # Run classification if enabled
-        topics = custom_classification(
-            document_file) if USE_CUSTOM_CLASSIFICATION else []
+        topics = custom_classification(document_file) if USE_CUSTOM_CLASSIFICATION else []
 
         structured_metadata = {
             "Dublin Core": dublin_core_metadata,
@@ -40,10 +38,8 @@ def process_document(document_file):
             "File Properties": file_properties
         }
 
-        # Ensure format is set correctly based on preference
         if PREFER_FILE_METADATA_FORMAT:
-            structured_metadata["Dublin Core"]["format"] = file_properties.get(
-                "format", "Unknown")
+            structured_metadata["Dublin Core"]["format"] = file_properties.get("format", "Unknown")
 
         return {
             "filename": os.path.basename(document_file),
@@ -53,6 +49,7 @@ def process_document(document_file):
     except Exception as e:
         log_message(f"Error processing {document_file}: {e}")
         return None
+
 
 
 def main():
