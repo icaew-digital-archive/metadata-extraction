@@ -5,7 +5,7 @@ from multiprocessing import Pool
 
 from config import *
 from context import *
-from doc_processing import extract_text_from_doc
+from doc_processing import *
 from file_metadata import get_file_metadata
 from metadata_generation import generate_metadata
 from pdf_processing import extract_text_from_pdf
@@ -18,8 +18,16 @@ def process_document(document_file):
             document_file)  # Extract file properties first
         text = ""
 
-        if document_file.endswith((".pdf", ".docx", ".jpg", ".png")):
+        if document_file.endswith((".pdf", ".docx")):
             text = extract_text_from_pdf(document_file)
+
+        if document_file.endswith((".doc")):
+            docx_file = convert_doc_to_docx(document_file)
+            text = extract_text_from_pdf(docx_file)
+            if os.path.exists(docx_file):
+                os.remove(docx_file)
+            else:
+                print("The file does not exist")            
 
         if not text.strip():
             log_message(
@@ -54,11 +62,10 @@ def process_document(document_file):
 
 def main():
     """Main execution function."""
-
     document_files = [
         os.path.join(root, file)
         for root, _, files in os.walk(DOCUMENTS_FOLDER)
-        for file in files if file.endswith((".pdf", ".docx", ".jpg", ".png"))
+        for file in files if file.endswith((".pdf", ".docx", ".jpg", ".png", ".doc"))
     ]
 
     log_message(f"Found {len(document_files)} documents")
