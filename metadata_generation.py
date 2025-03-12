@@ -48,5 +48,7 @@ def generate_metadata(text):
 
     except Exception as e:
         log_message(f"Error during OpenAI structured request: {e}")
+        
         # Return empty metadata if AI call fails
-        return json.dumps(default_empty_metadata)
+        default_empty_metadata = {field: "" for field in METADATA_CONTEXT.keys()}
+        return default_empty_metadata
