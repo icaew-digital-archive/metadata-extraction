@@ -22,16 +22,20 @@ OUTPUT_CSV = "/home/digital-archivist/Documents/custom scripts/dublin-core-metad
 LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_extraction.log"
 
 
-# Load metadata context from JSON file
+# Metadata standard selection: "dublin_core", "marc21", or "both"
+METADATA_STANDARD = "dublin_core"  # Change to "dublin_core" or "marc21" as needed
+
 def load_metadata_context():
     try:
         with open("schema.json", "r", encoding="utf-8") as file:
             schema_data = json.load(file)
-            metadata_context = schema_data.get("dublin_core", {})
+            metadata_context = {}
+
+            if METADATA_STANDARD in ["dublin_core", "both"]:
+                metadata_context.update(schema_data.get("dublin_core", {}))
             
-            # Add MARC21 fields if present
-            if "marc21" in schema_data:
-                metadata_context.update(schema_data["marc21"])
+            if METADATA_STANDARD in ["marc21", "both"]:
+                metadata_context.update(schema_data.get("marc21", {}))
             
             return metadata_context
     except (FileNotFoundError, json.JSONDecodeError) as e:

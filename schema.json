@@ -146,6 +146,40 @@
     }
   },
   "marc21": {
+    "001": {
+      "definition": "Control Number",
+      "comment": "Unique identifier assigned to the record.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide a unique identifier for the record."
+    },
+    "008": {
+      "definition": "Fixed-Length Data Elements",
+      "comment": "Contains coded information related to the resource, such as date, language, and format.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Format as a 40-character fixed field."
+    },
+    "020": {
+      "definition": "International Standard Book Number (ISBN)",
+      "comment": "Unique identifier for books.",
+      "type": "string",
+      "required": false,
+      "custom_instructions": "Include ISBN if available."
+    },
+    "100": {
+      "definition": "Main Entry - Personal Name",
+      "comment": "Author or primary creator of the resource.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Personal name",
+          "custom_instructions": "Provide the author's name in 'Last, First' format."
+        }
+      },
+      "required": ["a"]
+    },
     "245": {
       "definition": "Title Statement",
       "comment": "Contains the title and statement of responsibility for the resource.",
@@ -167,12 +201,115 @@
           "custom_instructions": "Include authorship or attribution statements."
         }
       },
-      "required": ["a", "b", "c"],
-      "custom_instructions": "Ensure compliance with MARC21 standards."
+      "required": ["a", "b", "c"]
+    },
+    "250": {
+      "definition": "Edition Statement",
+      "comment": "Indicates the edition of the work.",
+      "type": "string",
+      "required": false,
+      "custom_instructions": "Include edition information if applicable."
+    },
+    "260": {
+      "definition": "Publication, Distribution, etc. (Pre-2009)",
+      "comment": "Details about where, by whom, and when the resource was published.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Place of publication",
+          "custom_instructions": "Provide city and country."
+        },
+        "b": {
+          "type": "string",
+          "definition": "Publisher",
+          "custom_instructions": "Include the full name of the publisher."
+        },
+        "c": {
+          "type": "string",
+          "definition": "Date of publication",
+          "custom_instructions": "Ensure the date follows the YYYY format."
+        }
+      },
+      "required": ["a", "b", "c"]
+    },
+    "264": {
+      "definition": "Production, Publication, Distribution, Manufacture, and Copyright Notice (Post-2009)",
+      "comment": "Replaces field 260 for newer records.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Place of publication",
+          "custom_instructions": "Provide city and country."
+        },
+        "b": {
+          "type": "string",
+          "definition": "Publisher",
+          "custom_instructions": "Include the full name of the publisher."
+        },
+        "c": {
+          "type": "string",
+          "definition": "Date of publication",
+          "custom_instructions": "Ensure the date follows the YYYY format."
+        }
+      },
+      "required": ["a", "b", "c"]
+    },
+    "300": {
+      "definition": "Physical Description",
+      "comment": "Provides details about the resource's physical form.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Extent",
+          "custom_instructions": "Number of pages, volumes, or physical description."
+        },
+        "b": {
+          "type": "string",
+          "definition": "Other physical details",
+          "custom_instructions": "Illustrations, maps, etc."
+        },
+        "c": {
+          "type": "string",
+          "definition": "Dimensions",
+          "custom_instructions": "Size of the item in cm."
+        }
+      },
+      "required": ["a"]
+    },
+    "490": {
+      "definition": "Series Statement",
+      "comment": "Identifies the series to which the resource belongs.",
+      "type": "string",
+      "required": false,
+      "custom_instructions": "Include series title if applicable."
+    },
+    "500": {
+      "definition": "General Note",
+      "comment": "Provides additional descriptive information.",
+      "type": "string",
+      "required": false,
+      "custom_instructions": "Include any relevant notes."
+    },
+    "505": {
+      "definition": "Formatted Contents Note",
+      "comment": "A table of contents or structured contents listing.",
+      "type": "string",
+      "required": false,
+      "custom_instructions": "Include table of contents if available."
+    },
+    "520": {
+      "definition": "Summary, etc.",
+      "comment": "A brief summary of the resource.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide a concise abstract."
     },
     "650": {
-      "definition": "Subject Added Entry",
-      "comment": "Contains subject terms describing the content of the resource.",
+      "definition": "Subject Added Entry - Topical Term",
+      "comment": "Describes the main topics of the resource.",
       "type": "object",
       "properties": {
         "a": {
@@ -196,8 +333,33 @@
           "custom_instructions": "Indicate a geographic region if relevant."
         }
       },
-      "required": ["a"],
-      "custom_instructions": "Follow MARC21 cataloging rules."
+      "required": ["a"]
+    },
+    "700": {
+      "definition": "Added Entry - Personal Name",
+      "comment": "Contains names of contributors other than the main author.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Personal name",
+          "custom_instructions": "Provide additional author names in 'Last, First' format."
+        }
+      },
+      "required": []
+    },
+    "856": {
+      "definition": "Electronic Location and Access",
+      "comment": "Provides a link to an electronic resource.",
+      "type": "object",
+      "properties": {
+        "u": {
+          "type": "string",
+          "definition": "Uniform Resource Identifier (URI)",
+          "custom_instructions": "Provide a valid URL."
+        }
+      },
+      "required": ["u"]
     }
   }
 }
