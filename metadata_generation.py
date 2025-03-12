@@ -23,6 +23,26 @@ def generate_metadata(text):
         "additionalProperties": False
     }
 
+    # response_format = {
+    #     "type": "json_schema",
+    #     "json_schema": {
+    #         "name": "metadata_extraction",
+    #         "schema": custom_metadata_schema,
+    #     },
+    # }
+
+    response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "metadata_extraction",
+                "schema": custom_metadata_schema,
+                "strict": True
+            }
+        }
+
+    print('CUSTOM METADATA SCHEMA:')
+    print(json.dumps(response_format, indent=4, ensure_ascii=False))
+
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
@@ -30,7 +50,7 @@ def generate_metadata(text):
                 {"role": "system", "content": get_prompt_instructions()},
                 {"role": "user", "content": text}
             ],
-            response_format={"type": "json_object"}
+        response_format=response_format
         )
 
         metadata_json = json.loads(response.choices[0].message.content)
