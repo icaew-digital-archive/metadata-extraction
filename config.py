@@ -33,7 +33,7 @@ def load_metadata_context():
             metadata_context = {}
 
             # Only load the selected metadata standard
-            if METADATA_STANDARD == "both":
+            if METADATA_STANDARD == "dublin_core":
                 metadata_context = schema_data.get("dublin_core", {})
 
             elif METADATA_STANDARD == "marc21":
