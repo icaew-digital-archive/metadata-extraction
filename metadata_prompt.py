@@ -2,7 +2,7 @@ from config import METADATA_CONTEXT, METADATA_STANDARD
 
 
 def get_prompt_instructions():
-    """Generate metadata extraction prompt instructions."""
+    """Generate metadata extraction prompt instructions with explicit definitions for fields."""
 
     metadata_guidelines = []
 
@@ -11,30 +11,29 @@ def get_prompt_instructions():
 
         # ✅ Handle flat fields (Dublin Core & MARC21 single-level fields)
         if "definition" in info:
-            guideline = f"- **{field}**: {info['definition']}"
+            guideline = f"- **{field}**"
+            guideline += f"\n  - 🟢 **Definition:** {info['definition']}"
             if info.get("comment"):
-                guideline += f" ({info['comment']})"
+                guideline += f"\n  - 🟡 **Comment:** {info['comment']}"
             if "custom_instructions" in info:
-                guideline += f" → **{info['custom_instructions']}**"
+                guideline += f"\n  - 🔴 **Custom Instructions:** {info['custom_instructions']}"
             field_guidelines.append(guideline)
 
         # ✅ Handle nested MARC21 fields
         if "properties" in info:
             for sub_key, sub_value in info["properties"].items():
                 if isinstance(sub_value, dict) and "definition" in sub_value:
-                    guideline = f"  - **{field} ({sub_key})**: {sub_value['definition']}"
+                    guideline = f"  - **{field} ({sub_key})**"
+                    guideline += f"\n    - 🟢 **Definition:** {sub_value['definition']}"
                     if sub_value.get("comment"):
-                        guideline += f" ({sub_value['comment']})"
+                        guideline += f"\n    - 🟡 **Comment:** {sub_value['comment']}"
                     if "custom_instructions" in sub_value:
-                        guideline += f" → **{sub_value['custom_instructions']}**"
+                        guideline += f"\n    - 🔴 **Custom Instructions:** {sub_value['custom_instructions']}"
                     field_guidelines.append(guideline)
 
         metadata_guidelines.extend(field_guidelines)
 
     metadata_guidelines_str = "\n".join(metadata_guidelines)
-
-    # Debugging: Print output to verify correct formatting
-    print("DEBUG: Metadata Guidelines\n", metadata_guidelines_str)
 
     # Get required fields for metadata extraction
     required_fields = [
@@ -49,7 +48,7 @@ def get_prompt_instructions():
         else "both Dublin Core and MARC21"
     )
 
-    # ✅ Final structured prompt
+    # ✅ Final structured prompt with explicit section definitions
     prompt = f"""
 Extract structured metadata from the document text using the **{standard_label}** standard.
 
@@ -57,8 +56,13 @@ Extract structured metadata from the document text using the **{standard_label}*
 {required_fields_str}  
 
 ### **Guidelines for Extraction**  
-Follow the instructions under `"definition"`, `"comment"`, and especially `"custom_instructions"` for each metadata element.  
-📌 **"`custom_instructions` is the most important—you MUST follow these precisely.**  
+Follow the instructions under `"Definition"`, `"Comment"`, and `"Custom Instructions"` for each metadata element.  
+📌 **"`Custom Instructions` is the most important—you MUST follow these precisely.**  
+
+#### **Metadata Field Structure**
+- 🟢 **Definition**: A concise explanation of what the metadata element represents.  
+- 🟡 **Comment**: Additional guidance, best practices, or context for how to interpret or apply the element.  
+- 🔴 **Custom Instructions**: Strict rules that MUST be followed exactly when extracting metadata.  
 
 {metadata_guidelines_str}
 
@@ -70,7 +74,7 @@ Follow the instructions under `"definition"`, `"comment"`, and especially `"cust
 
 ---
 """
-    
+
     print('PROMPT:\n', prompt)  # Debugging output
 
     return prompt
