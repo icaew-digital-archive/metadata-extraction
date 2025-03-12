@@ -7,6 +7,7 @@ from metadata_schema import metadata_schema
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+
 def generate_metadata(text):
     """Generate structured metadata using OpenAI’s JSON Schema enforcement."""
 
@@ -37,11 +38,14 @@ def generate_metadata(text):
         # ✅ Ensure all required fields are included, even if OpenAI omitted them
         for field in required_fields:
             if field not in metadata_json:
-                metadata_json[field] = ""  # Fill missing fields with empty string
+                # Fill missing fields with empty string
+                metadata_json[field] = ""
 
-        log_message(f"Generated structured metadata: {json.dumps(metadata_json, indent=4)}")
+        log_message(
+            f"Generated structured metadata: {json.dumps(metadata_json, indent=4)}")
         return json.dumps(metadata_json)
 
     except Exception as e:
         log_message(f"Error during OpenAI structured request: {e}")
-        return json.dumps({field: "" for field in METADATA_CONTEXT.keys()})  # Ensure output is JSON
+        # Ensure output is JSON
+        return json.dumps({field: "" for field in METADATA_CONTEXT.keys()})
