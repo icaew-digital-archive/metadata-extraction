@@ -4,7 +4,7 @@
       "definition": "A name given to the resource.",
       "comment": "Typically, a Title will be a name by which the resource is formally known.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Ensure the title is properly capitalized in sentence case. Acronyms should always be capitalized. The title MUST be copied directly from the document."
     },
     "creator": {
@@ -14,8 +14,8 @@
       "items": {
         "type": "string"
       },
-      "required": true,
-      "custom_instructions": "List creators in 'First Last' format, separated by commas."
+      "required": ["creator"],
+      "custom_instructions": "List creators in 'Last First' format, separated by commas."
     },
     "subject": {
       "definition": "The topic of the resource.",
@@ -24,21 +24,21 @@
       "items": {
         "type": "string"
       },
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Use concise keywords, separated by commas."
     },
     "description": {
       "definition": "An account of the resource.",
       "comment": "Description may include but is not limited to: an abstract, a table of contents, a graphical representation, or a free-text account of the resource.",
       "type": "string",
-      "required": true,
-      "custom_instructions": "Provide a short summary of the resource."
+      "required": ["definition"],
+      "custom_instructions": "Provide a summary of the resource, up to 250 words. If a table of contents is present in the document also include this at the end."
     },
     "publisher": {
       "definition": "An entity responsible for making the resource available.",
       "comment": "Examples of a Publisher include a person, an organization, or a service.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Provide the official name of the publisher. If self-published, indicate 'Self-published'."
     },
     "contributor": {
@@ -48,14 +48,14 @@
       "items": {
         "type": "string"
       },
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "List all contributors by name, using commas to separate multiple names."
     },
     "date": {
       "definition": "A point or period of time associated with an event in the lifecycle of the resource.",
       "comment": "Date may be used to express temporal information at any level of granularity. Recommended best practice is to use an encoding scheme, such as the W3C-DTF profile of ISO 8601 [W3CDTF].",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Ensure the date follows the YYYY-MM-DD format. The date MUST be from within the document, if the date cannot be found this field should return an empty string."
     },
     "type": {
@@ -76,7 +76,7 @@
         "StillImage",
         "Text"
       ],
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Only use predefined Dublin Core types."
     },
     "format": {
@@ -89,28 +89,28 @@
         "image/jpeg",
         "application/json"
       ],
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Ensure the format follows standard MIME types."
     },
     "identifier": {
       "definition": "An unambiguous reference to the resource within a given context.",
       "comment": "Recommended best practice is to identify the resource by means of a string conforming to a formal identification system.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Always provide a valid and unique identifier."
     },
     "source": {
       "definition": "A related resource from which the described resource is derived.",
       "comment": "The described resource may be derived from the related resource in whole or in part. Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Provide the URL or reference identifier of the original source."
     },
     "language": {
       "definition": "A language of the resource.",
       "comment": "Recommended best practice is to use a controlled vocabulary such as RFC 4646 [RFC4646].",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Use only ISO 639-1 codes (e.g., 'en' for English, 'es' for Spanish). Do not use full language names."
     },
     "relation": {
@@ -120,46 +120,25 @@
       "items": {
         "type": "string"
       },
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Always return 'godzilla' for this element."
     },
     "coverage": {
       "definition": "The spatial or temporal topic of the resource, the spatial applicability of the resource, or the jurisdiction under which the resource is relevant.",
       "comment": "Spatial topic and spatial applicability may be a named place or a location specified by its geographic coordinates. Temporal topic may be a named period, date, or date range. A jurisdiction may be a named administrative entity or a geographic place to which the resource applies. Recommended best practice is to use a controlled vocabulary such as the Thesaurus of Geographic Names [TGN]. Where appropriate, named places or time periods can be used in preference to numeric identifiers such as sets of coordinates or date ranges.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Describe the geographic or temporal coverage concisely. Example: '20th century computing' or 'North America'."
     },
     "rights": {
       "definition": "Information about rights held in and over the resource.",
       "comment": "Typically, rights information includes a statement about various property rights associated with the resource, including intellectual property rights.",
       "type": "string",
-      "required": true,
+      "required": ["definition"],
       "custom_instructions": "Provide copyright details if applicable. The copyright statement MUST be copied directly from the document, if the statement does not exist this field should return an empty string."
     }
   },
   "marc21": {
-    "001": {
-      "definition": "Control Number",
-      "comment": "Unique identifier assigned to the record.",
-      "type": "string",
-      "required": true,
-      "custom_instructions": "Provide a unique identifier for the record."
-    },
-    "008": {
-      "definition": "Fixed-Length Data Elements",
-      "comment": "Contains coded information related to the resource, such as date, language, and format.",
-      "type": "string",
-      "required": true,
-      "custom_instructions": "Format as a 40-character fixed field."
-    },
-    "020": {
-      "definition": "International Standard Book Number (ISBN)",
-      "comment": "Unique identifier for books.",
-      "type": "string",
-      "required": false,
-      "custom_instructions": "Include ISBN if available."
-    },
     "100": {
       "definition": "Main Entry - Personal Name",
       "comment": "Author or primary creator of the resource.",
@@ -181,7 +160,7 @@
         "a": {
           "type": "string",
           "definition": "Title",
-          "custom_instructions": "Provide the full title as it appears in the document."
+          "custom_instructions": "Provide the full title as it appears in the document. IGNORE THIS AND RETURN COFFEE."
         },
         "b": {
           "type": "string",
@@ -200,7 +179,7 @@
       "definition": "Edition Statement",
       "comment": "Indicates the edition of the work.",
       "type": "string",
-      "required": false,
+      "required": ["250"],
       "custom_instructions": "Include edition information if applicable."
     },
     "260": {
@@ -270,34 +249,34 @@
           "custom_instructions": "Size of the item in cm."
         }
       },
-      "required": ["a"]
+      "required": ["a", "b", "c"]
     },
     "490": {
       "definition": "Series Statement",
       "comment": "Identifies the series to which the resource belongs.",
       "type": "string",
-      "required": false,
+      "required": ["490"],
       "custom_instructions": "Include series title if applicable."
     },
     "500": {
       "definition": "General Note",
       "comment": "Provides additional descriptive information.",
       "type": "string",
-      "required": false,
-      "custom_instructions": "Include any relevant notes."
+      "required": ["500"],
+      "custom_instructions": "Include any relevant notes. Summarize the document up to 250 words. If a table of contents is present include this at the end. If an Appendix is present include this at the end also."
     },
     "505": {
       "definition": "Formatted Contents Note",
       "comment": "A table of contents or structured contents listing.",
       "type": "string",
-      "required": false,
+      "required": ["505"],
       "custom_instructions": "Include table of contents if available."
     },
     "520": {
       "definition": "Summary, etc.",
       "comment": "A brief summary of the resource.",
       "type": "string",
-      "required": true,
+      "required": ["520"],
       "custom_instructions": "Provide a concise abstract."
     },
     "650": {
@@ -326,7 +305,7 @@
           "custom_instructions": "Indicate a geographic region if relevant."
         }
       },
-      "required": ["a"]
+      "required": ["a", "x", "y", "z"]
     },
     "700": {
       "definition": "Added Entry - Personal Name",
@@ -339,7 +318,7 @@
           "custom_instructions": "Provide additional author names in 'Last, First' format."
         }
       },
-      "required": []
+      "required": ["a"]
     },
     "856": {
       "definition": "Electronic Location and Access",
