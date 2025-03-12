@@ -136,13 +136,6 @@
       "type": "string",
       "required": true,
       "custom_instructions": "Provide copyright details if applicable. The copyright statement MUST be copied directly from the document, if the statement does not exist this field should return an empty string."
-    },
-    "owl": {
-      "definition": "This is a test element. The value in here should be random owl breed.",
-      "comment": "",
-      "type": "string",
-      "required": true,
-      "custom_instructions": ""
     }
   },
   "marc21": {
