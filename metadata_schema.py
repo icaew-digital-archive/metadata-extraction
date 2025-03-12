@@ -1,3 +1,4 @@
+import json
 from config import METADATA_CONTEXT
 
 metadata_schema = {
@@ -28,3 +29,7 @@ for field, details in METADATA_CONTEXT.items():
 
     if "required" in details and details["required"]:
         metadata_schema["schema"]["required"].append(field)
+
+# Print metadata schema in a pretty format
+print('OPENAI STRUCTURED OUTPUT:')
+print(json.dumps(metadata_schema, indent=4, ensure_ascii=False))
