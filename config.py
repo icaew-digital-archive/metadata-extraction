@@ -1,4 +1,3 @@
-# config.py
 import json
 import logging
 import os
@@ -22,35 +21,17 @@ DOCUMENTS_FOLDER = "/home/digital-archivist/Documents/custom scripts/dublin-core
 OUTPUT_CSV = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_output.csv"
 LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadata-extraction/test-and-output-files/metadata_extraction.log"
 
-# Allows empty fields to be returned, replaced with ""
-OUTPUT_EMPTY_FIELDS = True
 
-# Metadata Extraction Settings
-METADATA_PROMPT_SETTINGS = {
-    "description_length_min": 200,  # Max length of description in characters
-    "description_length_max": 500,  # Max length of description in characters
-    "verbosity": "detailed",  # Options: 'brief', 'detailed'
+# Load metadata context from JSON file
+def load_metadata_context():
+    try:
+        with open("schema.json", "r", encoding="utf-8") as file:
+            return json.load(file)["dublin_core"]
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading metadata context: {e}")
+        return {}
 
-    # Select which Dublin Core fields should be included in the metadata
-    "include_fields": {
-        "title": True,
-        "creator": True,
-        "subject": True,
-        "description": True,
-        "publisher": True,
-        "contributor": True,
-        "date": True,
-        "type": True,
-        "format": False,
-        "identifier": True,
-        "source": True,
-        "language": True,
-        "relation": True,
-        "coverage": False,
-        "rights": True
-    }
-}
-
+METADATA_CONTEXT = load_metadata_context()
 
 # Logging configuration
 log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -65,20 +46,14 @@ logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-
 def log_message(message):
     logger.info(message)
     print(message)
 
-
 METADATA_CONTEXT_FILE = os.path.join(os.path.dirname(__file__), "context.json")
-
 
 # Enable or disable custom classification (can be Semaphore or another method)
 USE_CUSTOM_CLASSIFICATION = True  # Set to False to disable classification
-
-# Default classification function (Semaphore)
-
 
 def custom_classification(file_path):
     """User-defined classification function. Default: Uses Semaphore."""
