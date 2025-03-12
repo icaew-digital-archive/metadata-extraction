@@ -187,3 +187,198 @@
     }
   }
 }
+
+
+
+
+
+
+{
+  "dublin_core": {
+    "title": {
+      "definition": "A name given to the resource.",
+      "comment": "Typically, a Title will be a name by which the resource is formally known.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Ensure the title is properly capitalized in sentence case. Acronyms should always be capitalized. The title MUST be copied directly from the document."
+    },
+    "creator": {
+      "definition": "An entity primarily responsible for making the resource.",
+      "comment": "Examples of a Creator include a person, an organization, or a service.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "required": true,
+      "custom_instructions": "List creators in 'First Last' format, separated by commas."
+    },
+    "subject": {
+      "definition": "The topic of the resource.",
+      "comment": "Typically, a subject will be expressed as keywords, key phrases, or classification codes that describe the topic of the resource. Recommended best practice is to use a controlled vocabulary.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "required": true,
+      "custom_instructions": "Use concise keywords, separated by commas."
+    },
+    "description": {
+      "definition": "An account of the resource.",
+      "comment": "Description may include but is not limited to: an abstract, a table of contents, a graphical representation, or a free-text account of the resource.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide a short summary of the resource."
+    },
+    "publisher": {
+      "definition": "An entity responsible for making the resource available.",
+      "comment": "Examples of a Publisher include a person, an organization, or a service.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide the official name of the publisher. If self-published, indicate 'Self-published'."
+    },
+    "contributor": {
+      "definition": "An entity responsible for making contributions to the resource.",
+      "comment": "Examples of a Contributor include a person, an organization, or a service.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "required": true,
+      "custom_instructions": "List all contributors by name, using commas to separate multiple names."
+    },
+    "date": {
+      "definition": "A point or period of time associated with an event in the lifecycle of the resource.",
+      "comment": "Date may be used to express temporal information at any level of granularity. Recommended best practice is to use an encoding scheme, such as the W3C-DTF profile of ISO 8601 [W3CDTF].",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Ensure the date follows the YYYY-MM-DD format. The date MUST be from within the document, if the date cannot be found this field should return an empty string."
+    },
+    "type": {
+      "definition": "The nature or genre of the resource.",
+      "comment": "Recommended best practice is to use a controlled vocabulary such as the DCMI Type Vocabulary [DCMITYPE]. To describe the file format, physical medium, or dimensions of the resource, use the Format element.",
+      "type": "string",
+      "enum": [
+        "Collection", "Dataset", "Event", "Image", "InteractiveResource",
+        "MovingImage", "PhysicalObject", "Service", "Software",
+        "Sound", "StillImage", "Text"
+      ],
+      "required": true,
+      "custom_instructions": "Only use predefined Dublin Core types."
+    },
+    "format": {
+      "definition": "The file format, physical medium, or dimensions of the resource.",
+      "comment": "Examples of dimensions include size and duration. Recommended best practice is to use a controlled vocabulary such as the list of Internet Media Types [MIME].",
+      "type": "string",
+      "enum": ["application/pdf", "text/plain", "image/jpeg", "application/json"],
+      "required": true,
+      "custom_instructions": "Ensure the format follows standard MIME types."
+    },
+    "identifier": {
+      "definition": "An unambiguous reference to the resource within a given context.",
+      "comment": "Recommended best practice is to identify the resource by means of a string conforming to a formal identification system.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Always provide a valid and unique identifier."
+    },
+    "source": {
+      "definition": "A related resource from which the described resource is derived.",
+      "comment": "The described resource may be derived from the related resource in whole or in part. Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide the URL or reference identifier of the original source."
+    },
+    "language": {
+      "definition": "A language of the resource.",
+      "comment": "Recommended best practice is to use a controlled vocabulary such as RFC 4646 [RFC4646].",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Use only ISO 639-1 codes (e.g., 'en' for English, 'es' for Spanish). Do not use full language names."
+    },
+    "relation": {
+      "definition": "A related resource.",
+      "comment": "Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "required": true,
+      "custom_instructions": "Always return 'godzilla' for this element."
+    },
+    "coverage": {
+      "definition": "The spatial or temporal topic of the resource, the spatial applicability of the resource, or the jurisdiction under which the resource is relevant.",
+      "comment": "Spatial topic and spatial applicability may be a named place or a location specified by its geographic coordinates. Temporal topic may be a named period, date, or date range. A jurisdiction may be a named administrative entity or a geographic place to which the resource applies. Recommended best practice is to use a controlled vocabulary such as the Thesaurus of Geographic Names [TGN]. Where appropriate, named places or time periods can be used in preference to numeric identifiers such as sets of coordinates or date ranges.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Describe the geographic or temporal coverage concisely. Example: '20th century computing' or 'North America'."
+    },
+    "rights": {
+      "definition": "Information about rights held in and over the resource.",
+      "comment": "Typically, rights information includes a statement about various property rights associated with the resource, including intellectual property rights.",
+      "type": "string",
+      "required": true,
+      "custom_instructions": "Provide copyright details if applicable. The copyright statement MUST be copied directly from the document, if the statement does not exist this field should return an empty string."
+    },
+    "owl": {
+      "definition": "This is a test element. The value in here should be random owl breed.",
+      "comment": "",
+      "type": "string",
+      "required": true,
+      "custom_instructions": ""
+    }
+  },
+  "marc21": {
+    "245": {
+      "definition": "Title Statement",
+      "comment": "Contains the title and statement of responsibility for the resource.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Title",
+          "custom_instructions": "Provide the full title as it appears in the document."
+        },
+        "b": {
+          "type": "string",
+          "definition": "Remainder of title",
+          "custom_instructions": "If applicable, provide the subtitle or additional title information."
+        },
+        "c": {
+          "type": "string",
+          "definition": "Statement of responsibility",
+          "custom_instructions": "Include authorship or attribution statements."
+        }
+      },
+      "required": ["a", "b", "c"],
+      "custom_instructions": "Ensure compliance with MARC21 standards."
+    },
+    "650": {
+      "definition": "Subject Added Entry",
+      "comment": "Contains subject terms describing the content of the resource.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Topical term or geographic name",
+          "custom_instructions": "Provide a controlled vocabulary term."
+        },
+        "x": {
+          "type": "string",
+          "definition": "General subdivision",
+          "custom_instructions": "Specify a subdivision, if applicable."
+        },
+        "y": {
+          "type": "string",
+          "definition": "Chronological subdivision",
+          "custom_instructions": "Include a time period if relevant."
+        },
+        "z": {
+          "type": "string",
+          "definition": "Geographic subdivision",
+          "custom_instructions": "Indicate a geographic region if relevant."
+        }
+      },
+      "required": ["a"],
+      "custom_instructions": "Follow MARC21 cataloging rules."
+    }
+  }
+}
