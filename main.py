@@ -27,7 +27,7 @@ def process_document(document_file):
             if os.path.exists(docx_file):
                 os.remove(docx_file)
             else:
-                print("The file does not exist")            
+                print("The file does not exist")
 
         if not text.strip():
             log_message(
@@ -45,7 +45,7 @@ def process_document(document_file):
             document_file) if USE_CUSTOM_CLASSIFICATION else []
 
         structured_metadata = {
-            "Dublin Core": dublin_core_metadata,
+            "OpenAI Response": dublin_core_metadata,
             "Topics": topics,
             "File Properties": file_properties
         }
