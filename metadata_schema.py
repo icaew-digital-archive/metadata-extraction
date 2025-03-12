@@ -11,13 +11,20 @@ metadata_schema = {
     }
 }
 
-# Convert Dublin Core context into schema dynamically
+# Convert Dublin Core & MARC21 into schema dynamically
 for field, details in METADATA_CONTEXT.items():
-    prop = {key: value for key, value in details.items() if key not in ["custom_instructions"]}
-    
-    # Add property to schema
+    if isinstance(details, dict) and "properties" in details:
+        # MARC21 fields (nested structure)
+        prop = {
+            "type": "object",
+            "properties": details["properties"],
+            "required": details.get("required", []),
+        }
+    else:
+        # Standard Dublin Core fields
+        prop = details
+
     metadata_schema["schema"]["properties"][field] = prop
-    
-    # Handle required fields dynamically
-    if prop.pop("required", False):
+
+    if "required" in details and details["required"]:
         metadata_schema["schema"]["required"].append(field)

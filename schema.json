@@ -130,5 +130,60 @@
       "required": true,
       "custom_instructions": ""
     }
+  },
+  "marc21": {
+    "245": {
+      "definition": "Title Statement",
+      "comment": "Contains the title and statement of responsibility for the resource.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Title",
+          "custom_instructions": "Provide the full title as it appears in the document."
+        },
+        "b": {
+          "type": "string",
+          "definition": "Remainder of title",
+          "custom_instructions": "If applicable, provide the subtitle or additional title information."
+        },
+        "c": {
+          "type": "string",
+          "definition": "Statement of responsibility",
+          "custom_instructions": "Include authorship or attribution statements."
+        }
+      },
+      "required": ["a", "b", "c"],
+      "custom_instructions": "Ensure compliance with MARC21 standards."
+    },
+    "650": {
+      "definition": "Subject Added Entry",
+      "comment": "Contains subject terms describing the content of the resource.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "definition": "Topical term or geographic name",
+          "custom_instructions": "Provide a controlled vocabulary term."
+        },
+        "x": {
+          "type": "string",
+          "definition": "General subdivision",
+          "custom_instructions": "Specify a subdivision, if applicable."
+        },
+        "y": {
+          "type": "string",
+          "definition": "Chronological subdivision",
+          "custom_instructions": "Include a time period if relevant."
+        },
+        "z": {
+          "type": "string",
+          "definition": "Geographic subdivision",
+          "custom_instructions": "Indicate a geographic region if relevant."
+        }
+      },
+      "required": ["a"],
+      "custom_instructions": "Follow MARC21 cataloging rules."
+    }
   }
 }

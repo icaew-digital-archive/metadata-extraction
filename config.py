@@ -26,12 +26,20 @@ LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadat
 def load_metadata_context():
     try:
         with open("schema.json", "r", encoding="utf-8") as file:
-            return json.load(file)["dublin_core"]
+            schema_data = json.load(file)
+            metadata_context = schema_data.get("dublin_core", {})
+            
+            # Add MARC21 fields if present
+            if "marc21" in schema_data:
+                metadata_context.update(schema_data["marc21"])
+            
+            return metadata_context
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error loading metadata context: {e}")
         return {}
 
 METADATA_CONTEXT = load_metadata_context()
+
 
 # Logging configuration
 log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
