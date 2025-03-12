@@ -1,38 +1,44 @@
-# **AI Dublin Core Metadata Extraction [EXPERIMENTAL]**
+# **AI Dublin Core Metadata Extraction [EXPERIMENTAL]**  
+_Automated metadata extraction and classification for document processing_
 
-## **Project Overview**
+## **Overview**
 
-This project explores the automation of **document metadata extraction, classification, validation, and structuring** based on the [Dublin Core Metadata Standard](https://www.dublincore.org/specifications/dublin-core/dces/). It processes **PDFs and Word documents** using IBM's [**Docling**](https://github.com/DS4SD/docling) for text extraction and **OpenAI’s GPT-4** for AI-driven metadata generation.
+This project automates **document metadata extraction, classification, and structuring** using **OpenAI’s GPT-4** and the **Dublin Core Metadata Standard**. It processes **PDFs and Word documents**, extracts metadata, and optionally classifies topics using **Semaphore**.
 
-This is an **experimental system**, aimed at evaluating different techniques for metadata extraction and enrichment, and is not yet intended for production use.
-
----
-
-## **Current Capabilities**
-
-✅ **Text Extraction** – Uses **IBM Docling** for PDFs and Word documents.  
-✅ **AI-Powered Metadata Generation** – Leverages **OpenAI’s GPT-4** to extract and structure metadata into Dublin Core fields.  
-✅ **Context-Based Metadata Mapping** – Loads metadata definitions dynamically from a structured **JSON file** (`context.json`).  
-✅ **Structured Output** – Outputs metadata in **JSON and CSV**, making it compatible with archives and databases.  
-✅ **Parallel Processing Support** – Uses **multiprocessing** for processing large numbers of documents efficiently.  
-✅ **External Processing** – Currently integrating with **Semaphore** for topic classification.
+> **⚠ Experimental:** This system is under development and not yet production-ready.
 
 ---
 
-## **How It Works**
+## **Features**
+✅ **Multi-format Support** – Processes PDFs (`.pdf`), Word documents (`.docx`, `.doc`), and images (`.jpg`, `.png`).  
+✅ **AI-Driven Metadata Extraction** – Uses **GPT-4** to generate **Dublin Core** metadata.  
+✅ **File Metadata Extraction** – Captures file properties (size, format, hash, timestamps).  
+✅ **Optional Topic Classification** – Integrates with **Semaphore** for topic-based classification.  
+✅ **Parallel Processing** – Uses multiprocessing for efficient document handling.  
+✅ **Structured Output** – Saves metadata in **JSON and CSV** formats.  
+✅ **Logging** – Tracks processing steps and errors.  
 
-1️⃣ **Extract high-fidelity text** from PDFs and DOCX files using **IBM Docling**, ensuring accurate and structured content retrieval, even from complex document layouts.  
-2️⃣ **Generate metadata** with **OpenAI’s GPT-4**, leveraging structured **Dublin Core mappings** for precise and meaningful metadata extraction.  
-3️⃣ **Perform advanced topic classification** with **Semaphore’s API** (if enabled), enabling enhanced categorization and retrieval of documents.  
-4️⃣ **Store results** in structured **JSON/CSV formats**, making metadata easily accessible for further processing, archiving, or analysis.
-
----
-
-## **Current Development Focus**
-
-- Improving **accuracy and consistency** of metadata extraction.
-- Evaluating the effectiveness of **AI-driven metadata structuring**.
-- Testing **performance optimizations** for handling large-scale document processing.
-- Exploring additional **classification methods** beyond Semaphore.
+_(MARC21 support is experimental and disabled by default.)_
 
 ---
+
+## **Example Metadata Output (JSON)**
+
+```json
+{
+    "filename": "example.pdf",
+    "metadata": {
+        "title": "Understanding AI Ethics",
+        "creator": ["John Doe"],
+        "subject": ["Artificial Intelligence", "Ethics"],
+        "description": "A discussion on AI ethics...",
+        "publisher": "AI Research Institute",
+        "date": "2023-04-15",
+        "format": "application/pdf",
+        "language": "en",
+        "identifier": "doi:10.1234/ai-ethics",
+        "rights": "© 2023 AI Research Institute"
+    },
+    "topics": ["Machine Learning", "AI Governance"]
+}
+```
