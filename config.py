@@ -23,10 +23,7 @@ LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadat
 
 
 # Metadata standard selection: "dublin_core", "marc21"
-METADATA_STANDARD = "marc21"  # Change to "dublin_core", "marc21"
-
-
-
+METADATA_STANDARD = "dublin_core"  # Change to "dublin_core", "marc21"
 
 
 # Logging configuration
