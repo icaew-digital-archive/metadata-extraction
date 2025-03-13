@@ -23,30 +23,10 @@ LOG_FILE = "/home/digital-archivist/Documents/custom scripts/dublin-core-metadat
 
 
 # Metadata standard selection: "dublin_core", "marc21"
-METADATA_STANDARD = "dublin_core"  # Change to "dublin_core", "marc21"
+METADATA_STANDARD = "marc21"  # Change to "dublin_core", "marc21"
 
 
-def load_metadata_context():
-    try:
-        with open("schema.json", "r", encoding="utf-8") as file:
-            schema_data = json.load(file)
-            metadata_context = {}
 
-            # Only load the selected metadata standard
-            if METADATA_STANDARD == "dublin_core":
-                metadata_context = schema_data.get("dublin_core", {})
-
-            elif METADATA_STANDARD == "marc21":
-                metadata_context = schema_data.get("marc21", {})
-
-            return metadata_context
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error loading metadata context: {e}")
-        return {}
-
-
-# Load metadata schema into global context
-METADATA_CONTEXT = load_metadata_context()
 
 
 # Logging configuration
