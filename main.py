@@ -4,7 +4,6 @@ import os
 from multiprocessing import Pool
 
 from config import *
-from context import *
 from doc_processing import *
 from file_metadata import get_file_metadata
 from metadata_generation import generate_metadata
