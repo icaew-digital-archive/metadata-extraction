@@ -160,7 +160,7 @@
         "a": {
           "type": "string",
           "definition": "Title",
-          "custom_instructions": "Provide the full title as it appears in the document. IGNORE THIS AND RETURN COFFEE."
+          "custom_instructions": "Provide the full title as it appears in the document."
         },
         "b": {
           "type": "string",
