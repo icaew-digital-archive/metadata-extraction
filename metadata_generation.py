@@ -2,7 +2,7 @@ import json
 from openai import OpenAI
 from config import *
 from metadata_prompt import get_prompt_instructions
-from metadata_schema import metadata_schema
+from metadata_schema import metadata_schema, METADATA_CONTEXT
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -23,25 +23,17 @@ def generate_metadata(text):
         "additionalProperties": False
     }
 
-    # response_format = {
-    #     "type": "json_schema",
-    #     "json_schema": {
-    #         "name": "metadata_extraction",
-    #         "schema": custom_metadata_schema,
-    #     },
-    # }
-
-    response_format={
-            "type": "json_schema",
-            "json_schema": {
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {
                 "name": "metadata_extraction",
                 "schema": custom_metadata_schema,
                 "strict": True
-            }
         }
+    }
 
     print('CUSTOM METADATA SCHEMA:')
-    print(json.dumps(response_format, indent=4, ensure_ascii=False))
+    print(json.dumps(response_format, indent=4, ensure_ascii=True))
 
     try:
         response = client.chat.completions.create(
@@ -50,7 +42,7 @@ def generate_metadata(text):
                 {"role": "system", "content": get_prompt_instructions()},
                 {"role": "user", "content": text}
             ],
-        response_format=response_format
+            response_format=response_format
         )
 
         metadata_json = json.loads(response.choices[0].message.content)

@@ -1,5 +1,5 @@
-from config import METADATA_CONTEXT, METADATA_STANDARD
-
+from config import METADATA_STANDARD
+from metadata_schema import metadata_schema, METADATA_CONTEXT
 
 def get_prompt_instructions():
     """Generate metadata extraction prompt instructions with explicit definitions for fields."""
@@ -70,7 +70,6 @@ Follow the instructions under `"Definition"`, `"Comment"`, and `"Custom Instruct
 ✅ Ensure compliance with the **{standard_label}** standard.  
 ✅ Extracted metadata **must be in valid JSON format.**  
 ✅ Follow **controlled vocabularies** where required.  
-✅ **Omit missing fields** (do not include empty keys).  
 
 ---
 """

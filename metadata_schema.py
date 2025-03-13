@@ -1,5 +1,27 @@
 import json
-from config import METADATA_CONTEXT
+# from config import METADATA_CONTEXT
+from config import METADATA_STANDARD
+
+def load_metadata_context():
+    try:
+        with open("schema.json", "r", encoding="utf-8") as file:
+            schema_data = json.load(file)
+            metadata_context = {}
+
+            # Only load the selected metadata standard
+            if METADATA_STANDARD == "dublin_core":
+                metadata_context = schema_data.get("dublin_core", {})
+
+            elif METADATA_STANDARD == "marc21":
+                metadata_context = schema_data.get("marc21", {})
+
+            return metadata_context
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading metadata context: {e}")
+        return {}
+    
+# Load metadata schema into global context
+METADATA_CONTEXT = load_metadata_context()
 
 metadata_schema = {
     "name": "metadata_extraction",
@@ -51,4 +73,6 @@ for field, details in METADATA_CONTEXT.items():
             metadata_schema["schema"]["required"].append(field)
 
 print('OPENAI STRUCTURED OUTPUT:')
-print(json.dumps(metadata_schema, indent=4, ensure_ascii=False))
+print(json.dumps(metadata_schema, indent=4, ensure_ascii=True))
+
+
