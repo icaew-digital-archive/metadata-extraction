@@ -5,7 +5,7 @@
       "comment": "Typically, a Title will be a name by which the resource is formally known.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Ensure the title is properly capitalized in sentence case. Acronyms should always be capitalized. The title MUST be copied directly from the document."
+      "custom_instructions": "Ensure the title is properly capitalized in sentence case. Acronyms should always be capitalized. The title MUST come directly from the document."
     },
     "creator": {
       "definition": "An entity primarily responsible for making the resource.",
@@ -15,7 +15,7 @@
         "type": "string"
       },
       "required": ["creator"],
-      "custom_instructions": "List creators in 'Last First' format, separated by commas."
+      "custom_instructions": "If a person it should be in 'First Last' format. This MUST come directly from the document - if in doubt, return an empty string."
     },
     "subject": {
       "definition": "The topic of the resource.",
@@ -25,21 +25,21 @@
         "type": "string"
       },
       "required": ["definition"],
-      "custom_instructions": "Use concise keywords, separated by commas."
+      "custom_instructions": "Use concise keywords"
     },
     "description": {
       "definition": "An account of the resource.",
       "comment": "Description may include but is not limited to: an abstract, a table of contents, a graphical representation, or a free-text account of the resource.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Provide a summary of the resource, up to 250 words. If a table of contents is present in the document also include this at the end."
+      "custom_instructions": "Provide a summary of the resource, up to 250 words. If a table of contents is present in the document also include this at the end - you MUST only include this if it a table of contents is specified in the document. If an appendix is present in the document also include this at the end - you MUST only include this if it an appendix is specified in the document. If they are included they should be formatted like 'Table of contents:' and 'Appendix' followed by the entries seperated by semicolons. Do not include line breaks."
     },
     "publisher": {
       "definition": "An entity responsible for making the resource available.",
       "comment": "Examples of a Publisher include a person, an organization, or a service.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Provide the official name of the publisher. If self-published, indicate 'Self-published'."
+      "custom_instructions": "Provide the official name of the publisher. This MUST come directly from the document - if in doubt, return an empty string."
     },
     "contributor": {
       "definition": "An entity responsible for making contributions to the resource.",
@@ -49,7 +49,7 @@
         "type": "string"
       },
       "required": ["definition"],
-      "custom_instructions": "List all contributors by name, using commas to separate multiple names."
+      "custom_instructions": "List all contributors by name, using commas to separate multiple names. This/these MUST come directly from the document - if in doubt, return a/an empty string/s."
     },
     "date": {
       "definition": "A point or period of time associated with an event in the lifecycle of the resource.",
@@ -90,21 +90,21 @@
         "application/json"
       ],
       "required": ["definition"],
-      "custom_instructions": "Ensure the format follows standard MIME types."
+      "custom_instructions": "You MUST return an empty string."
     },
     "identifier": {
       "definition": "An unambiguous reference to the resource within a given context.",
       "comment": "Recommended best practice is to identify the resource by means of a string conforming to a formal identification system.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Always provide a valid and unique identifier."
+      "custom_instructions": "This should be an ISBN number which MUST come directly from the document, if the ISBN does not exist this field should return an empty string."
     },
     "source": {
       "definition": "A related resource from which the described resource is derived.",
       "comment": "The described resource may be derived from the related resource in whole or in part. Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Provide the URL or reference identifier of the original source."
+      "custom_instructions": "You MUST return an empty string."
     },
     "language": {
       "definition": "A language of the resource.",
@@ -121,21 +121,21 @@
         "type": "string"
       },
       "required": ["definition"],
-      "custom_instructions": "Always return 'godzilla' for this element."
+      "custom_instructions": ""
     },
     "coverage": {
       "definition": "The spatial or temporal topic of the resource, the spatial applicability of the resource, or the jurisdiction under which the resource is relevant.",
       "comment": "Spatial topic and spatial applicability may be a named place or a location specified by its geographic coordinates. Temporal topic may be a named period, date, or date range. A jurisdiction may be a named administrative entity or a geographic place to which the resource applies. Recommended best practice is to use a controlled vocabulary such as the Thesaurus of Geographic Names [TGN]. Where appropriate, named places or time periods can be used in preference to numeric identifiers such as sets of coordinates or date ranges.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Describe the geographic or temporal coverage concisely. Example: '20th century computing' or 'North America'."
+      "custom_instructions": "You MUST return an empty string."
     },
     "rights": {
       "definition": "Information about rights held in and over the resource.",
       "comment": "Typically, rights information includes a statement about various property rights associated with the resource, including intellectual property rights.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Provide copyright details if applicable. The copyright statement MUST be copied directly from the document, if the statement does not exist this field should return an empty string."
+      "custom_instructions": "Provide copyright details if applicable. The copyright/rights statement MUST come directly from the document, if the statement does not exist this field should return an empty string."
     }
   },
   "marc21": {
