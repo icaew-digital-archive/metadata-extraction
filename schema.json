@@ -5,7 +5,7 @@
       "comment": "Typically, a Title will be a name by which the resource is formally known.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "Ensure the title is properly capitalized in sentence case. Acronyms should always be capitalized. The title MUST come directly from the document."
+      "custom_instructions": "Ensure the title is in sentence case. Acronyms should always be capitalized. The title MUST come directly from the document. Main title and subtitle should be divided using a colon for example: 'Selecting an ISP: a guide to the basics'."
     },
     "creator": {
       "definition": "An entity primarily responsible for making the resource.",
@@ -97,7 +97,7 @@
       "comment": "Recommended best practice is to identify the resource by means of a string conforming to a formal identification system.",
       "type": "string",
       "required": ["definition"],
-      "custom_instructions": "This should be an ISBN number which MUST come directly from the document, if the ISBN does not exist this field should return an empty string."
+      "custom_instructions": "This should be an ISBN number which MUST come directly from the document - it should be formatted like this for example: 'ISBN 1-84152-243-0'. If the ISBN does not exist this field should return an empty string."
     },
     "source": {
       "definition": "A related resource from which the described resource is derived.",
