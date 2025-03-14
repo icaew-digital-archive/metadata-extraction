@@ -56,8 +56,8 @@ Extract structured metadata from the document text using the **{standard_label}*
 {required_fields_str}  
 
 ### **Guidelines for Extraction**  
-Follow the instructions under `"Definition"`, `"Comment"`, and `"Custom Instructions"` for each metadata element.  
-📌 **"`Custom Instructions` is the most important—you MUST follow these precisely.**  
+Follow the instructions under "Definition", "Comment", and "Custom Instructions" for each metadata element.  
+📌 **"Custom Instructions" is the most important — you MUST follow these precisely.**  
 
 #### **Metadata Field Structure**
 - 🟢 **Definition**: A concise explanation of what the metadata element represents.  
