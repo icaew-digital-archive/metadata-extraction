@@ -5,7 +5,7 @@ Command-line interface for the metadata extraction tool.
 import argparse
 import sys
 import os
-from typing import List, Optional
+from typing import List, Optional, Set, Tuple
 from metadata_extractor import MetadataExtractor
 from metadata_writer import MetadataWriter
 
@@ -89,7 +89,10 @@ def get_pdf_files(file_path: Optional[str] = None, folder_path: Optional[str] = 
         pdf_files = []
         for file in os.listdir(folder_path):
             if file.lower().endswith('.pdf'):
-                pdf_files.append(os.path.join(folder_path, file))
+                full_path = os.path.join(folder_path, file)
+                pdf_files.append(full_path)
+                print(f"Found PDF: {file}")  # Debug log
+        print(f"\nTotal PDFs found in directory: {len(pdf_files)}")  # Debug log
         return pdf_files
 
     return []
@@ -107,31 +110,46 @@ def main() -> None:
             print("No PDF files found to process")
             sys.exit(1)
 
-        print(f"Found {len(pdf_files)} PDF file(s) to process")
+        total_files = len(pdf_files)
+        print(f"\nStarting to process {total_files} PDF file(s)")
 
         # Initialize metadata extractor and writer
         extractor = MetadataExtractor()
         writer = MetadataWriter(args.csv_file)
 
+        # Track processed files to avoid duplicates
+        processed_files: Set[str] = set()
+
         # Process each PDF file
-        for pdf_path in pdf_files:
+        for index, pdf_path in enumerate(pdf_files, 1):
             try:
-                print(f"\nProcessing: {pdf_path}")
-                metadata = extractor.extract_metadata(
+                # Skip if already processed
+                if pdf_path in processed_files:
+                    print(f"\n[{index}/{total_files}] Skipping already processed file: {pdf_path}")
+                    continue
+
+                print(f"\n[{index}/{total_files}] Processing: {pdf_path}")
+                metadata, original_path = extractor.extract_metadata(
                     pdf_path, args.first, args.last)
 
                 # Print metadata to console
-                print("\nExtracted Metadata:")
+                print(f"\n[{index}/{total_files}] Extracted Metadata:")
                 print(metadata)
 
-                # Write to CSV immediately
-                writer.write_metadata(metadata, pdf_path)
+                # Write to CSV using the original path
+                writer.write_metadata(metadata, original_path)
+                processed_files.add(pdf_path)
+                print(f"[{index}/{total_files}] Successfully processed and added to CSV: {original_path}")
 
             except Exception as e:
-                print(f"Error processing {pdf_path}: {str(e)}")
+                print(f"[{index}/{total_files}] Error processing {pdf_path}: {str(e)}")
                 continue  # Continue with next file even if one fails
 
-        print(f"\nProcessing complete. Metadata written to: {args.csv_file}")
+        print(f"\nProcessing complete:")
+        print(f"- Total files found: {total_files}")
+        print(f"- Successfully processed: {len(processed_files)}")
+        print(f"- Failed to process: {total_files - len(processed_files)}")
+        print(f"- Metadata written to: {args.csv_file}")
 
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
