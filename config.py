@@ -43,8 +43,8 @@ IMPORTANT GUIDELINES:
 - Divide title and subtitle with a colon; do not capitalize the first letter after colon
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
-- Include issue number or date if available. If both are present, use the issue number only. If no issue number is present, use the date.
-- The title (including the subtitle) should be seperated from the issue number or date with a comma
+- Include reference/issue number or date if available. If both are present, use the reference/issue number only. If no reference/issue number is present, use the date.
+- The title (including the subtitle) should be seperated from the reference/issue number or date with a comma
 - Indicate if the content is revised or time-limited
 - Examples:
   * "Digital assets: a guide for practitioners"
@@ -125,35 +125,60 @@ IMPORTANT GUIDELINES:
 - Leave blank
 
 ### Output Format
-Return metadata in this exact format, with each field on a new line starting with a dash:
+Return metadata as a JSON object with the following structure. All fields must be strings, and empty values should be empty strings (""). Multiple values should be semicolon-separated strings:
 
-- entity.title: [value]
-- Title: [value]
-- Creator: [value]
-- Subject: [value]
-- Description: [value]
-- Publisher: [value]
-- Contributor: [value]
-- Date: [value]
-- Type: [value]
-- Format: [value]
-- Identifier: [value]
-- Source: [value]
-- Language: [value]
-- Relation: [value]
-- Coverage: [value]
-- Rights: [value]
+{
+    "entity.title": "string",
+    "Title": "string",
+    "Creator": "string",
+    "Subject": "",
+    "Description": "string",
+    "Publisher": "string",
+    "Contributor": "string",
+    "Date": "string",
+    "Type": "string",
+    "Format": "string",
+    "Identifier": "string",
+    "Source": "",
+    "Language": "string",
+    "Relation": "string",
+    "Coverage": "",
+    "Rights": ""
+}
+
+Example output:
+{
+    "entity.title": "20140500-TECPLN12949-Vital",
+    "Title": "Vital, Issue 82",
+    "Creator": "ICAEW",
+    "Subject": "",
+    "Description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
+    "Publisher": "ICAEW",
+    "Contributor": "",
+    "Date": "2014-05",
+    "Type": "Text",
+    "Format": "pdf",
+    "Identifier": "TECPLN12949",
+    "Source": "",
+    "Language": "en",
+    "Relation": "Vital Magazine",
+    "Coverage": "",
+    "Rights": ""
+}
 
 ### Validation Rules
-1. REQUIRED fields must not be empty: entity.title, Title, Creator, Subject, Publisher, Date, Type, Format, Source, Language
+1. REQUIRED fields must not be empty strings: entity.title, Title, Creator, Publisher, Date, Type, Format, Language
 2. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY)
-3. Multiple values must be separated by semicolons
+3. Multiple values must be semicolon-separated strings
 4. No special characters in entity.title except hyphens
 5. All text should be properly encoded (no special characters or emojis)
 6. No trailing or leading whitespace in any field
 7. No explanatory text or notes in the values
+8. Output must be valid JSON
+9. All field values must be strings (not null, numbers, or other types)
+10. Empty values must be empty strings ("") not null
 
-If you encounter any issues or ambiguities in the document, leave the relevant field blank rather than making assumptions.'''
+If you encounter any issues or ambiguities in the document, use an empty string ("") for the relevant field rather than making assumptions.'''
 
 # OpenAI API settings
 DEFAULT_MODEL = "gpt-4.1"
