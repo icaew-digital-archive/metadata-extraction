@@ -57,22 +57,16 @@ class MetadataWriter:
             Dict[str, str]: Dictionary of metadata fields and values
 
         Raises:
-            ValueError: If the JSON is invalid or missing required fields
+            ValueError: If the JSON is invalid
         """
         try:
             # Parse JSON string into dictionary
             metadata_dict = json.loads(metadata_str)
             
-            # Validate all required fields are present
-            required_fields = ['entity.title', 'Title', 'Creator', 'Publisher', 
-                             'Date', 'Type', 'Format', 'Language']
-            missing_fields = [field for field in required_fields 
-                            if not metadata_dict.get(field)]
-            if missing_fields:
-                raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+            # Initialize all fields with empty values
+            result = {field: '' for field in self.fields}
             
-            # Ensure all fields are strings and present in our field list
-            result = {field: '' for field in self.fields}  # Initialize with empty values
+            # Map JSON data to our expected fields
             for field, value in metadata_dict.items():
                 if field in self.fields:
                     # Convert any non-string values to strings
