@@ -118,8 +118,9 @@ def main() -> None:
         extractor = MetadataExtractor()
         writer = MetadataWriter(args.csv_file)
 
-        # Track processed files to avoid duplicates
+        # Track processed and failed files
         processed_files: Set[str] = set()
+        failed_files: List[Tuple[str, str]] = []  # List of (file_path, error_message) tuples
 
         # Process each PDF file
         for index, pdf_path in enumerate(pdf_files, 1):
@@ -143,14 +144,22 @@ def main() -> None:
                 print(f"[{index}/{total_files}] Successfully processed and added to CSV: {original_path}")
 
             except Exception as e:
-                print(f"[{index}/{total_files}] Error processing {pdf_path}: {str(e)}")
+                error_msg = str(e)
+                print(f"[{index}/{total_files}] Error processing {pdf_path}: {error_msg}")
+                failed_files.append((pdf_path, error_msg))
                 continue  # Continue with next file even if one fails
 
+        # Print detailed summary
         print(f"\nProcessing complete:")
         print(f"- Total files found: {total_files}")
         print(f"- Successfully processed: {len(processed_files)}")
-        print(f"- Failed to process: {total_files - len(processed_files)}")
+        print(f"- Failed to process: {len(failed_files)}")
         print(f"- Metadata written to: {args.csv_file}")
+        
+        if failed_files:
+            print("\nFailed files:")
+            for file_path, error in failed_files:
+                print(f"  - {os.path.basename(file_path)}: {error}")
 
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
