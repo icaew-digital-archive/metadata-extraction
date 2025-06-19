@@ -6,8 +6,9 @@ Metadata extraction wrapper script that downloads assets from Preservica and the
 
 This wrapper script:
 1. Downloads assets from Preservica using download_preservica_assets.py
-2. Extracts metadata from the downloaded files using main.py
-3. Handles the workflow between the two scripts
+2. Converts any DOCX/DOC files to PDF using convert_documents.py
+3. Extracts metadata from the PDF files using main.py
+4. Handles the workflow between the scripts
 
 To use this script, edit the configuration variables at the top of the file.
 """
@@ -17,10 +18,11 @@ To use this script, edit the configuration variables at the top of the file.
 
 # Script paths
 DOWNLOAD_SCRIPT = "/home/digital-archivist/Documents/custom scripts/digital-archiving-scripts/pypreservica scripts/download_preservica_assets.py"  # Path to the Preservica download script
+CONVERT_SCRIPT = "convert_documents.py"  # Path to the document conversion script
 EXTRACTION_SCRIPT = "/home/digital-archivist/Documents/custom scripts/metadata-extraction/main.py"  # Path to the metadata extraction script
 
 # Download configuration
-FOLDER_ID = "a3725f76-ced2-4c7a-a59e-551a90acfc75"  # Change this to your folder ID
+FOLDER_ID = "a7bef24a-9e87-479d-bdbb-98f26ccf600f"  # Change this to your folder ID
 # FOLDERS_FILE = "folders.txt"  # Uncomment to use multiple folders
 # ASSET_ID = "cc56e888-8d18-5582-0d41-65c168d611ee"  # Uncomment to use single asset
 # ASSETS_FILE = "assets.txt"  # Uncomment to use multiple assets
@@ -117,8 +119,17 @@ def main():
         print("No files found after download. Stopping orchestration.")
         sys.exit(1)
 
-    # Step 3: Run the metadata extraction script
-    print("\nStep 3: Extracting metadata from downloaded files")
+    # Step 3: Convert any DOCX/DOC files to PDF
+    print("\nStep 3: Converting documents to PDF format")
+    
+    convert_cmd = ['python', CONVERT_SCRIPT, str(output_dir)]
+
+    if not run_command(convert_cmd, "Document conversion"):
+        print("Document conversion step failed.")
+        sys.exit(1)
+
+    # Step 4: Run the metadata extraction script (main.py remains unchanged, PDF-focused)
+    print("\nStep 4: Extracting metadata from PDF files")
     
     extract_cmd = ['python', EXTRACTION_SCRIPT, '--folder', str(output_dir), '--csv-file', str(csv_output)]
     
