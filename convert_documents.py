@@ -83,29 +83,39 @@ def _convert_with_libreoffice(input_path: Path) -> str:
     temp_dir = tempfile.mkdtemp()
     output_dir = Path(temp_dir)
     
-    # LibreOffice command
-    cmd = [
-        'libreoffice',
-        '--headless',
-        '--convert-to', 'pdf',
-        '--outdir', str(output_dir),
-        str(input_path)
-    ]
-    
-    # Run conversion
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-    
-    if result.returncode == 0:
-        # Find the generated PDF file
-        pdf_files = list(output_dir.glob('*.pdf'))
-        if pdf_files:
-            pdf_path = pdf_files[0]
-            # Move to the same directory as the original file
-            final_pdf_path = input_path.with_suffix('.pdf')
-            pdf_path.rename(final_pdf_path)
-            return str(final_pdf_path)
-    
-    raise RuntimeError(f"LibreOffice conversion failed for {input_path.name}")
+    try:
+        # LibreOffice command
+        cmd = [
+            'libreoffice',
+            '--headless',
+            '--convert-to', 'pdf',
+            '--outdir', str(output_dir),
+            str(input_path)
+        ]
+        
+        # Run conversion
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        
+        if result.returncode == 0:
+            # Find the generated PDF file
+            pdf_files = list(output_dir.glob('*.pdf'))
+            if pdf_files:
+                pdf_path = pdf_files[0]
+                # Move to the same directory as the original file
+                final_pdf_path = input_path.with_suffix('.pdf')
+                pdf_path.rename(final_pdf_path)
+                return str(final_pdf_path)
+        
+        raise RuntimeError(f"LibreOffice conversion failed for {input_path.name}")
+        
+    finally:
+        # Clean up temporary directory
+        try:
+            import shutil
+            shutil.rmtree(temp_dir)
+            print(f"Cleaned up temporary directory: {temp_dir}")
+        except Exception as e:
+            print(f"Warning: Could not clean up temporary directory {temp_dir}: {str(e)}")
 
 
 def _convert_with_pandoc(input_path: Path) -> str:
