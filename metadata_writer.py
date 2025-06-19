@@ -18,8 +18,12 @@ class MetadataWriter:
         """
         # Define the expected metadata fields in order, with filename first
         self.fields: List[str] = [
-            'filename',  # Added filename as first field
+            'filename/reference',  # Changed from 'filename'
             'entity.title',
+            'entity.description',
+            'icaew:ContentType',
+            'icaew:InternalReference',
+            'icaew:Notes',
             'Title',
             'Creator',
             'Subject',
@@ -66,11 +70,24 @@ class MetadataWriter:
             # Initialize all fields with empty values
             result = {field: '' for field in self.fields}
             
+            # Store the old entity.title value before we overwrite it
+            old_entity_title = metadata_dict.get('entity.title', '')
+            
             # Map JSON data to our expected fields
             for field, value in metadata_dict.items():
                 if field in self.fields:
                     # Convert any non-string values to strings
                     result[field] = str(value) if value is not None else ''
+            
+            # Apply the new mapping rules:
+            # 1. entity.title should be a copy of Title
+            result['entity.title'] = result.get('Title', '')
+            
+            # 2. entity.description should be a copy of Description
+            result['entity.description'] = result.get('Description', '')
+            
+            # 3. icaew:InternalReference gets the old entity.title value
+            result['icaew:InternalReference'] = old_entity_title
             
             return result
 
@@ -94,8 +111,8 @@ class MetadataWriter:
             # Parse the metadata
             metadata_dict = self._parse_metadata(metadata_str)
 
-            # Add filename as first column
-            metadata_dict['filename'] = os.path.basename(pdf_path)
+            # Add filename/reference as first column
+            metadata_dict['filename/reference'] = os.path.basename(pdf_path)
 
             # Append to CSV
             with open(self.csv_file, 'a', newline='', encoding='utf-8') as csvfile:

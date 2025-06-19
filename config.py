@@ -17,7 +17,9 @@ IMPORTANT GUIDELINES:
 10. Maintain consistent formatting across all documents
 11. You may see text similar to this: "© ICAEW 2014 TECPLN12949 05/14". The "05/14" actually means that the document was created on 05/2014, so use that for the date across all fields. Use this logic whenever you see text similar to this.
 
-### entity.title — Asset Level (REQUIRED)
+### ICAEW-Specific Fields
+
+**icaew:InternalReference (REQUIRED)**
 - Single value only
 - Format: YYYYMMDD-Document-Name
 - Use title case
@@ -36,6 +38,70 @@ IMPORTANT GUIDELINES:
   * 20240200-Financial-Services-Faculty-Report
   * 20240000-Annual-Report-2023
 
+**icaew:ContentType (OPTIONAL)**
+- Single value only
+- Must use one of the following controlled vocabulary terms (exact spelling and case):
+  * Annual report
+  * Article
+  * Biographical profile
+  * Company profile
+  * Course
+  * Database
+  * eBook
+  * eBook chapter
+  * eLearning module
+  * Event
+  * Form
+  * Helpsheets and support
+  * Hub page
+  * ICAEW consultation and response
+  * Internal ICAEW policy
+  * Journal
+  * Learning material
+  * Legal precedent
+  * Library book
+  * Library journal
+  * Listing
+  * Member reward
+  * Minutes and board papers
+  * Newsletter
+  * No content type
+  * Podcast
+  * Press release
+  * Promotional material
+  * Regional news
+  * Regulations
+  * Report
+  * Representation
+  * Research guide
+  * Speech or presentation
+  * Synopsis
+  * Technical release
+  * Thought leadership report
+  * Transcript
+  * Video
+  * Webinar
+  * Website
+- If the content type cannot be determined from the document, use "No content type"
+- Do not create new content types; only use the terms from this list
+
+**icaew:Notes (OPTIONAL)**
+- Single value only
+- Use for any additional notes or comments about the document
+- If no notes are needed, return an empty string ("")
+
+### Dublin Core XIP Metadata Fields
+
+**entity.title (REQUIRED)**
+- Single value only
+- This should be an exact copy of the Title field
+- Use the title as it appears in the document
+
+**entity.description (OPTIONAL)**
+- Single value only
+- This should be an exact copy of the Description field
+- Use only if an existing summary or description is present
+
 ### Dublin Core Metadata Fields
 
 **Title (REQUIRED)**
@@ -47,12 +113,13 @@ IMPORTANT GUIDELINES:
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
 - Include reference/issue number or date if available. If both are present, use the reference/issue number only. If no reference/issue number is present, use the date.
-- The title (including the subtitle) should be separated from the reference/issue number or date with a comma
+- The title (including the subtitle) should be separated from the reference/issue number or date with a comma. Reference/issue number or date should also be separated with a comma.
 - Indicate if the content is revised or time-limited
 - Examples:
   * "Digital assets: a guide for practitioners"
   * "Financial reporting in 2024: what you need to know"
   * "Vital, Issue 82"
+  * "Quarterly, Issue 3, 2020"
 
 **Creator (REQUIRED)**
 - Multiple values allowed (separate with semicolons)
@@ -155,6 +222,10 @@ Return metadata as a JSON object with the following structure. All fields must b
 
 {
     "entity.title": "string",
+    "entity.description": "string",
+    "icaew:ContentType": "string",
+    "icaew:InternalReference": "string",
+    "icaew:Notes": "string",
     "Title": "string",
     "Creator": "string",
     "Subject": "",
@@ -174,7 +245,11 @@ Return metadata as a JSON object with the following structure. All fields must b
 
 Example output:
 {
-    "entity.title": "20140500-TECPLN12949-Vital",
+    "entity.title": "Vital, Issue 82",
+    "entity.description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
+    "icaew:ContentType": "Magazine",
+    "icaew:InternalReference": "20140500-TECPLN12949-Vital",
+    "icaew:Notes": "",
     "Title": "Vital, Issue 82",
     "Creator": "ICAEW",
     "Subject": "",
@@ -193,21 +268,23 @@ Example output:
 }
 
 ### Validation Rules
-1. REQUIRED fields must not be empty strings: entity.title, Title, Creator, Publisher, Date, Type, Format, Language
-2. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY)
-3. Multiple values must be semicolon-separated strings
-4. No special characters in entity.title except hyphens:
+1. REQUIRED fields must not be empty strings: icaew:InternalReference, entity.title, Title, Creator, Publisher, Date, Type, Format, Language
+2. entity.title must be an exact copy of Title
+3. entity.description must be an exact copy of Description
+4. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY)
+5. Multiple values must be semicolon-separated strings
+6. No special characters in icaew:InternalReference except hyphens:
    - Allowed: letters (A-Z, a-z), numbers (0-9), hyphens (-)
    - Not allowed: spaces, underscores, periods, commas, ampersands, or any other special characters
    - Replace spaces with hyphens
    - Replace '&' with "and"
    - Remove all other special characters
-5. All text should be properly encoded (no special characters or emojis)
-6. No trailing or leading whitespace in any field
-7. No explanatory text or notes in the values
-8. Output must be valid JSON
-9. All field values must be strings (not null, numbers, or other types)
-10. Empty values must be empty strings ("") not null
+7. All text should be properly encoded (no special characters or emojis)
+8. No trailing or leading whitespace in any field
+9. No explanatory text or notes in the values
+10. Output must be valid JSON
+11. All field values must be strings (not null, numbers, or other types)
+12. Empty values must be empty strings ("") not null
 
 If you encounter any issues or ambiguities in the document, use an empty string ("") for the relevant field rather than making assumptions.'''
 
