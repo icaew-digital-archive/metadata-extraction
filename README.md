@@ -221,4 +221,5 @@ metadata-extraction/
 ├── requirements.txt                # Python dependencies
 ├── .env                           # Environment variables (API keys)
 └── README.md                      # This file
+
 ```
