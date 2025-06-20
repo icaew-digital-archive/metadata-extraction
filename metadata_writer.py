@@ -70,24 +70,21 @@ class MetadataWriter:
             # Initialize all fields with empty values
             result = {field: '' for field in self.fields}
             
-            # Store the old entity.title value before we overwrite it
-            old_entity_title = metadata_dict.get('entity.title', '')
-            
             # Map JSON data to our expected fields
             for field, value in metadata_dict.items():
                 if field in self.fields:
                     # Convert any non-string values to strings
                     result[field] = str(value) if value is not None else ''
             
-            # Apply the new mapping rules:
+            # Apply the mapping rules:
             # 1. entity.title should be a copy of Title
             result['entity.title'] = result.get('Title', '')
             
             # 2. entity.description should be a copy of Description
             result['entity.description'] = result.get('Description', '')
             
-            # 3. icaew:InternalReference gets the old entity.title value
-            result['icaew:InternalReference'] = old_entity_title
+            # 3. icaew:InternalReference should use the AI-generated value
+            # (no special mapping needed - it should already be properly formatted)
             
             return result
 
