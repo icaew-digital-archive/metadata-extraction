@@ -43,9 +43,7 @@ IMPORTANT GUIDELINES:
 - Must use one of the following controlled vocabulary terms (exact spelling and case):
   * Annual report
   * Article
-  * Biographical profile
-  * Company profile
-  * Course
+  * Committee papers
   * Database
   * eBook
   * eBook chapter
@@ -55,15 +53,12 @@ IMPORTANT GUIDELINES:
   * Helpsheets and support
   * Hub page
   * ICAEW consultation and response
-  * Internal ICAEW policy
+  * Interview
   * Journal
   * Learning material
   * Legal precedent
   * Library book
-  * Library journal
   * Listing
-  * Member reward
-  * Minutes and board papers
   * Newsletter
   * No content type
   * Podcast
@@ -78,12 +73,151 @@ IMPORTANT GUIDELINES:
   * Synopsis
   * Technical release
   * Thought leadership report
-  * Transcript
-  * Video
   * Webinar
   * Website
 - If the content type cannot be determined from the document, use "No content type"
 - Do not create new content types; only use the terms from this list
+
+### Content Type Selection Guidelines (based on SiteCore metadata guide):
+
+**Annual report**
+- Use for: Annual reports and annual reviews
+- Examples: ICAEW annual report, ICAEW annual review, Faculty/District Society annual reports
+- Do not use for: Any other content
+
+**Article**
+- Use for: Content that could be an article in a magazine
+- Examples: PDF articles from Faculty magazines, articles from Practicewire/London Accountant/SIG newsletters, legal alerts
+- Do not use for: Press releases, regional news, complete journal issues, web pages that list articles
+
+**Committee papers**
+- Check before using - requires verification
+
+**Database**
+- Check before using - requires verification
+
+**eBook**
+- Check before using - requires verification
+
+**eBook chapter**
+- Check before using - requires verification
+
+**eLearning module**
+- Check before using - requires verification
+
+**Event**
+- Use for: Events in the Configio database
+- Do not use for: Other event-like content
+
+**Form**
+- Use for: Blank forms (online forms or PDF forms)
+- Examples: Online form web pages, media library PDF forms
+- Do not use for: Web pages that include forms alongside other information
+
+**Helpsheets and support**
+- Use for: Content providing practical advice, helpful assistance, and explanations
+- Examples: TAS/SIG helpsheets, Faculty practical guidance, Excel how-to guides, Atom Briefings, support pages
+- Do not use for: Technical releases, ICAEW regulations, web pages that list helpsheets
+
+**Hub page**
+- Use for: Content using the SiteCore hub page template
+- Do not use for: Other page types
+
+**ICAEW consultation and response**
+- Check before using - requires verification
+
+**Interview**
+- Not currently in use - may be needed for future content
+
+**Journal**
+- Use for: Complete issues of journals
+- Examples: Complete PDF issues of Faculty magazines (e.g., Taxline issues)
+- Do not use for: Web pages that list articles from journals, individual articles
+
+**Learning material**
+- Use for: Learning and exam materials
+- Examples: Exam papers, mark schemes, syllabi, pass lists
+
+**Legal precedent**
+- Check before using - requires verification
+
+**Library book**
+- Check before using - requires verification
+
+**Listing**
+- Use for: Content that provides lists of links to other content
+- Examples: Web pages listing articles on topics, helpsheets, press releases, webinars, podcasts, A-Z listings
+- Do not use for: Web pages using SiteCore hub page template, web pages listing articles from journals
+
+**Newsletter**
+- Use for: Complete newsletters including several articles
+- Examples: Community newsletters, district society newsletters, complete issues of publications
+- Do not use for: Simple lists of articles from newsletters, individual newsletter articles, complete journal issues
+
+**No content type**
+- Use for: Content that doesn't conform to other content types and shouldn't be exposed in queries
+- Examples: Biographies of board members, administration pages, contact pages
+- Do not use for: Content that needs to be picked up by queries and included on automatically generated pages
+
+**Podcast**
+- Use for: Podcasts or content introducing a single podcast with a link
+- Do not use for: Web pages that list podcasts
+
+**Press release**
+- Use for: ICAEW press releases published on Press Releases pages
+- Examples: Press releases from https://www.icaew.com/en/about-icaew/news/press-release-archive/
+- Do not use for: Web pages listing press releases, press release style content not on official Press Release pages
+
+**Promotional material**
+- Use for: Content promoting products, conferences, faculties, communities
+- Examples: Member offers, join pages, benefits pages, flyers
+
+**Regional news**
+- Use for: Press releases from ICAEW regions and district societies
+- Examples: Regional press releases from https://www.icaew.com/en/about-icaew/news/press-release-archive/regions-2017/
+- Do not use for: Web pages listing regional news, London Accountant articles
+
+**Regulations**
+- Use for: ICAEW regulations
+- Examples: Audit Regulations and Guidance, Code of Ethics, Insolvency Licensing Regulations, Probate and Compensation Scheme Regulations
+- Do not use for: Guidance supporting regulations, downloadable forms, non-ICAEW regulations, ICAEW Charter and bye-laws
+
+**Report**
+- Use for: Content in report format
+- Examples: Research reports, briefing documents, web pages providing access to reports
+- Do not use for: Technical releases, annual reports, web pages listing reports
+
+**Representation**
+- Use for: ICAEW representations to governments and other bodies
+- Examples: ICAEW REP PDFs
+- Do not use for: Web pages listing ICAEW REPs
+
+**Research guide**
+- Check before using - requires verification
+
+**Speech or presentation**
+- Check before using - requires verification
+
+**Synopsis**
+- Use for: Synopses of accounting standards
+- Examples: Synopses of FRS, IFRS, IAS standards
+- Do not use for: Technical releases, general summaries
+
+**Technical release**
+- Use for: Technical releases in any technical release series
+- Examples: Technical release PDFs, web pages introducing single technical releases
+- Do not use for: Web pages listing technical releases
+
+**Thought leadership report**
+- Use for: Thought leadership initiative reports (must be labeled as thought leadership within the text)
+- Do not use for: Web pages listing thought leadership reports, reports with thought leadership elements but not labeled as such
+
+**Webinar**
+- Use for: Webinars or content introducing a single webinar with a link
+- Do not use for: Web pages listing webinars
+
+**Website**
+- Check before using - requires verification
 
 **icaew:Notes (OPTIONAL)**
 - Single value only
@@ -120,6 +254,8 @@ IMPORTANT GUIDELINES:
   * "Financial reporting in 2024: what you need to know"
   * "Vital, Issue 82"
   * "Quarterly, Issue 3, 2020"
+  * "AI in corporate advisory: investment, M&A and transaction services"
+  * "IFRS 16 leases"
 
 **Creator (REQUIRED)**
 - Multiple values allowed (separate with semicolons)
@@ -145,8 +281,13 @@ IMPORTANT GUIDELINES:
 - Use only if an existing summary or description is present
 - Briefly summarize the content if available
 - Do not write new summaries manually
+- Listing of contents may be helpful, with each item in the list seperated by a semicolon.
 - Should always finish with a full stop/period
-- Example: "Technical guidance on implementing IFRS 9 for financial instruments"
+- After this description append the following string: "(AI generated description)"
+- Examples:
+  * "Technical guidance on implementing IFRS 9 for financial instruments"
+  * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides."
+  * "This guide provides an overview of blockchain technology, including its key features, potential use cases, challenges to widespread adoption, a glossary of terms, and relevant resources. Includes a case study on Ripple and discusses both the strengths and limitations of blockchain for accountants."
 
 **Publisher (REQUIRED)**
 - Single value only
@@ -203,7 +344,11 @@ IMPORTANT GUIDELINES:
 - Multiple values allowed (separate with semicolons)
 - Include any ISBNs, URLs, issue numbers, reference codes
 - Include all identifiers in one field (separate with semicolons)
-- Examples: "ISBN 978-1-78915-123-4", "TECH 01/24", "https://www.icaew.com/123"
+- Examples: 
+  * "ISBN 978-1-78915-123-4"
+  * "Issue 12"
+  * "TECH 01/24"
+  * "https://www.icaew.com/123"
 
 **Language (REQUIRED)**
 - Single value only
