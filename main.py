@@ -131,15 +131,32 @@ def main() -> None:
                     continue
 
                 print(f"\n[{index}/{total_files}] Processing: {pdf_path}")
-                metadata, original_path = extractor.extract_metadata(
-                    pdf_path, args.first, args.last)
+                
+                # Determine original format by checking if this was a converted file
+                original_format = None
+                base_name = os.path.splitext(pdf_path)[0]
+                
+                # Check for common original formats that might have been converted
+                for ext in ['.docx', '.doc', '.txt', '.srt']:
+                    original_file = base_name + ext
+                    if os.path.exists(original_file):
+                        original_format = ext[1:]  # Remove the dot
+                        print(f"Detected original format: {original_format}")
+                        break
+                
+                # If no original file found, assume it's a native PDF
+                if not original_format:
+                    original_format = 'pdf'
+                
+                metadata, original_path, detected_format = extractor.extract_metadata(
+                    pdf_path, args.first, args.last, original_format)
 
                 # Print metadata to console
                 print(f"\n[{index}/{total_files}] Extracted Metadata:")
                 print(metadata)
 
-                # Write to CSV using the original path
-                writer.write_metadata(metadata, original_path)
+                # Write to CSV using the original path and format
+                writer.write_metadata(metadata, original_path, detected_format)
                 processed_files.add(pdf_path)
                 print(f"[{index}/{total_files}] Successfully processed and added to CSV: {original_path}")
 
