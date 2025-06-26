@@ -22,7 +22,7 @@ CONVERT_SCRIPT = "convert_documents.py"  # Path to the document conversion scrip
 EXTRACTION_SCRIPT = "/home/digital-archivist/Documents/custom scripts/metadata-extraction/main.py"  # Path to the metadata extraction script
 
 # Download configuration
-FOLDER_ID = "a7bef24a-9e87-479d-bdbb-98f26ccf600f"  # Change this to your folder ID
+FOLDER_ID = "0752b58e-7297-49c7-b3f1-3a481f55a968"  # Change this to your folder ID
 # FOLDERS_FILE = "folders.txt"  # Uncomment to use multiple folders
 # ASSET_ID = "cc56e888-8d18-5582-0d41-65c168d611ee"  # Uncomment to use single asset
 # ASSETS_FILE = "assets.txt"  # Uncomment to use multiple assets
@@ -33,6 +33,7 @@ CSV_OUTPUT = "metadata.csv"  # CSV file to write extracted metadata to
 
 # Optional settings
 USE_ASSET_REF = True  # Set to True to use asset reference numbers in filenames
+ORIGINAL_ONLY = True  # Set to True to download only original (first generation) files
 FIRST_PAGES = 5  # Number of pages to include from the start (0 = no limit)
 LAST_PAGES = 3   # Number of pages to include from the end (0 = no limit)
 # ===================================
@@ -108,6 +109,9 @@ def main():
     # Add optional arguments
     if USE_ASSET_REF:
         download_cmd.append('--use-asset-ref')
+
+    if ORIGINAL_ONLY:
+        download_cmd.append('--original-only')
 
     if not run_command(download_cmd, "Preservica asset download"):
         print("Download step failed. Stopping orchestration.")
