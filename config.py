@@ -16,6 +16,9 @@ IMPORTANT GUIDELINES:
 9. Do not add explanatory text or notes in the metadata values
 10. Maintain consistent formatting across all documents
 11. You may see text similar to this: "© ICAEW 2014 TECPLN12949 05/14". The "05/14" actually means that the document was created on 05/2014, so use that for the date across all fields. Use this logic whenever you see text similar to this.
+12. Use only standard ASCII characters - avoid special Unicode characters, em-dashes, en-dashes, or smart quotes
+13. Replace any em-dashes (—), en-dashes (–), or hyphens used as title separators with colons (:)
+14. For identifiers, only include ISBNs, URLs, and clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
 
 ### ICAEW-Specific Fields
 
@@ -243,12 +246,14 @@ IMPORTANT GUIDELINES:
 - Use the title as it appears in the document
 - Use sentence case (capitalize first word only)
 - Capitalize acronyms and proper nouns
-- Divide title and subtitle with a colon; do not capitalize the first letter after colon
+- ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons
+- Do not capitalize the first letter after a colon
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
-- Include reference/issue number or date if available. If both are present, use the reference/issue number only. If no reference/issue number is present, use the date.
-- The title (including the subtitle) should be separated from the reference/issue number or date with a comma. Reference/issue number or date should also be separated with a comma.
+- The order should be: title, subtitle, issue/volume, date
+- Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
 - Indicate if the content is revised or time-limited
+- Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols
 - Examples:
   * "Digital assets: a guide for practitioners"
   * "Financial reporting in 2024: what you need to know"
@@ -256,6 +261,11 @@ IMPORTANT GUIDELINES:
   * "Quarterly, Issue 3, 2020"
   * "AI in corporate advisory: investment, M&A and transaction services"
   * "IFRS 16 leases"
+  * "Audit firm governance: a project for the Financial Reporting Council, Ernst and Young LLP response, 3rd February 2009"
+  * "Audit firm governance: second consultation paper"
+  * "Audit firm governance: evidence gathering consultation paper, 5th February 2009"
+  * "Tax Faculty newsletter, Issue 15, 15th March 2024"
+  * "Technical release: IFRS 9 implementation, TECH 01/24, 15th January 2024"
 
 **Creator (REQUIRED)**
 - Multiple values allowed (separate with semicolons)
@@ -265,11 +275,16 @@ IMPORTANT GUIDELINES:
   3. Institution or organization (e.g., "ICAEW")
 - For anonymous works, use "Anonymous" as the creator
 - For corporate authors, list the organization name
+- For letters and correspondence: include sender first, then recipient if both are clearly identified (e.g., "John Smith; Ernst and Young LLP")
+- Use full names when available (e.g., "John Smith" not "J. Smith")
+- Use consistent formatting: "First Name Last Name" or "Organization Name"
 - Examples:
   * "John Smith; Financial Services Faculty; ICAEW"
   * "Anonymous"
   * "ICAEW Technical Department"
   * "Sarah Jones; Tax Faculty; Deloitte"
+  * "David Tweedie; Ernst and Young LLP"
+  * "Mike Ashley; KPMG Europe LLP"
 
 **Subject, Source, Coverage, Rights (RESERVED)**
 - These fields are reserved for future use
@@ -281,7 +296,7 @@ IMPORTANT GUIDELINES:
 - Use only if an existing summary or description is present
 - Briefly summarize the content if available
 - Do not write new summaries manually
-- Listing of contents may be helpful, with each item in the list seperated by a semicolon.
+- Listing of contents may be helpful, with each item in the list separated by a semicolon.
 - Should always finish with a full stop/period
 - After this description append the following string: "(AI generated description)"
 - Examples:
@@ -310,11 +325,12 @@ IMPORTANT GUIDELINES:
 
 **Date (REQUIRED)**
 - Single value only
-- Use YYYY-MM-DD format
-- If day is unknown, use YYYY-MM
-- If month is unknown, use YYYY
+- Use YYYY-MM-DD format with zero-padding for single digits when the full date is known
+- If day is unknown, use YYYY-MM format
+- If month is unknown, use YYYY format
 - Use the date found within the document
-- Examples: "2024-03-15", "2024-03", "2024"
+- Convert any date format to YYYY-MM-DD (e.g., "10/7/2009" becomes "2009-10-07", "January 28, 2009" becomes "2009-01-28")
+- Examples: "2024-03-15", "2024-03", "2024", "2009-02-05", "2009-01-28"
 
 **Type (REQUIRED)**
 - Single value only
@@ -332,22 +348,28 @@ IMPORTANT GUIDELINES:
 
 **Format (REQUIRED)**
 - Single value only
-- Use the lowercase file extension of the source document
-- For PDF documents, use "pdf"
-- For Microsoft Word documents, use "docx"
-- For Microsoft Excel documents, use "xlsx"
-- For text files, use "txt"
-- For images, use appropriate extension (e.g., "jpg", "png", "tiff")
+- Use the lowercase file extension of the ORIGINAL source document (before conversion to PDF)
+- For PDF documents that were originally PDFs, use "pdf"
+- For Microsoft Word documents that were converted to PDF, use "docx" or "doc"
+- For Microsoft Excel documents that were converted to PDF, use "xlsx"
+- For text files that were converted to PDF, use "txt"
+- For SRT files that were converted to PDF, use "srt"
+- For images that were converted to PDF, use appropriate extension (e.g., "jpg", "png", "tiff")
 - If format cannot be determined, use "pdf" as default
 
 **Identifier (OPTIONAL)**
 - Multiple values allowed (separate with semicolons)
-- Include any ISBNs, URLs, issue numbers, reference codes
-- Include all identifiers in one field (separate with semicolons)
+- ONLY include the following types of identifiers:
+  * ISBNs (e.g., "ISBN 978-1-78915-123-4")
+  * URLs (e.g., "https://www.icaew.com/123")
+  * Clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
+- Do NOT include random strings of letters and numbers
+- Do NOT include unclear or ambiguous codes
+- If no clear identifiers are found, return an empty string ("")
 - Examples: 
   * "ISBN 978-1-78915-123-4"
-  * "Issue 12"
   * "TECH 01/24"
+  * "TECPLN12949"
   * "https://www.icaew.com/123"
 
 **Language (REQUIRED)**
@@ -392,7 +414,7 @@ Example output:
 {
     "entity.title": "Vital, Issue 82",
     "entity.description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
-    "icaew:ContentType": "Magazine",
+    "icaew:ContentType": "Journal",
     "icaew:InternalReference": "20140500-TECPLN12949-Vital",
     "icaew:Notes": "",
     "Title": "Vital, Issue 82",
@@ -416,7 +438,7 @@ Example output:
 1. REQUIRED fields must not be empty strings: icaew:InternalReference, entity.title, Title, Creator, Publisher, Date, Type, Format, Language
 2. entity.title must be an exact copy of Title
 3. entity.description must be an exact copy of Description
-4. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY)
+4. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY) with zero-padding for single digits
 5. Multiple values must be semicolon-separated strings
 6. No special characters in icaew:InternalReference except hyphens:
    - Allowed: letters (A-Z, a-z), numbers (0-9), hyphens (-)
@@ -430,6 +452,9 @@ Example output:
 10. Output must be valid JSON
 11. All field values must be strings (not null, numbers, or other types)
 12. Empty values must be empty strings ("") not null
+13. Title field must follow the order: title, subtitle, issue/volume, date
+14. Content type must be one of the controlled vocabulary terms (exact spelling and case)
+15. Identifiers must only include ISBNs, URLs, or clear ICAEW reference codes
 
 If you encounter any issues or ambiguities in the document, use an empty string ("") for the relevant field rather than making assumptions.'''
 

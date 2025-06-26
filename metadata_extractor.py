@@ -13,7 +13,7 @@ class MetadataExtractor:
         """Initialize the metadata extractor with an OpenAI client."""
         self.client = OpenAIClient()
 
-    def extract_metadata(self, pdf_path: str, first_pages: int = 0, last_pages: int = 0) -> Tuple[str, str]:
+    def extract_metadata(self, pdf_path: str, first_pages: int = 0, last_pages: int = 0, original_format: str = None) -> Tuple[str, str, str]:
         """
         Extract metadata from a PDF file using OpenAI's API.
 
@@ -21,9 +21,10 @@ class MetadataExtractor:
             pdf_path (str): Path to the PDF file
             first_pages (int): Number of pages to include from the start
             last_pages (int): Number of pages to include from the end
+            original_format (str): Original file format (e.g., 'docx', 'txt') if the file was converted
 
         Returns:
-            Tuple[str, str]: A tuple containing (metadata, original_file_path)
+            Tuple[str, str, str]: A tuple containing (metadata, original_file_path, original_format)
         """
         original_path = pdf_path  # Store the original path
         try:
@@ -42,7 +43,7 @@ class MetadataExtractor:
                 file_id = self.client.upload_file(pdf_path)
                 metadata = self.client.extract_metadata(file_id)
 
-                return metadata, original_path
+                return metadata, original_path, original_format
 
             finally:
                 # Clean up temporary file if it was created
