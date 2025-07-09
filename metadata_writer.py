@@ -105,18 +105,35 @@ class MetadataWriter:
             # Initialize all fields with empty values
             result = {field: '' for field in self.fields}
             
-            # Map JSON data to our expected fields
+            # Map old field names to new dc: field names
+            field_map = {
+                'Title': 'dc:title',
+                'Creator': 'dc:creator',
+                'Subject': 'dc:subject',
+                'Description': 'dc:description',
+                'Publisher': 'dc:publisher',
+                'Contributor': 'dc:contributor',
+                'Date': 'dc:date',
+                'Type': 'dc:type',
+                'Format': 'dc:format',
+                'Identifier': 'dc:identifier',
+                'Source': 'dc:source',
+                'Language': 'dc:language',
+                'Relation': 'dc:relation',
+                'Coverage': 'dc:coverage',
+                'Rights': 'dc:rights'
+            }
             for field, value in metadata_dict.items():
-                if field in self.fields:
-                    # Convert any non-string values to strings and clean them
-                    result[field] = self._clean_text(str(value) if value is not None else '')
+                mapped_field = field_map.get(field, field)
+                if mapped_field in self.fields:
+                    result[mapped_field] = self._clean_text(str(value) if value is not None else '')
             
             # Apply the mapping rules:
-            # 1. entity.title should be a copy of Title
-            result['entity.title'] = result.get('Title', '')
+            # 1. entity.title should be a copy of dc:title (from Title)
+            result['entity.title'] = result.get('dc:title', '')
             
-            # 2. entity.description should be a copy of Description
-            result['entity.description'] = result.get('Description', '')
+            # 2. entity.description should be a copy of dc:description (from Description)
+            result['entity.description'] = result.get('dc:description', '')
             
             # 3. icaew:InternalReference should use the AI-generated value
             # (no special mapping needed - it should already be properly formatted)
@@ -149,7 +166,7 @@ class MetadataWriter:
 
             # Override the Format field with the original format if available
             if original_format:
-                metadata_dict['Format'] = original_format.lower()
+                metadata_dict['dc:format'] = original_format.lower()
 
             # Append to CSV
             with open(self.csv_file, 'a', newline='', encoding='utf-8') as csvfile:
