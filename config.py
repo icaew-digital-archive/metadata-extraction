@@ -17,8 +17,10 @@ IMPORTANT GUIDELINES:
 10. Maintain consistent formatting across all documents
 11. You may see text similar to this: "© ICAEW 2014 TECPLN12949 05/14". The "05/14" actually means that the document was created on 05/2014, so use that for the date across all fields. Use this logic whenever you see text similar to this.
 12. Use only standard ASCII characters - avoid special Unicode characters, em-dashes, en-dashes, or smart quotes
-13. Replace any em-dashes (—), en-dashes (–), or hyphens used as title separators with colons (:)
+13. Replace any em-dashes (—), en-dashes (–), or hyphens used as title separators with colons (:), with the exception when they show a date range, i.e. do not replace "2008-09" with "2008:09"
 14. For identifiers, only include ISBNs, URLs, and clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
+15. For the creator and contributor fields, always normalise "Institute of Chartered Accountants in England and Wales" to "ICAEW"
+16. Acronyms (such as OECD, IFRS, FRC, HMRC, UK, VAT, etc.) must ALWAYS be in all capitals, regardless of their position in the sentence or title. Do NOT use title case for acronyms. For example, always use "OECD" (not "Oecd"), "IFRS" (not "Ifrs"), "FRC" (not "Frc")
 
 ### ICAEW-Specific Fields
 
@@ -244,8 +246,7 @@ IMPORTANT GUIDELINES:
 **Title (REQUIRED)**
 - Single value only
 - Use the title as it appears in the document
-- Use sentence case (capitalize first word only)
-- Capitalize acronyms and proper nouns
+- Use sentence case (capitalize first word only), but acronyms (e.g., OECD, IFRS, FRC, HMRC, UK, VAT) must always be in all capitals, even at the start of the title or after a colon.
 - ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons
 - Do not capitalize the first letter after a colon
 - Do not use "&"; use "and"
@@ -255,11 +256,7 @@ IMPORTANT GUIDELINES:
 - Indicate if the content is revised or time-limited
 - Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols
 - Examples:
-  * "Digital assets: a guide for practitioners"
-  * "Financial reporting in 2024: what you need to know"
-  * "Vital, Issue 82"
-  * "Quarterly, Issue 3, 2020"
-  * "AI in corporate advisory: investment, M&A and transaction services"
+  * "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010"
   * "IFRS 16 leases"
   * "Audit firm governance: a project for the Financial Reporting Council, Ernst and Young LLP response, 3rd February 2009"
   * "Audit firm governance: second consultation paper"
@@ -410,7 +407,7 @@ Return metadata as a JSON object with the following structure. All fields must b
     "Rights": ""
 }
 
-Example output:
+Example outputs:
 {
     "entity.title": "Vital, Issue 82",
     "entity.description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
@@ -430,6 +427,29 @@ Example output:
     "Source": "",
     "Language": "en",
     "Relation": "Vital Magazine",
+    "Coverage": "",
+    "Rights": ""
+}
+
+{
+    "entity.title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
+    "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+    "icaew:ContentType": "Representation",
+    "icaew:InternalReference": "20100122-OECD-Discussion-Draft-On-The-Application-Of-Tax-Treaties-To-State-Owned-Entities-Including-Sovereign-Wealth-Funds-Tax-Faculty-TAXREP-4-10",
+    "icaew:Notes": "",
+    "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
+    "Creator": "Tax Faculty; ICAEW",
+    "Subject": "",
+    "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+    "Publisher": "ICAEW",
+    "Contributor": "OECD",
+    "Date": "2010-01-22",
+    "Type": "Text",
+    "Format": "pdf",
+    "Identifier": "TAXREP 4/10",
+    "Source": "",
+    "Language": "en",
+    "Relation": "",
     "Coverage": "",
     "Rights": ""
 }
