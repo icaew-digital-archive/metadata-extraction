@@ -22,6 +22,16 @@ IMPORTANT GUIDELINES:
 15. For the creator and contributor fields, always normalise "Institute of Chartered Accountants in England and Wales" to "ICAEW"
 16. Acronyms (such as OECD, IFRS, FRC, HMRC, UK, VAT, etc.) must ALWAYS be in all capitals, regardless of their position in the sentence or title. Do NOT use title case for acronyms. For example, always use "OECD" (not "Oecd"), "IFRS" (not "Ifrs"), "FRC" (not "Frc")
 
+### XIP Metadata Fields
+
+**entity.title (REQUIRED)**
+- Single value only
+- This should be an exact copy of the Dublin Core Title field as described below
+
+**entity.description (REQUIRED)**
+- Single value only
+- This should be an exact copy of the Dublin Core Description field as described below
+
 ### ICAEW-Specific Fields
 
 **icaew:InternalReference (REQUIRED)**
@@ -229,18 +239,6 @@ IMPORTANT GUIDELINES:
 - Use for any additional notes or comments about the document
 - If no notes are needed, return an empty string ("")
 
-### Dublin Core XIP Metadata Fields
-
-**entity.title (REQUIRED)**
-- Single value only
-- This should be an exact copy of the Title field
-- Use the title as it appears in the document
-
-**entity.description (OPTIONAL)**
-- Single value only
-- This should be an exact copy of the Description field
-- Use only if an existing summary or description is present
-
 ### Dublin Core Metadata Fields
 
 **Title (REQUIRED)**
@@ -251,7 +249,7 @@ IMPORTANT GUIDELINES:
 - Do not capitalize the first letter after a colon
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
-- The order should be: title, subtitle, issue/volume, date
+- The order and format should be- title: subtitle, issue/volume, date
 - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
 - Indicate if the content is revised or time-limited
 - Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols
@@ -294,7 +292,7 @@ IMPORTANT GUIDELINES:
 - Briefly summarize the content if available
 - Do not write new summaries manually
 - Listing of contents may be helpful, with each item in the list separated by a semicolon.
-- Should always finish with a full stop/period
+- Should always finish with a full stop/period, question marks are also allowed
 - After this description append the following string: "(AI generated description)"
 - Examples:
   * "Technical guidance on implementing IFRS 9 for financial instruments"
@@ -315,7 +313,7 @@ IMPORTANT GUIDELINES:
 
 **Contributor (OPTIONAL)**
 - Multiple values allowed (separate with semicolons)
-- Used for external institutions involved
+- Used for external institutions involved (i.e. not ICAEW)
 - Use full organization names
 - Separate multiple contributors with semicolons
 - Examples: "Deloitte", "The Pensions Regulator", "Financial Reporting Council"
@@ -334,8 +332,8 @@ IMPORTANT GUIDELINES:
 - Use DCMI type values in sentence case
 - Common types:
   * Text (for documents, articles, reports)
-  * Moving image (for videos, animations)
-  * Still image (for photographs, diagrams)
+  * Moving Image (for videos, animations)
+  * Still Image (for photographs, diagrams)
   * Sound (for audio recordings)
   * Dataset (for spreadsheets, databases)
   * Interactive resource (for web pages, applications)
