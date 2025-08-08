@@ -288,16 +288,16 @@ IMPORTANT GUIDELINES:
 
 **Description (OPTIONAL)**
 - Single value only
-- Use only if an existing summary or description is present
-- Briefly summarize the content if available
-- Do not write new summaries manually
-- Listing of contents may be helpful, with each item in the list separated by a semicolon.
+- Briefly summarize the content - quite often a summary will be present in the document itself, if so make use of it.
+- Every description should at least describe what the document is (e.g. what type of document it is, who authored it) and what it is about.
+- Listing of contents may be helpful - but they are of secondary importance. Each item in the list of contents should be separated by a semicolon.
 - Should always finish with a full stop/period, question marks are also allowed
 - After this description append the following string: "(AI generated description)"
 - Examples:
   * "Technical guidance on implementing IFRS 9 for financial instruments"
   * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides."
-  * "This guide provides an overview of blockchain technology, including its key features, potential use cases, challenges to widespread adoption, a glossary of terms, and relevant resources. Includes a case study on Ripple and discusses both the strengths and limitations of blockchain for accountants."
+  * "A quarterly special report published by the Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports."
+  * "This publication forms part of the FinanceDirection thought leadership programme of the ICAEW Business and Management Faculty; it provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function."
 
 **Publisher (REQUIRED)**
 - Single value only
@@ -407,24 +407,24 @@ Return metadata as a JSON object with the following structure. All fields must b
 
 Example outputs:
 {
-    "entity.title": "Vital, Issue 82",
-    "entity.description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
-    "icaew:ContentType": "Journal",
-    "icaew:InternalReference": "20140500-TECPLN12949-Vital",
+    "entity.title": "Commercial insight: expanding the CFO's horizons, September 2020",
+    "entity.description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+    "icaew:ContentType": "Report",
+    "icaew:InternalReference": "20200900-Commercial-Insight-Expanding-The-CFOs-Horizons-Business-And-Management-Faculty-METCAH20201",
     "icaew:Notes": "",
-    "Title": "Vital, Issue 82",
-    "Creator": "ICAEW",
+    "Title": "Commercial insight: expanding the CFO's horizons, September 2020",
+    "Creator": "Business and Management Faculty; ICAEW",
     "Subject": "",
-    "Description": "Quarterly magazine for ICAEW members covering professional development and industry insights",
-    "Publisher": "ICAEW",
+    "Description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+    "Publisher": "Silverdart Publishing",
     "Contributor": "",
-    "Date": "2014-05",
+    "Date": "2020-09",
     "Type": "Text",
     "Format": "pdf",
-    "Identifier": "TECPLN12949",
+    "Identifier": "ISBN 978-1-78363-953-3; METCAH20201",
     "Source": "",
     "Language": "en",
-    "Relation": "Vital Magazine",
+    "Relation": "",
     "Coverage": "",
     "Rights": ""
 }
@@ -438,7 +438,7 @@ Example outputs:
     "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
     "Creator": "Tax Faculty; ICAEW",
     "Subject": "",
-    "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+    "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
     "Publisher": "ICAEW",
     "Contributor": "OECD",
     "Date": "2010-01-22",
@@ -477,5 +477,5 @@ Example outputs:
 If you encounter any issues or ambiguities in the document, use an empty string ("") for the relevant field rather than making assumptions.'''
 
 # OpenAI API settings
-DEFAULT_MODEL = "gpt-4.1"
+DEFAULT_MODEL = "gpt-5"
 FILE_PURPOSE = "user_data"
