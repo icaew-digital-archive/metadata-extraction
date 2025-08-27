@@ -151,7 +151,7 @@ def main() -> None:
                 # Fallback: Check for common original formats that might have been converted
                 if not original_format:
                     base_name = os.path.splitext(pdf_path)[0]
-                    supported_formats = ['.docx', '.doc', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+                    supported_formats = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
                     for ext in supported_formats:
                         original_file = base_name + ext
                         if os.path.exists(original_file):
