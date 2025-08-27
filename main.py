@@ -134,17 +134,32 @@ def main() -> None:
                 
                 # Determine original format by checking if this was a converted file
                 original_format = None
-                base_name = os.path.splitext(pdf_path)[0]
                 
-                # Check for common original formats that might have been converted
-                for ext in ['.docx', '.doc', '.txt', '.srt']:
-                    original_file = base_name + ext
-                    if os.path.exists(original_file):
-                        original_format = ext[1:]  # Remove the dot
-                        print(f"Detected original format: {original_format}")
-                        break
+                # First, try to read from format mapping file (created by convert_documents.py)
+                mapping_file = os.path.join(os.path.dirname(pdf_path), "format_mapping.json")
+                if os.path.exists(mapping_file):
+                    try:
+                        import json
+                        with open(mapping_file, 'r') as f:
+                            format_mapping = json.load(f)
+                        if pdf_path in format_mapping:
+                            original_format = format_mapping[pdf_path]
+                            print(f"Detected original format from mapping: {original_format}")
+                    except Exception as e:
+                        print(f"Warning: Could not read format mapping: {e}")
                 
-                # If no original file found, assume it's a native PDF
+                # Fallback: Check for common original formats that might have been converted
+                if not original_format:
+                    base_name = os.path.splitext(pdf_path)[0]
+                    supported_formats = ['.docx', '.doc', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+                    for ext in supported_formats:
+                        original_file = base_name + ext
+                        if os.path.exists(original_file):
+                            original_format = ext[1:]  # Remove the dot
+                            print(f"Detected original format: {original_format}")
+                            break
+                
+                # If no original format found, assume it's a native PDF
                 if not original_format:
                     original_format = 'pdf'
                 
