@@ -36,7 +36,7 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
         return str(input_path), False
     
     # Check if it's a supported format
-    supported_formats = ['.docx', '.doc', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    supported_formats = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
     if input_path.suffix.lower() not in supported_formats:
         raise ValueError(f"Unsupported file format: {input_path.suffix}. Supported formats: {', '.join(supported_formats)}")
     
@@ -334,7 +334,7 @@ def get_supported_formats() -> list:
     Returns:
         list: List of supported file extensions
     """
-    return ['.pdf', '.docx', '.doc', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    return ['.pdf', '.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
 
 
 def is_supported_format(file_path: str) -> bool:
@@ -394,7 +394,7 @@ def convert_directory(directory_path: str) -> List[str]:
                 converted_count += 1
                 # Store the original format mapping
                 original_ext = Path(file_path).suffix.lower()
-                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.txt', '.srt', '.vtt']:
+                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
                     format_mapping[str(pdf_path)] = original_ext[1:]  # Remove the dot
                 
         except Exception as e:
@@ -422,7 +422,7 @@ def main():
     
     if len(sys.argv) != 2:
         print("Usage: python convert_documents.py <directory_path>")
-        print("This script converts all DOCX/DOC/TXT/SRT and image files (JPG, PNG, TIFF) in the specified directory to PDF.")
+        print("This script converts all DOCX/DOC/XLSX/PPTX/PPT/TXT/SRT/VTT and image files (JPG, PNG, TIFF) in the specified directory to PDF.")
         sys.exit(1)
     
     directory_path = sys.argv[1]
