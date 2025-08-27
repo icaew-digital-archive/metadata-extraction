@@ -34,8 +34,9 @@ graph TD
     %% External Services
     OpenAIClient -->|API Calls| OpenAI[OpenAI API]
     Download -->|API Calls| PreservicaAPI[Preservica API]
-    Converter -->|Conversion| LibreOffice[LibreOffice/Pandoc]
+    Converter -->|Office Conversion| LibreOffice[LibreOffice/Pandoc]
     Converter -->|Text Conversion| ReportLab[ReportLab]
+    Converter -->|Image Conversion| Pillow[Pillow (PIL)]
     
     %% Component Details
     subgraph "Orchestration"
@@ -56,6 +57,7 @@ graph TD
         PreservicaAPI
         LibreOffice
         ReportLab
+        Pillow
     end
     
     subgraph "Utilities"
@@ -72,7 +74,7 @@ graph TD
     
     class Wrapper wrapper
     class Main,Extractor,Writer,Download,Converter primary
-    class OpenAIClient,OpenAI,PreservicaAPI,LibreOffice,ReportLab secondary
+    class OpenAIClient,OpenAI,PreservicaAPI,LibreOffice,ReportLab,Pillow secondary
     class PDFUtils,Config,Env utility
 ```
 
@@ -126,19 +128,33 @@ The tool supports the following file formats:
 - **PDF** (.pdf) - Processed directly
 - **DOCX** (.docx) - Converted to PDF using LibreOffice/Pandoc
 - **DOC** (.doc) - Converted to PDF using LibreOffice/Pandoc
-- **TXT** (.txt) - Converted to PDF using ReportLab (NEW)
-- **SRT** (.srt) - Converted to PDF using ReportLab with subtitle cleaning (NEW)
+- **XLSX** (.xlsx) - Converted to PDF using LibreOffice/Pandoc (NEW)
+- **PPTX** (.pptx) - Converted to PDF using LibreOffice/Pandoc (NEW)
+- **PPT** (.ppt) - Converted to PDF using LibreOffice/Pandoc (NEW)
+- **TXT** (.txt) - Converted to PDF using ReportLab
+- **SRT** (.srt) - Converted to PDF using ReportLab with subtitle cleaning
+- **VTT** (.vtt) - Converted to PDF using ReportLab with WebVTT cleaning (NEW)
+- **Images** (.jpg, .jpeg, .png, .tiff, .tif) - Converted to PDF using Pillow (NEW)
 
 ### Document Conversion Methods:
-- **Office Documents** (DOCX/DOC): LibreOffice (preferred) or Pandoc
-- **Text Files** (TXT/SRT): Python ReportLab library
+- **Office Documents** (DOCX/DOC/XLSX/PPTX/PPT): LibreOffice (preferred) or Pandoc
+- **Text Files** (TXT/SRT/VTT): Python ReportLab library
+- **Image Files** (JPG/PNG/TIFF): Python Pillow library
 - **PDF Files**: Passed through unchanged
 
-### SRT File Processing:
-Subtitle files (.srt) are automatically cleaned during conversion:
+### Subtitle File Processing:
+Subtitle files (.srt, .vtt) are automatically cleaned during conversion:
 - Removes subtitle numbers and timestamps
 - Extracts only the actual subtitle text content
 - Preserves paragraph structure for better metadata extraction
+- WebVTT files have additional header cleaning (WEBVTT, X-TIMESTAMP-MAP, etc.)
+
+### Image File Processing:
+Image files are converted to PDF while maintaining quality:
+- Supports common formats: JPG, JPEG, PNG, TIFF, TIF
+- Automatic RGB conversion for compatibility
+- Configurable resolution settings
+- Preserves original format information for metadata extraction
 
 ## Usage
 
@@ -252,7 +268,31 @@ The `icaew:ContentType` field uses a controlled vocabulary with the following op
 ### Customization
 - Edit `config.py` to modify metadata extraction rules and prompts
 - Edit the configuration variables in `metadata_extraction_wrapper.py` to change script paths and settings
-- The system uses OpenAI's GPT-4 model by default (configurable in `config.py`)
+- The system uses OpenAI's GPT-5 model by default (configurable in `config.py`)
+
+## Format Mapping and Preservation
+
+The system automatically creates a `format_mapping.json` file during document conversion to preserve original file format information. This ensures that:
+
+- **Accurate Metadata**: The `dc:format` field correctly shows the original format (e.g., "xlsx", "pptx", "jpg") instead of "pdf"
+- **Format Tracking**: Each converted PDF is linked to its original source format
+- **Metadata Integrity**: Users can distinguish between native PDFs and converted documents
+- **Audit Trail**: Complete visibility into the conversion process
+
+### Format Mapping Example:
+```json
+{
+  "downloads/document.pdf": "xlsx",
+  "downloads/presentation.pdf": "pptx",
+  "downloads/image.pdf": "jpg"
+}
+```
+
+### Supported Original Formats:
+- **Office Documents**: docx, doc, xlsx, pptx, ppt
+- **Text Files**: txt, srt, vtt  
+- **Images**: jpg, jpeg, png, tiff, tif
+- **Native**: pdf (no conversion needed)
 
 ## Dependencies
 
@@ -260,7 +300,8 @@ The `icaew:ContentType` field uses a controlled vocabulary with the following op
 - `openai>=1.0.0` - OpenAI API integration
 - `python-dotenv>=1.0.0` - Environment variable management
 - `PyPDF2>=3.0.0` - PDF file operations
-- `reportlab>=4.0.0` - Text-to-PDF conversion (NEW)
+- `reportlab>=4.0.0` - Text-to-PDF conversion
+- `Pillow>=10.0.0` - Image processing and conversion (NEW)
 
 ### System Tools
 - **LibreOffice** (recommended) - Office document conversion
@@ -286,9 +327,10 @@ metadata-extraction/
 
 ## Workflow
 
-1. **Download**: Assets downloaded from Preservica (PDF, DOCX, DOC, TXT, SRT, etc.)
-2. **Convert**: `convert_documents.py` converts all non-PDF files to PDF
-3. **Extract**: `main.py` processes only PDF files (original + converted)
-4. **Output**: CSV with metadata from all documents
+1. **Download**: Assets downloaded from Preservica (PDF, DOCX, DOC, XLSX, PPTX, PPT, TXT, SRT, VTT, images, etc.)
+2. **Convert**: `convert_documents.py` converts all non-PDF files to PDF while preserving original format information
+3. **Format Mapping**: Creates `format_mapping.json` to track original file formats for accurate metadata extraction
+4. **Extract**: `main.py` processes only PDF files (original + converted) with correct format attribution
+5. **Output**: CSV with metadata from all documents, including accurate `dc:format` fields
 
-The wrapper script orchestrates all steps seamlessly while keeping each component focused on its specific task.
+The wrapper script orchestrates all steps seamlessly while keeping each component focused on its specific task. The format mapping ensures that converted files maintain their original format identity in the metadata output.

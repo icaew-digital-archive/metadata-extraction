@@ -16,9 +16,9 @@ class MetadataWriter:
         Args:
             csv_file (str): Path to the CSV file to write to
         """
-        # Define the expected metadata fields in order, with filename first
+        # Define the expected metadata fields in order, with assetId first
         self.fields: List[str] = [
-            'filename/reference',  # Changed from 'filename'
+            'assetId',  # Changed from 'filename/reference'
             'entity.title',
             'entity.description',
             'icaew:ContentType',
@@ -161,8 +161,8 @@ class MetadataWriter:
             # Parse the metadata
             metadata_dict = self._parse_metadata(metadata_str)
 
-            # Add filename/reference as first column
-            metadata_dict['filename/reference'] = os.path.basename(pdf_path)
+            # Add assetId as first column
+            metadata_dict['assetId'] = os.path.basename(pdf_path)
 
             # Override the Format field with the original format if available
             if original_format:

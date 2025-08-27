@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Standalone document conversion script for converting DOCX/DOC files to PDF.
-This script processes all Office documents in a directory and converts them to PDF format.
+Standalone document conversion script for converting DOCX/DOC files and images to PDF.
+This script processes all Office documents and image files in a directory and converts them to PDF format.
 """
 
 import os
@@ -15,10 +15,10 @@ from typing import List, Tuple
 
 def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
     """
-    Convert a DOCX/DOC/TXT/SRT file to PDF format.
+    Convert a DOCX/DOC/TXT/SRT or image file to PDF format.
     
     Args:
-        input_path (str): Path to the input file (DOCX, DOC, TXT, or SRT)
+        input_path (str): Path to the input file (DOCX, DOC, TXT, SRT, JPG, JPEG, PNG, or TIFF)
         
     Returns:
         Tuple[str, bool]: (path_to_pdf, was_converted)
@@ -36,8 +36,9 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
         return str(input_path), False
     
     # Check if it's a supported format
-    if input_path.suffix.lower() not in ['.docx', '.doc', '.txt', '.srt']:
-        raise ValueError(f"Unsupported file format: {input_path.suffix}. Only PDF, DOCX, DOC, TXT, and SRT are supported.")
+    supported_formats = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    if input_path.suffix.lower() not in supported_formats:
+        raise ValueError(f"Unsupported file format: {input_path.suffix}. Supported formats: {', '.join(supported_formats)}")
     
     print(f"Converting {input_path.name} to PDF...")
     
@@ -47,6 +48,13 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
             pdf_path = _convert_text_to_pdf(input_path)
             if pdf_path:
                 print(f"Successfully converted {input_path.name} to PDF using text conversion")
+                return pdf_path, True
+        
+        # For image files, use image-to-PDF conversion
+        if input_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.tiff', '.tif']:
+            pdf_path = _convert_image_to_pdf(input_path)
+            if pdf_path:
+                print(f"Successfully converted {input_path.name} to PDF using image conversion")
                 return pdf_path, True
         
         # For Office documents, try LibreOffice first
@@ -62,7 +70,7 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
             return pdf_path, True
         
         # If all methods fail, raise an error
-        raise RuntimeError(f"Failed to convert {input_path.name} to PDF. Please ensure LibreOffice or Pandoc is installed.")
+        raise RuntimeError(f"Failed to convert {input_path.name} to PDF. Please ensure LibreOffice, Pandoc, or Pillow is installed.")
         
     except Exception as e:
         print(f"Error converting {input_path.name}: {str(e)}")
@@ -180,42 +188,84 @@ def _convert_text_to_pdf(input_path: Path) -> str:
         except Exception as e:
             raise RuntimeError(f"Could not read file {input_path.name}: {str(e)}")
     
-    # Create PDF document
-    doc = SimpleDocTemplate(str(output_path), pagesize=A4)
+    # Create PDF document with ultra-minimal margins for maximum text density
+    doc = SimpleDocTemplate(
+        str(output_path), 
+        pagesize=A4,
+        leftMargin=0.25*inch,   # Ultra-reduced from 0.5 inch
+        rightMargin=0.25*inch,  # Ultra-reduced from 0.5 inch
+        topMargin=0.25*inch,    # Ultra-reduced from 0.5 inch
+        bottomMargin=0.25*inch  # Ultra-reduced from 0.5 inch
+    )
     styles = getSampleStyleSheet()
     
-    # Create custom style for better text formatting
+    # Create ultra-compact style for maximum text density
     text_style = ParagraphStyle(
-        'CustomText',
+        'UltraCompactText',
         parent=styles['Normal'],
-        fontSize=11,
-        leading=14,
-        spaceAfter=6
+        fontSize=8,              # Further reduced from 9
+        leading=9,               # Further reduced from 11 (ultra-tight line spacing)
+        spaceAfter=1,            # Minimal paragraph spacing
+        spaceBefore=0,           # No space before paragraphs
+        alignment=0,             # Left alignment
+        wordWrap='CJK',          # Better word wrapping
+        leftIndent=0,            # No left indentation
+        rightIndent=0,           # No right indentation
+        firstLineIndent=0        # No first line indentation
     )
     
     # Process content based on file type
     if input_path.suffix.lower() == '.srt':
         # For SRT files, clean up subtitle formatting
         content = _clean_srt_content(content)
+    elif input_path.suffix.lower() == '.vtt':
+        # For VTT files, clean up WebVTT formatting
+        content = _clean_vtt_content(content)
     
-    # Split content into paragraphs
-    paragraphs = content.split('\n\n')
+    # Create continuous text flow by joining all content with spaces
+    # This eliminates all line breaks and creates one massive paragraph
+    continuous_text = content.replace('\n\n', ' ').replace('\n', ' ').strip()
     
-    # Create story (content) for PDF
-    story = []
-    
-    for para in paragraphs:
-        para = para.strip()
-        if para:  # Skip empty paragraphs
-            # Replace single newlines with spaces for better formatting
-            para = para.replace('\n', ' ')
-            story.append(Paragraph(para, text_style))
-            story.append(Spacer(1, 6))
+    # Create story (content) for PDF - just one continuous paragraph
+    story = [Paragraph(continuous_text, text_style)]
     
     # Build PDF
     doc.build(story)
     
     return str(output_path)
+
+
+def _convert_image_to_pdf(input_path: Path) -> str:
+    """
+    Convert image files to PDF using Pillow (PIL).
+    
+    Args:
+        input_path (Path): Path to the input image file
+        
+    Returns:
+        str: Path to the converted PDF file
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        raise RuntimeError("Pillow (PIL) library is required for image-to-PDF conversion. Install with: pip install Pillow")
+    
+    output_path = input_path.with_suffix('.pdf')
+    
+    try:
+        # Open the image
+        with Image.open(input_path) as img:
+            # Convert to RGB if necessary (PDF doesn't support RGBA)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # Save as PDF
+            img.save(str(output_path), 'PDF', resolution=100.0)
+            
+            return str(output_path)
+            
+    except Exception as e:
+        raise RuntimeError(f"Failed to convert image {input_path.name} to PDF: {str(e)}")
 
 
 def _clean_srt_content(content: str) -> str:
@@ -249,6 +299,34 @@ def _clean_srt_content(content: str) -> str:
     return '\n\n'.join(cleaned_lines)
 
 
+def _clean_vtt_content(content: str) -> str:
+    """
+    Clean up WebVTT subtitle content for better PDF formatting.
+    
+    Args:
+        content (str): Raw WebVTT content
+        
+    Returns:
+        str: Cleaned content
+    """
+    lines = content.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Skip WebVTT header lines
+        if line.startswith('WEBVTT') or line.startswith('X-TIMESTAMP-MAP') or line.startswith('X-WRITER'):
+            continue
+        
+        # Keep actual subtitle text
+        if line:
+            cleaned_lines.append(line)
+    
+    # Join lines with double newlines for paragraph separation
+    return '\n\n'.join(cleaned_lines)
+
+
 def get_supported_formats() -> list:
     """
     Get list of supported input file formats.
@@ -256,7 +334,7 @@ def get_supported_formats() -> list:
     Returns:
         list: List of supported file extensions
     """
-    return ['.pdf', '.docx', '.doc', '.txt', '.srt']
+    return ['.pdf', '.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
 
 
 def is_supported_format(file_path: str) -> bool:
@@ -304,6 +382,9 @@ def convert_directory(directory_path: str) -> List[str]:
     pdf_files = []
     converted_count = 0
     
+    # Create a format mapping file to track original formats
+    format_mapping = {}
+    
     for file_path in supported_files:
         try:
             pdf_path, was_converted = convert_to_pdf(file_path)
@@ -311,11 +392,23 @@ def convert_directory(directory_path: str) -> List[str]:
             
             if was_converted:
                 converted_count += 1
+                # Store the original format mapping
+                original_ext = Path(file_path).suffix.lower()
+                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
+                    format_mapping[str(pdf_path)] = original_ext[1:]  # Remove the dot
                 
         except Exception as e:
             print(f"Failed to convert {file_path}: {str(e)}")
             # If conversion fails, skip the file
             continue
+    
+    # Write format mapping to a JSON file
+    if format_mapping:
+        import json
+        mapping_file = directory / "format_mapping.json"
+        with open(mapping_file, 'w') as f:
+            json.dump(format_mapping, f, indent=2)
+        print(f"Format mapping saved to: {mapping_file}")
     
     print(f"Conversion complete: {converted_count} files converted to PDF")
     print(f"Total PDF files available: {len(pdf_files)}")
@@ -329,7 +422,7 @@ def main():
     
     if len(sys.argv) != 2:
         print("Usage: python convert_documents.py <directory_path>")
-        print("This script converts all DOCX/DOC files in the specified directory to PDF.")
+        print("This script converts all DOCX/DOC/XLSX/PPTX/PPT/TXT/SRT/VTT and image files (JPG, PNG, TIFF) in the specified directory to PDF.")
         sys.exit(1)
     
     directory_path = sys.argv[1]
