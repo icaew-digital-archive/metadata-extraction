@@ -375,9 +375,9 @@ IMPORTANT GUIDELINES:
 
 **Relation (OPTIONAL)**
 - Multiple values allowed (separate with semicolons)
-- Name of the parent folder or collection
+- Name of the collection or series the document belongs to
 - Multiple relations allowed (separate with semicolons)
-- Examples: "Technical Releases", "Faculty Publications", "Annual Reports"
+- Examples (is not exhaustive): "Technical Release", "Faculty Publication", "Annual Report", "Special Report", "Tax Representation", "Audit Insights", "Thought Leadership"
 
 ### Output Format
 Return metadata as a JSON object with the following structure. All fields must be strings, and empty values should be empty strings (""). Multiple values should be semicolon-separated strings:
@@ -424,7 +424,7 @@ Example outputs:
     "Identifier": "ISBN 978-1-78363-953-3; METCAH20201",
     "Source": "",
     "Language": "en",
-    "Relation": "",
+    "Relation": "Special Report",
     "Coverage": "",
     "Rights": ""
 }
@@ -447,7 +447,30 @@ Example outputs:
     "Identifier": "TAXREP 4/10",
     "Source": "",
     "Language": "en",
-    "Relation": "",
+    "Relation": "Tax Representation",
+    "Coverage": "",
+    "Rights": ""
+}
+
+{
+    "entity.title": "Audit insights: banking, October 2013",
+    "entity.description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+    "icaew:ContentType": "Report",
+    "icaew:InternalReference": "20131000-Audit-Insights-Banking-Financial-Services-Faculty-TECPLN12491",
+    "icaew:Notes": "",
+    "Title": "Audit insights: banking, October 2013",
+    "Creator": "Audit and Assurance Faculty; Financial Services Faculty; ICAEW",
+    "Subject": "",
+    "Description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+    "Publisher": "ICAEW",
+    "Contributor": "",
+    "Date": "2013-10",
+    "Type": "Text",
+    "Format": "pdf",
+    "Identifier": "ISBN 978-0-85760-942-7; TECPLN12491",
+    "Source": "",
+    "Language": "en",
+    "Relation": "Thought Leadership; Audit Insights",
     "Coverage": "",
     "Rights": ""
 }
