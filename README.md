@@ -1,6 +1,6 @@
 # Metadata Extraction Tool
 
-A command-line tool for extracting metadata from PDF, DOCX, DOC, TXT, and SRT files using OpenAI's API. The metadata extraction follows ICAEW-specific conventions and includes a wrapper script for downloading assets from Preservica.
+A powerful command-line tool for extracting metadata from various document formats using OpenAI's API. The metadata extraction follows ICAEW-specific conventions and includes a comprehensive wrapper script for downloading assets from Preservica, converting them to PDF, and extracting rich metadata.
 
 ## System Architecture
 
@@ -89,6 +89,24 @@ The system follows a modular architecture where:
 - `pdf_utils.py` handles PDF file operations
 - `config.py` centralizes configuration settings
 
+## Format Mapping and Preservation
+
+The system automatically creates a `format_mapping.json` file during document conversion to preserve original file format information. This ensures that:
+
+- **Accurate Metadata**: The `dc:format` field correctly shows the original format (e.g., "xlsx", "pptx", "jpg") instead of "pdf"
+- **Format Tracking**: Each converted PDF is linked to its original source format
+- **Metadata Integrity**: Users can distinguish between native PDFs and converted documents
+- **Audit Trail**: Complete visibility into the conversion process
+
+### Format Mapping Example:
+```json
+{
+  "downloads/document.pdf": "xlsx",
+  "downloads/presentation.pdf": "pptx",
+  "downloads/image.pdf": "jpg"
+}
+```
+
 ## Setup
 
 1. Create a virtual environment:
@@ -115,9 +133,12 @@ brew install pandoc               # macOS
 # Download from https://pandoc.org/ for Windows
 ```
 
-4. Create a `.env` file with your OpenAI API key:
+4. Create a `.env` file with your OpenAI API key and script paths:
 ```
 OPENAI_API_KEY=your-api-key-here
+PYPRESERVICA_DOWNLOAD_SCRIPT="/path/to/download_preservica_assets.py"
+METADATA_EXTRACTION_SCRIPT="/path/to/main.py"
+CONVERT_DOCUMENTS_SCRIPT="/path/to/convert_documents.py"
 ```
 
 5. Configure the wrapper script by editing the variables at the top of `metadata_extraction_wrapper.py`
@@ -170,7 +191,7 @@ Edit the configuration variables at the top of `metadata_extraction_wrapper.py`:
 ```python
 # Download configuration
 FOLDER_ID = "your-folder-id-here"  # Change this to your folder ID
-OUTPUT_DIR = "./downloads"  # Directory where downloaded assets will be saved
+WORKING_DIR = "./downloads"  # Directory where assets are downloaded and processed
 CSV_OUTPUT = "metadata.csv"  # CSV file to write extracted metadata to
 
 # Optional settings
@@ -209,7 +230,24 @@ python main.py --file document.pdf --first 3 --last 2 -c output.csv
 ## Arguments
 
 ### Wrapper Script
-The wrapper script uses hardcoded configuration variables (no command line arguments).
+The wrapper script supports the following command line arguments:
+
+- `--preservica-folder-ref FOLDER_ID`: Override hardcoded folder ID
+- `--output-dir DIRECTORY`: Override working directory for downloads and processing
+- `--csv-file FILENAME`: Override CSV output filename  
+- `--skip-download`: Skip Preservica download step and work with existing files
+
+**Examples:**
+```bash
+# Use specific folder ID
+python metadata_extraction_wrapper.py --preservica-folder-ref 12345678-1234-1234-1234-123456789abc
+
+# Custom output directory
+python metadata_extraction_wrapper.py --preservica-folder-ref FOLDER_ID --output-dir ./my-downloads
+
+# Work with existing files (skip download)
+python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --csv-file results.csv
+```
 
 ### Document Converter
 - `<directory_path>`: Path to directory containing files to convert
@@ -327,10 +365,32 @@ metadata-extraction/
 
 ## Workflow
 
-1. **Download**: Assets downloaded from Preservica (PDF, DOCX, DOC, XLSX, PPTX, PPT, TXT, SRT, VTT, images, etc.)
-2. **Convert**: `convert_documents.py` converts all non-PDF files to PDF while preserving original format information
+1. **Download**: Assets downloaded from Preservica (PDF, DOCX, DOC, XLSX, PPTX, PPT, TXT, SRT, VTT, images, etc.) **TO** the working directory
+2. **Convert**: `convert_documents.py` reads files **FROM** the working directory and converts non-PDF files to PDF while preserving original format information
 3. **Format Mapping**: Creates `format_mapping.json` to track original file formats for accurate metadata extraction
-4. **Extract**: `main.py` processes only PDF files (original + converted) with correct format attribution
+4. **Extract**: `main.py` reads PDF files **FROM** the working directory and processes them with correct format attribution
 5. **Output**: CSV with metadata from all documents, including accurate `dc:format` fields
 
+**Note**: The working directory serves as both the **download destination** (step 1) and the **processing source** (steps 2 & 4). This design keeps all files in one location throughout the workflow.
+
 The wrapper script orchestrates all steps seamlessly while keeping each component focused on its specific task. The format mapping ensures that converted files maintain their original format identity in the metadata output.
+
+## Environment Configuration
+
+The system uses environment variables for configuration, loaded from a `.env` file:
+
+```bash
+# Required API keys
+OPENAI_API_KEY=your-openai-api-key
+
+# Script paths (can be absolute or relative)
+PYPRESERVICA_DOWNLOAD_SCRIPT="/path/to/download_preservica_assets.py"
+METADATA_EXTRACTION_SCRIPT="/path/to/main.py"
+CONVERT_DOCUMENTS_SCRIPT="convert_documents.py"
+
+# Preservica credentials
+USERNAME="your-username"
+PASSWORD="your-password"
+TENANT="your-tenant"
+SERVER="your-server"
+```

@@ -65,7 +65,7 @@ FOLDER_ID = ""  # Change this to your folder ID (can be overridden via CLI)
 # ASSETS_FILE = "assets.txt"  # Uncomment to use multiple assets
 
 # Output configuration
-OUTPUT_DIR = "./downloads"  # Directory where downloaded assets will be saved
+WORKING_DIR = "./downloads"  # Directory where assets are downloaded and processed
 CSV_OUTPUT = "ai.csv"  # CSV file to write extracted metadata to
 
 # Optional settings
@@ -90,8 +90,8 @@ Examples:
   python metadata_extraction_wrapper.py --preservica-folder-ref 12345678-1234-1234-1234-123456789abc --output-dir ./my-downloads
   
   # Work with existing files (skip download):
-  python metadata_extraction_wrapper.py --skip-download --output-dir ./srts-test
-  python metadata_extraction_wrapper.py --skip-download --output-dir ./srts-test --csv-file my_metadata.csv
+  python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files
+  python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --csv-file my_metadata.csv
         """
     )
 
@@ -104,7 +104,7 @@ Examples:
     parser.add_argument(
         '--output-dir',
         type=str,
-        help='Output directory for downloaded files (overrides hardcoded OUTPUT_DIR)'
+        help='Working directory for downloads and processing (overrides hardcoded WORKING_DIR)'
     )
 
     parser.add_argument(
@@ -163,7 +163,7 @@ def display_configuration():
     print(f"Extraction script: {EXTRACTION_SCRIPT}")
     print(
         f"Folder ID: {FOLDER_ID if FOLDER_ID else 'Not set (use --preservica-folder-ref)'}")
-    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"Output directory: {WORKING_DIR}")
     print(f"CSV output: {CSV_OUTPUT}")
     print(f"Use asset ref: {USE_ASSET_REF}")
     print(f"Original only: {ORIGINAL_ONLY}")
@@ -185,7 +185,7 @@ def main():
 
     # Use CLI arguments if provided, otherwise fall back to hardcoded values
     folder_id = args.preservica_folder_ref if args.preservica_folder_ref else FOLDER_ID
-    output_dir = Path(args.output_dir) if args.output_dir else Path(OUTPUT_DIR)
+    output_dir = Path(args.output_dir) if args.output_dir else Path(WORKING_DIR)
     csv_output = Path(args.csv_file) if args.csv_file else Path(CSV_OUTPUT)
     skip_download = args.skip_download
 
@@ -229,10 +229,10 @@ def main():
     else:
         print("\nStep 1: Skipping Preservica download (using existing files)")
 
-    # Step 2: Check if files were downloaded
-    print("\nStep 2: Verifying downloaded files")
+    # Step 2: Check if files are available for processing
+    print("\nStep 2: Verifying files are available for processing")
     if not check_downloaded_files(output_dir):
-        print("No files found after download. Stopping orchestration.")
+        print("No files found in working directory. Stopping orchestration.")
         sys.exit(1)
 
     # Step 3: Convert any DOCX/DOC files to PDF
