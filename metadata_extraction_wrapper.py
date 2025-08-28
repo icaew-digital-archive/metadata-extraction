@@ -6,20 +6,57 @@ Metadata extraction wrapper script that downloads assets from Preservica and the
 
 This wrapper script:
 1. Downloads assets from Preservica using download_preservica_assets.py
-2. Converts any DOCX/DOC files to PDF using convert_documents.py
+2. Converts any DOCX/DOC/XLSX/PPTX/PPT/TXT/SRT/VTT/image files to PDF using convert_documents.py
 3. Extracts metadata from the PDF files using main.py
 4. Handles the workflow between the scripts
 
 To use this script, edit the configuration variables at the top of the file or use CLI arguments.
+Script paths can be configured via environment variables or .env file.
 """
+
+from pathlib import Path
+import argparse
+import sys
+import subprocess
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(override=True)
+
+# ===== CONFIGURATION FROM ENVIRONMENT VARIABLES =====
+# Script paths - read from environment variables with fallbacks
+#
+# To configure script paths, add these to your .env file:
+# PYPRESERVICA_DOWNLOAD_SCRIPT="/path/to/download_preservica_assets.py"
+# METADATA_EXTRACTION_SCRIPT="/path/to/main.py"
+# CONVERT_DOCUMENTS_SCRIPT="/path/to/convert_documents.py"
+#
+# Or set them as environment variables:
+# export PYPRESERVICA_DOWNLOAD_SCRIPT="/path/to/download_preservica_assets.py"
+# export METADATA_EXTRACTION_SCRIPT="/path/to/main.py"
+# export CONVERT_DOCUMENTS_SCRIPT="/path/to/convert_documents.py"
+
+# Download script path
+DOWNLOAD_SCRIPT = os.getenv(
+    'PYPRESERVICA_DOWNLOAD_SCRIPT',
+    "fallback_path_here"
+)
+
+# Convert script path (relative to current directory by default)
+CONVERT_SCRIPT = os.getenv(
+    'CONVERT_DOCUMENTS_SCRIPT',
+    "fallback_path_here"
+)
+
+# Metadata extraction script path
+EXTRACTION_SCRIPT = os.getenv(
+    'METADATA_EXTRACTION_SCRIPT',
+    "fallback_path_here"
+)
 
 # ===== HARDCODED CONFIGURATION =====
 # Change these variables as needed
-
-# Script paths
-DOWNLOAD_SCRIPT = "/home/digital-archivist/Documents/custom scripts/digital-archiving-scripts/pypreservica scripts/download_preservica_assets.py"  # Path to the Preservica download script
-CONVERT_SCRIPT = "convert_documents.py"  # Path to the document conversion script
-EXTRACTION_SCRIPT = "/home/digital-archivist/Documents/custom scripts/metadata-extraction/main.py"  # Path to the metadata extraction script
 
 # Download configuration
 FOLDER_ID = ""  # Change this to your folder ID (can be overridden via CLI)
@@ -33,15 +70,11 @@ CSV_OUTPUT = "ai.csv"  # CSV file to write extracted metadata to
 
 # Optional settings
 USE_ASSET_REF = True  # Set to True to use asset reference numbers in filenames
-ORIGINAL_ONLY = True  # Set to True to download only original (first generation) files
+# Set to True to download only original (first generation) files
+ORIGINAL_ONLY = True
 FIRST_PAGES = 6  # Number of pages to include from the start (0 = no limit)
 LAST_PAGES = 4   # Number of pages to include from the end (0 = no limit)
 # ===================================
-
-import subprocess
-import sys
-import argparse
-from pathlib import Path
 
 
 def parse_arguments():
@@ -61,31 +94,31 @@ Examples:
   python metadata_extraction_wrapper.py --skip-download --output-dir ./srts-test --csv-file my_metadata.csv
         """
     )
-    
+
     parser.add_argument(
         '--preservica-folder-ref',
         type=str,
         help='Preservica folder ID to download (overrides hardcoded FOLDER_ID)'
     )
-    
+
     parser.add_argument(
         '--output-dir',
         type=str,
         help='Output directory for downloaded files (overrides hardcoded OUTPUT_DIR)'
     )
-    
+
     parser.add_argument(
         '--csv-file',
         type=str,
         help='CSV output filename (overrides hardcoded CSV_OUTPUT)'
     )
-    
+
     parser.add_argument(
         '--skip-download',
         action='store_true',
         help='Skip Preservica download step and work with existing files in output directory'
     )
-    
+
     return parser.parse_args()
 
 
@@ -93,7 +126,7 @@ def run_command(cmd, description):
     """Run a command and return True if successful, False otherwise."""
     print(f"Running: {description}")
     print(f"Command: {' '.join(cmd)}")
-    
+
     try:
         result = subprocess.run(cmd, check=True)
         print(f"Successfully completed: {description}")
@@ -112,41 +145,61 @@ def check_downloaded_files(download_dir):
     if not download_dir.exists():
         print(f"Download directory does not exist: {download_dir}")
         return False
-    
+
     files = list(download_dir.glob('*'))
     if not files:
         print(f"No files found in download directory: {download_dir}")
         return False
-    
+
     print(f"Found {len(files)} files in download directory")
     return True
 
 
+def display_configuration():
+    """Display the current configuration being used."""
+    print("=== Configuration ===")
+    print(f"Download script: {DOWNLOAD_SCRIPT}")
+    print(f"Convert script: {CONVERT_SCRIPT}")
+    print(f"Extraction script: {EXTRACTION_SCRIPT}")
+    print(
+        f"Folder ID: {FOLDER_ID if FOLDER_ID else 'Not set (use --preservica-folder-ref)'}")
+    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"CSV output: {CSV_OUTPUT}")
+    print(f"Use asset ref: {USE_ASSET_REF}")
+    print(f"Original only: {ORIGINAL_ONLY}")
+    print(f"First pages: {FIRST_PAGES}")
+    print(f"Last pages: {LAST_PAGES}")
+    print("==================\n")
+
+
 def main():
     """Main orchestration function."""
-    
+
     # Parse command line arguments
     args = parse_arguments()
-    
+
     print("Starting orchestration process")
-    
+
+    # Display current configuration
+    display_configuration()
+
     # Use CLI arguments if provided, otherwise fall back to hardcoded values
     folder_id = args.preservica_folder_ref if args.preservica_folder_ref else FOLDER_ID
     output_dir = Path(args.output_dir) if args.output_dir else Path(OUTPUT_DIR)
     csv_output = Path(args.csv_file) if args.csv_file else Path(CSV_OUTPUT)
     skip_download = args.skip_download
-    
+
     print(f"Using folder ID: {folder_id}")
     print(f"Output directory: {output_dir}")
     print(f"CSV output: {csv_output}")
     print(f"Skip download: {skip_download}")
-    
+
     # Step 1: Run the download script (unless skipped)
     if not skip_download:
         print("\nStep 1: Downloading assets from Preservica")
-        
+
         download_cmd = ['python', DOWNLOAD_SCRIPT]
-        
+
         # Add the appropriate download source argument
         if folder_id:
             download_cmd.extend(['--folder', folder_id])
@@ -159,10 +212,10 @@ def main():
         else:
             print("Error: No download source specified. Please set one of FOLDER_ID, FOLDERS_FILE, ASSET_ID, or ASSETS_FILE.")
             sys.exit(1)
-        
+
         # Add output directory
         download_cmd.append(str(output_dir))
-        
+
         # Add optional arguments
         if USE_ASSET_REF:
             download_cmd.append('--use-asset-ref')
@@ -184,7 +237,7 @@ def main():
 
     # Step 3: Convert any DOCX/DOC files to PDF
     print("\nStep 3: Converting documents to PDF format")
-    
+
     convert_cmd = ['python', CONVERT_SCRIPT, str(output_dir)]
 
     if not run_command(convert_cmd, "Document conversion"):
@@ -193,9 +246,10 @@ def main():
 
     # Step 4: Run the metadata extraction script (main.py remains unchanged, PDF-focused)
     print("\nStep 4: Extracting metadata from PDF files")
-    
-    extract_cmd = ['python', EXTRACTION_SCRIPT, '--folder', str(output_dir), '--csv-file', str(csv_output)]
-    
+
+    extract_cmd = ['python', EXTRACTION_SCRIPT, '--folder',
+                   str(output_dir), '--csv-file', str(csv_output)]
+
     # Add optional page limit arguments
     if FIRST_PAGES > 0:
         extract_cmd.extend(['--first', str(FIRST_PAGES)])
@@ -213,4 +267,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

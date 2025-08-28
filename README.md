@@ -36,14 +36,14 @@ graph TD
     Download -->|API Calls| PreservicaAPI[Preservica API]
     Converter -->|Office Conversion| LibreOffice[LibreOffice/Pandoc]
     Converter -->|Text Conversion| ReportLab[ReportLab]
-    Converter -->|Image Conversion| Pillow[Pillow (PIL)]
+    Converter -->|Image Conversion| Pillow[Pillow PIL]
     
     %% Component Details
-    subgraph "Orchestration"
+    subgraph Orchestration
         Wrapper
     end
     
-    subgraph "Core Components"
+    subgraph CoreComponents
         Main
         Extractor
         Writer
@@ -51,7 +51,7 @@ graph TD
         Converter
     end
     
-    subgraph "External Services"
+    subgraph ExternalServices
         OpenAIClient
         OpenAI
         PreservicaAPI
@@ -60,7 +60,7 @@ graph TD
         Pillow
     end
     
-    subgraph "Utilities"
+    subgraph Utilities
         PDFUtils
         Config
         Env
