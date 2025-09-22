@@ -66,7 +66,8 @@ FOLDER_ID = ""  # Change this to your folder ID (can be overridden via CLI)
 
 # Output configuration
 WORKING_DIR = "./downloads"  # Directory where assets are downloaded and processed
-CSV_OUTPUT = "ai.csv"  # CSV file to write extracted metadata to
+JSON_OUTPUT = "ai.json"  # JSON file to write extracted metadata to
+CSV_OUTPUT = "ai.csv"  # CSV file to write extracted metadata to (converted from JSON)
 
 # Optional settings
 USE_ASSET_REF = True  # Set to True to use asset reference numbers in filenames
@@ -91,7 +92,7 @@ Examples:
   
   # Work with existing files (skip download):
   python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files
-  python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --csv-file my_metadata.csv
+  python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --json-file my_metadata.json --csv-file my_metadata.csv
         """
     )
 
@@ -105,6 +106,12 @@ Examples:
         '--output-dir',
         type=str,
         help='Working directory for downloads and processing (overrides hardcoded WORKING_DIR)'
+    )
+
+    parser.add_argument(
+        '--json-file',
+        type=str,
+        help='JSON output filename (overrides hardcoded JSON_OUTPUT)'
     )
 
     parser.add_argument(
@@ -164,6 +171,7 @@ def display_configuration():
     print(
         f"Folder ID: {FOLDER_ID if FOLDER_ID else 'Not set (use --preservica-folder-ref)'}")
     print(f"Output directory: {WORKING_DIR}")
+    print(f"JSON output: {JSON_OUTPUT}")
     print(f"CSV output: {CSV_OUTPUT}")
     print(f"Use asset ref: {USE_ASSET_REF}")
     print(f"Original only: {ORIGINAL_ONLY}")
@@ -186,11 +194,13 @@ def main():
     # Use CLI arguments if provided, otherwise fall back to hardcoded values
     folder_id = args.preservica_folder_ref if args.preservica_folder_ref else FOLDER_ID
     output_dir = Path(args.output_dir) if args.output_dir else Path(WORKING_DIR)
+    json_output = Path(args.json_file) if args.json_file else Path(JSON_OUTPUT)
     csv_output = Path(args.csv_file) if args.csv_file else Path(CSV_OUTPUT)
     skip_download = args.skip_download
 
     print(f"Using folder ID: {folder_id}")
     print(f"Output directory: {output_dir}")
+    print(f"JSON output: {json_output}")
     print(f"CSV output: {csv_output}")
     print(f"Skip download: {skip_download}")
 
@@ -244,11 +254,11 @@ def main():
         print("Document conversion step failed.")
         sys.exit(1)
 
-    # Step 4: Run the metadata extraction script (main.py remains unchanged, PDF-focused)
+    # Step 4: Run the metadata extraction script (main.py now writes to JSON)
     print("\nStep 4: Extracting metadata from PDF files")
 
     extract_cmd = ['python', EXTRACTION_SCRIPT, '--folder',
-                   str(output_dir), '--csv-file', str(csv_output)]
+                   str(output_dir), '--json-file', str(json_output)]
 
     # Add optional page limit arguments
     if FIRST_PAGES > 0:
@@ -260,10 +270,20 @@ def main():
         print("Metadata extraction step failed.")
         sys.exit(1)
 
+    # Step 5: Convert JSON to CSV
+    print("\nStep 5: Converting JSON metadata to CSV format")
+
+    convert_json_cmd = ['python', 'json_to_csv_converter.py', str(json_output), str(csv_output)]
+
+    if not run_command(convert_json_cmd, "JSON to CSV conversion"):
+        print("JSON to CSV conversion step failed.")
+        sys.exit(1)
+
     # Success
     print(f"\nOrchestration completed successfully!")
     print(f"Downloaded files: {output_dir}")
-    print(f"Metadata output: {csv_output}")
+    print(f"JSON metadata: {json_output}")
+    print(f"CSV metadata: {csv_output}")
 
 
 if __name__ == "__main__":
