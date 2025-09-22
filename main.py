@@ -8,7 +8,7 @@ import sys
 import os
 from typing import List, Optional, Set, Tuple
 from metadata_extractor import MetadataExtractor
-from metadata_writer import MetadataWriter
+from json_metadata_writer import JSONMetadataWriter
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -19,24 +19,27 @@ def create_parser() -> argparse.ArgumentParser:
         epilog='''
 Examples:
   # Process a single PDF file:
-  python main.py --file path/to/document.pdf -c output.csv
+  python main.py --file path/to/document.pdf -j output.json
   # or
-  python main.py -f path/to/document.pdf -c output.csv
+  python main.py -f path/to/document.pdf -j output.json
 
   # Process all PDFs in a directory:
-  python main.py --folder path/to/pdf/directory -c output.csv
+  python main.py --folder path/to/pdf/directory -j output.json
   # or
-  python main.py -d path/to/pdf/directory -c output.csv
+  python main.py -d path/to/pdf/directory -j output.json
 
   # Process first 3 pages of all PDFs in a directory:
-  python main.py --folder path/to/pdf/directory --first 3 -c output.csv
+  python main.py --folder path/to/pdf/directory --first 3 -j output.json
   # or
-  python main.py -d path/to/pdf/directory -f 3 -c output.csv
+  python main.py -d path/to/pdf/directory -f 3 -j output.json
 
   # Process last 2 pages of all PDFs in a directory:
-  python main.py --folder path/to/pdf/directory --last 2 -c output.csv
+  python main.py --folder path/to/pdf/directory --last 2 -j output.json
   # or
-  python main.py -d path/to/pdf/directory -l 2 -c output.csv
+  python main.py -d path/to/pdf/directory -l 2 -j output.json
+
+  # Convert JSON to CSV after processing:
+  python json_to_csv_converter.py output.json output.csv
 '''
     )
 
@@ -55,9 +58,9 @@ Examples:
                         type=int,
                         default=0,
                         help='Number of pages to include from the end (default: 0, meaning no limit)')
-    parser.add_argument('--csv-file', '-c',
+    parser.add_argument('--json-file', '-j',
                         required=True,
-                        help='CSV file to write metadata to')
+                        help='JSON file to write metadata to')
 
     return parser
 
@@ -116,7 +119,7 @@ def main() -> None:
 
         # Initialize metadata extractor and writer
         extractor = MetadataExtractor()
-        writer = MetadataWriter(args.csv_file)
+        writer = JSONMetadataWriter(args.json_file)
 
         # Track processed and failed files
         processed_files: Set[str] = set()
@@ -170,10 +173,10 @@ def main() -> None:
                 print(f"\n[{index}/{total_files}] Extracted Metadata:")
                 print(metadata)
 
-                # Write to CSV using the original path and format
+                # Write to JSON using the original path and format
                 writer.write_metadata(metadata, original_path, detected_format)
                 processed_files.add(pdf_path)
-                print(f"[{index}/{total_files}] Successfully processed and added to CSV: {original_path}")
+                print(f"[{index}/{total_files}] Successfully processed and added to JSON: {original_path}")
 
             except Exception as e:
                 error_msg = str(e)
@@ -186,7 +189,7 @@ def main() -> None:
         print(f"- Total files found: {total_files}")
         print(f"- Successfully processed: {len(processed_files)}")
         print(f"- Failed to process: {len(failed_files)}")
-        print(f"- Metadata written to: {args.csv_file}")
+        print(f"- Metadata written to: {args.json_file}")
         
         if failed_files:
             print("\nFailed files:")
