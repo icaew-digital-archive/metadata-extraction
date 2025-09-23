@@ -13,6 +13,12 @@ This project showcases an end-to-end document processing pipeline that:
 - Updates Preservica metadata using the extracted information
 - Preserves original format information throughout the pipeline
 
+## Demo
+
+![Metadata Extraction Demo](assets/demo.gif)
+
+*This demo shows the complete workflow: downloading assets from Preservica, AI-powered metadata extraction using OpenAI, and JSON output generation.*
+
 ## System Flow
 
 ```mermaid
@@ -59,6 +65,7 @@ graph TD
     JSONWriter -->|JSON Output| JSONFile[JSON File]
     JSONFile -->|Convert| JSONConverter
     JSONConverter -->|CSV Output| CSVFile[CSV File]
+    CSVFile -->|Update| PreservicaUpdate[Update Preservica<br/>Metadata]
     
     %% External Services
     OpenAIClient -->|API Calls| OpenAI[OpenAI API]
@@ -94,6 +101,7 @@ graph TD
     subgraph Output
         JSONFile
         CSVFile
+        PreservicaUpdate
     end
     
     %% Styling
@@ -107,7 +115,7 @@ graph TD
     class Main,Extractor,JSONWriter,Converter,JSONConverter primary
     class OpenAIClient,OpenAI,LibreOffice,ReportLab secondary
     class PDFUtils,Config,Env utility
-    class JSONFile,CSVFile output
+    class JSONFile,CSVFile,PreservicaUpdate output
 ```
 
 ## Technical Implementation
