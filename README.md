@@ -5,10 +5,31 @@ An experimental AI-powered metadata extraction system that processes various doc
 ## Overview
 
 This project showcases an end-to-end document processing pipeline that:
+- Downloads assets from Preservica digital preservation system or processes local files
 - Converts multiple document formats to PDF for consistent processing
 - Extracts structured metadata using AI/LLM technology
+- Maintains asset ID links for metadata updates and further processing
 - Outputs results in both JSON and CSV formats
+- Updates Preservica metadata using the extracted information
 - Preserves original format information throughout the pipeline
+
+## System Flow
+
+```mermaid
+graph LR
+    A[Input Files<br/>Preservica or Local] --> B[Convert to PDF]
+    B --> C[AI Processing<br/>OpenAI API]
+    C --> D[JSON Metadata<br/>with Asset IDs]
+    D --> E[CSV Output]
+    E --> F[Update Preservica<br/>Metadata]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style F fill:#f1f8e9
+```
 
 ## System Architecture
 
@@ -30,7 +51,7 @@ graph TD
     Env[.env] -->|API Key| OpenAIClient
     
     %% Data Flow
-    InputFiles[Input Files] -->|PDF/DOCX/DOC/etc| Wrapper
+    PreservicaAssets[Preservica Assets] -->|Download| Wrapper
     Wrapper -->|Convert if needed| Converter
     Converter -->|PDF Files| Main
     Main -->|Process| Extractor
@@ -43,7 +64,6 @@ graph TD
     OpenAIClient -->|API Calls| OpenAI[OpenAI API]
     Converter -->|Office Conversion| LibreOffice[LibreOffice/Pandoc]
     Converter -->|Text Conversion| ReportLab[ReportLab]
-    Converter -->|Image Conversion| Pillow[Pillow PIL]
     
     %% Component Details
     subgraph Orchestration
@@ -63,7 +83,6 @@ graph TD
         OpenAI
         LibreOffice
         ReportLab
-        Pillow
     end
     
     subgraph Utilities
@@ -86,38 +105,9 @@ graph TD
     
     class Wrapper wrapper
     class Main,Extractor,JSONWriter,Converter,JSONConverter primary
-    class OpenAIClient,OpenAI,LibreOffice,ReportLab,Pillow secondary
+    class OpenAIClient,OpenAI,LibreOffice,ReportLab secondary
     class PDFUtils,Config,Env utility
     class JSONFile,CSVFile output
-```
-
-The system follows a modular architecture where:
-- `metadata_extraction_wrapper.py` orchestrates the complete workflow (convert + extract + convert to CSV)
-- `convert_documents.py` converts various file formats to PDF for processing
-- `main.py` handles CLI interaction and orchestrates the extraction process (PDF-focused)
-- `metadata_extractor.py` manages the core extraction logic
-- `json_metadata_writer.py` handles JSON output formatting
-- `json_to_csv_converter.py` converts JSON metadata to CSV format
-- `openai_client.py` provides the OpenAI API integration
-- `pdf_utils.py` handles PDF file operations
-- `config.py` centralizes configuration settings
-
-## Format Mapping and Preservation
-
-The system automatically creates a `format_mapping.json` file during document conversion to preserve original file format information. This ensures that:
-
-- **Accurate Metadata**: The `dc:format` field correctly shows the original format (e.g., "xlsx", "pptx", "jpg") instead of "pdf"
-- **Format Tracking**: Each converted PDF is linked to its original source format
-- **Metadata Integrity**: Users can distinguish between native PDFs and converted documents
-- **Audit Trail**: Complete visibility into the conversion process
-
-### Format Mapping Example:
-```json
-{
-  "downloads/document.pdf": "xlsx",
-  "downloads/presentation.pdf": "pptx",
-  "downloads/image.pdf": "jpg"
-}
 ```
 
 ## Technical Implementation
@@ -134,42 +124,16 @@ The system is built with Python and integrates several key technologies:
 The system converts all documents to PDF before LLM processing to provide:
 - **Consistent Input Format**: Standardized structure for reliable LLM processing
 - **Preserved Layout**: Maintains document hierarchy and formatting context
-- **Clean Text Extraction**: Reliable text extraction with preserved structure
+- **Direct AI Processing**: PDFs are uploaded directly to OpenAI for text extraction and analysis
 - **Format Preservation**: Original format information maintained in metadata
 
 ## Supported File Formats
 
 The tool supports the following file formats:
 - **PDF** (.pdf) - Processed directly
-- **DOCX** (.docx) - Converted to PDF using LibreOffice/Pandoc
-- **DOC** (.doc) - Converted to PDF using LibreOffice/Pandoc
-- **XLSX** (.xlsx) - Converted to PDF using LibreOffice/Pandoc (NEW)
-- **PPTX** (.pptx) - Converted to PDF using LibreOffice/Pandoc (NEW)
-- **PPT** (.ppt) - Converted to PDF using LibreOffice/Pandoc (NEW)
-- **TXT** (.txt) - Converted to PDF using ReportLab
-- **SRT** (.srt) - Converted to PDF using ReportLab with subtitle cleaning
-- **VTT** (.vtt) - Converted to PDF using ReportLab with WebVTT cleaning (NEW)
-- **Images** (.jpg, .jpeg, .png, .tiff, .tif) - Converted to PDF using Pillow (NEW)
-
-### Document Conversion Methods:
-- **Office Documents** (DOCX/DOC/XLSX/PPTX/PPT): LibreOffice (preferred) or Pandoc
-- **Text Files** (TXT/SRT/VTT): Python ReportLab library
-- **Image Files** (JPG/PNG/TIFF): Python Pillow library
-- **PDF Files**: Passed through unchanged
-
-### Subtitle File Processing:
-Subtitle files (.srt, .vtt) are automatically cleaned during conversion:
-- Removes subtitle numbers and timestamps
-- Extracts only the actual subtitle text content
-- Preserves paragraph structure for better metadata extraction
-- WebVTT files have additional header cleaning (WEBVTT, X-TIMESTAMP-MAP, etc.)
-
-### Image File Processing:
-Image files are converted to PDF while maintaining quality:
-- Supports common formats: JPG, JPEG, PNG, TIFF, TIF
-- Automatic RGB conversion for compatibility
-- Configurable resolution settings
-- Preserves original format information for metadata extraction
+- **Office Documents** (.docx, .doc, .xlsx, .pptx, .ppt) - Converted to PDF
+- **Text Files** (.txt, .srt, .vtt) - Converted to PDF
+- **Images** (.jpg, .jpeg, .png, .tiff, .tif) - Converted to PDF
 
 ## Capabilities
 
@@ -194,20 +158,6 @@ python json_to_csv_converter.py output.json output.csv  # Convert to CSV
 - **AI-Powered Extraction**: Uses OpenAI's API for intelligent metadata extraction
 - **Dual Output**: Generates both JSON (structured) and CSV (tabular) outputs
 - **Page Selection**: Supports processing specific page ranges for large documents
-
-## Technical Architecture
-
-### Core Components
-
-- **`metadata_extraction_wrapper.py`**: Orchestrates the complete workflow
-- **`convert_documents.py`**: Handles multi-format to PDF conversion
-- **`main.py`**: PDF processing and metadata extraction
-- **`metadata_extractor.py`**: AI-powered metadata extraction logic
-- **`json_metadata_writer.py`**: JSON output formatting
-- **`json_to_csv_converter.py`**: JSON to CSV conversion
-- **`openai_client.py`**: OpenAI API integration
-- **`pdf_utils.py`**: PDF file operations
-- **`config.py`**: Configuration and AI prompts
 
 ## Metadata Schema
 
@@ -272,64 +222,66 @@ The system automatically creates a `format_mapping.json` file during document co
 }
 ```
 
-### Supported Original Formats:
-- **Office Documents**: docx, doc, xlsx, pptx, ppt
-- **Text Files**: txt, srt, vtt  
-- **Images**: jpg, jpeg, png, tiff, tif
-- **Native**: pdf (no conversion needed)
-
 ## Dependencies
 
-### Python Packages
-- `openai>=1.0.0` - OpenAI API integration
-- `python-dotenv>=1.0.0` - Environment variable management
-- `PyPDF2>=3.0.0` - PDF file operations
-- `reportlab>=4.0.0` - Text-to-PDF conversion
-
-### External Tools
-- **LibreOffice** - Office document conversion
-- **Pandoc** - Alternative document conversion
+- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab
+- **External Tools**: LibreOffice or Pandoc for document conversion
 
 ## File Structure
 
-```
-metadata-extraction/
-├── metadata_extraction_wrapper.py  # Main orchestration script
-├── main.py                         # Metadata extraction CLI (PDF only)
-├── convert_documents.py            # Multi-format to PDF conversion
-├── metadata_extractor.py           # Core extraction logic
-├── json_metadata_writer.py         # JSON output handling
-├── json_to_csv_converter.py        # JSON to CSV conversion
-├── metadata_writer.py              # Legacy CSV output handling
-├── openai_client.py                # OpenAI API integration
-├── pdf_utils.py                    # PDF file operations
-├── config.py                       # Configuration and prompts
-├── requirements.txt                # Python dependencies
-├── .env                           # Environment variables (API keys)
-└── README.md                      # This file
-```
+Key files:
+- `metadata_extraction_wrapper.py` - Main orchestration script
+- `main.py` - Metadata extraction CLI
+- `convert_documents.py` - Multi-format to PDF conversion
+- `metadata_extractor.py` - Core extraction logic
+- `json_metadata_writer.py` - JSON output handling
+- `json_to_csv_converter.py` - JSON to CSV conversion
+- `openai_client.py` - OpenAI API integration
+- `config.py` - Configuration and prompts
 
 ## Workflow
 
-1. **Input**: Place files (PDF, DOCX, DOC, XLSX, PPTX, PPT, TXT, SRT, VTT, images, etc.) in the working directory
-2. **Convert**: `convert_documents.py` reads files **FROM** the working directory and converts non-PDF files to PDF while preserving original format information
-3. **Format Mapping**: Creates `format_mapping.json` to track original file formats for accurate metadata extraction
-4. **Extract**: `main.py` reads PDF files **FROM** the working directory and processes them with correct format attribution
-5. **JSON Output**: Metadata is written to JSON format using `json_metadata_writer.py`
-6. **CSV Conversion**: `json_to_csv_converter.py` converts the JSON metadata to CSV format for final output
+1. **Input**: Assets downloaded from Preservica or local files placed in working directory
+2. **Convert**: Non-PDF files converted to PDF while preserving original format information
+3. **Extract**: AI-powered metadata extraction from PDF files
+4. **Output**: Metadata written to JSON format
+5. **Convert**: JSON metadata converted to CSV format
+6. **Update**: CSV output used to update Preservica metadata using preserved asset IDs
 
-**Note**: The working directory serves as both the **input location** (step 1) and the **processing source** (steps 2 & 4). This design keeps all files in one location throughout the workflow.
+## Preservica Integration
 
-The wrapper script orchestrates all steps seamlessly while keeping each component focused on its specific task. The format mapping ensures that converted files maintain their original format identity in the metadata output. The JSON-first approach allows for better data integrity and easier debugging.
+The system integrates with Preservica digital preservation system to:
+
+- **Asset Download**: Downloads assets from Preservica using folder or asset references
+- **Asset ID Tracking**: Maintains Preservica asset IDs throughout the processing pipeline
+- **Metadata Linking**: Links extracted metadata back to original Preservica assets
+- **Update Capability**: Enables further scripting to update Preservica metadata using extracted information
+
+### Asset ID Preservation
+
+Each processed document maintains its Preservica asset ID in the output metadata:
+- **JSON Output**: Asset ID stored in `assetId` field for each record
+- **CSV Output**: Asset ID included as first column for easy reference
+- **Update Workflow**: Asset IDs enable automated metadata updates back to Preservica
+
+### Metadata Update Process
+
+The CSV output serves as the primary input for updating Preservica metadata:
+- **Structured Data**: CSV format provides clean, tabular data for bulk updates
+- **Asset Linking**: First column contains Preservica asset IDs for precise targeting
+- **Bulk Processing**: Enables efficient batch updates of multiple assets
+- **Data Integrity**: Preserves all extracted metadata fields for comprehensive updates
 
 ## Project Status
 
 This is an experimental project demonstrating AI-powered document processing capabilities. The system showcases:
 
+- **Preservica Integration**: Seamless download and metadata linking with digital preservation system
 - **Document Format Conversion**: Multi-format to PDF conversion pipeline
 - **AI-Powered Metadata Extraction**: Intelligent content analysis and classification
-- **Structured Data Output**: JSON and CSV format generation
+- **Structured Data Output**: JSON and CSV format generation with asset tracking
+- **Metadata Update Workflow**: CSV output enables bulk updates back to Preservica
 - **Format Preservation**: Maintaining original file format information
 - **Modular Architecture**: Component-based design for flexibility
 
-The project serves as a proof-of-concept for automated document processing workflows using modern AI technologies.
+The project serves as a proof-of-concept for automated document processing workflows using modern AI technologies, with the ultimate goal of enhancing Preservica metadata through AI-powered extraction and bulk update capabilities.
