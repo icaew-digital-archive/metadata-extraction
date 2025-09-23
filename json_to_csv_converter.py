@@ -244,6 +244,9 @@ class JSONToCSVConverter:
                         # Handle assetId specially since it's not in metadata_dict
                         if field == 'assetId':
                             value = csv_row.get('assetId', '')
+                        elif field.startswith('dc:format'):
+                            # For dc:format fields, use the value already set from original_format
+                            value = csv_row.get(field, '')
                         else:
                             # Calculate the field index based on position
                             field_index = 0
