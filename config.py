@@ -1316,3 +1316,53 @@ If you encounter any issues or ambiguities in the document, use an empty string 
 # OpenAI API settings
 DEFAULT_MODEL = "gpt-5"
 FILE_PURPOSE = "user_data"
+
+
+def get_system_prompt(include_subjects: bool = True) -> str:
+    """Return the system prompt, with or without subject classification.
+
+    When include_subjects is False the Subject field reverts to RESERVED
+    (always returns []) and the topic list is omitted from the prompt.
+    """
+    if include_subjects:
+        return SYSTEM_PROMPT
+
+    prompt = SYSTEM_PROMPT
+
+    # Swap Subject OPTIONAL definition for RESERVED using section boundaries
+    subject_start = prompt.find('\n**Subject (OPTIONAL)**\n')
+    source_start = prompt.find('\n**Source, Coverage, Rights (RESERVED)**\n')
+    if subject_start != -1 and source_start != -1:
+        reserved = (
+            '\n**Subject (RESERVED)**\n'
+            '- This field is reserved for future use\n'
+            '- Always return an empty array ([]) for this field\n'
+            '- Do not attempt to extract or infer values for this field\n'
+        )
+        prompt = prompt[:subject_start] + reserved + prompt[source_start:]
+
+    # Remove the topic list section (between its header and the Validation Rules header)
+    topic_header = '\n### ICAEW Topic List for Subject Classification\n'
+    validation_header = '\n### Validation Rules\n'
+    if topic_header in prompt and validation_header in prompt:
+        prompt = prompt[:prompt.index(topic_header)] + prompt[prompt.index(validation_header):]
+
+    # Update output format template
+    prompt = prompt.replace(
+        '    "Subject": ["string", "string", ...],',
+        '    "Subject": [],'
+    )
+
+    # Update example 3 Subject
+    prompt = prompt.replace(
+        '    "Subject": ["Audit and assurance", "Financial services and regulation", "Financial services", "Banking"],',
+        '    "Subject": [],'
+    )
+
+    # Remove validation rule 16
+    rule16_marker = '\n16. Subject field validation:'
+    closing_marker = '\n\nIf you encounter any issues'
+    if rule16_marker in prompt and closing_marker in prompt:
+        prompt = prompt[:prompt.index(rule16_marker)] + prompt[prompt.index(closing_marker):]
+
+    return prompt

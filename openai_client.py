@@ -6,16 +6,23 @@ import os
 from typing import Optional
 from openai import OpenAI
 from dotenv import load_dotenv
-from config import SYSTEM_PROMPT, DEFAULT_MODEL, FILE_PURPOSE
+from config import get_system_prompt, DEFAULT_MODEL, FILE_PURPOSE
 
 
 class OpenAIClient:
-    def __init__(self) -> None:
-        """Initialize the OpenAI client with API key from environment variables."""
+    def __init__(self, include_subjects: bool = True) -> None:
+        """Initialize the OpenAI client with API key from environment variables.
+
+        Args:
+            include_subjects (bool): Whether to include subject classification in the
+                system prompt. When False, the Subject field is treated as reserved
+                and the topic list is omitted. Defaults to True.
+        """
         load_dotenv()
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         if not os.getenv('OPENAI_API_KEY'):
             raise ValueError("OPENAI_API_KEY environment variable not set")
+        self.system_prompt = get_system_prompt(include_subjects)
 
     def upload_file(self, file_path: str) -> str:
         """
@@ -65,7 +72,7 @@ class OpenAIClient:
             input=[
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT
+                    "content": self.system_prompt
                 },
                 {
                     "role": "user",

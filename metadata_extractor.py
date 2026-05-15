@@ -9,9 +9,14 @@ from openai_client import OpenAIClient
 
 
 class MetadataExtractor:
-    def __init__(self) -> None:
-        """Initialize the metadata extractor with an OpenAI client."""
-        self.client = OpenAIClient()
+    def __init__(self, include_subjects: bool = True) -> None:
+        """Initialize the metadata extractor with an OpenAI client.
+
+        Args:
+            include_subjects (bool): Whether to include subject classification in the
+                system prompt. Passed through to OpenAIClient. Defaults to True.
+        """
+        self.client = OpenAIClient(include_subjects=include_subjects)
 
     def extract_metadata(self, pdf_path: str, first_pages: int = 0, last_pages: int = 0, original_format: str = None, context_prompt: Optional[str] = None) -> Tuple[str, str, str]:
         """

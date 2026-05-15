@@ -41,6 +41,9 @@ Examples:
   # With custom context for the extraction prompt:
   python main.py --folder path/to/pdf/directory -j output.json --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
 
+  # Disable subject classification (Subject field will be empty):
+  python main.py --folder path/to/pdf/directory -j output.json --no-subjects
+
   # Convert JSON to CSV after processing:
   python json_to_csv_converter.py output.json output.csv
 '''
@@ -69,6 +72,10 @@ Examples:
                         type=str,
                         default=None,
                         help='Custom context to prepend to the extraction prompt (e.g. "What follows is a series of photos showing Chartered Accountant\'s Hall")')
+
+    parser.add_argument('--no-subjects',
+                        action='store_true',
+                        help='Disable subject classification (Subject field will always be empty)')
 
     return parser
 
@@ -126,7 +133,7 @@ def main() -> None:
         print(f"\nStarting to process {total_files} PDF file(s)")
 
         # Initialize metadata extractor and writer
-        extractor = MetadataExtractor()
+        extractor = MetadataExtractor(include_subjects=not args.no_subjects)
         writer = JSONMetadataWriter(args.json_file)
 
         # Track processed and failed files

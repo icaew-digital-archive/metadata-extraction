@@ -97,6 +97,9 @@ Examples:
 
   # With custom context for the extraction prompt:
   python metadata_extraction_wrapper.py --skip-download --output-dir ./my-downloads --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
+
+  # Disable subject classification (Subject field will be empty):
+  python metadata_extraction_wrapper.py --skip-download --output-dir ./my-downloads --no-subjects
         """
     )
 
@@ -142,6 +145,12 @@ Examples:
         type=str,
         default=None,
         help='Custom context to prepend to the extraction prompt (e.g. "What follows is a series of photos showing Chartered Accountant\'s Hall")'
+    )
+
+    parser.add_argument(
+        '--no-subjects',
+        action='store_true',
+        help='Disable subject classification (Subject field will always be empty)'
     )
 
     return parser.parse_args()
@@ -227,6 +236,8 @@ def main():
     context_prompt = args.context_prompt if args.context_prompt else None
     if context_prompt:
         print(f"Context prompt: {context_prompt[:60]}..." if len(context_prompt) > 60 else f"Context prompt: {context_prompt}")
+    no_subjects = args.no_subjects
+    print(f"Subject classification: {'disabled' if no_subjects else 'enabled'}")
 
     # Step 1: Run the download script (unless skipped)
     if not skip_download:
@@ -300,6 +311,9 @@ def main():
     # Add optional context prompt
     if context_prompt:
         extract_cmd.extend(['--context-prompt', context_prompt])
+
+    if no_subjects:
+        extract_cmd.append('--no-subjects')
 
     if not run_command(extract_cmd, "Metadata extraction"):
         print("Metadata extraction step failed.")
