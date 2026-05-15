@@ -21,7 +21,8 @@ IMPORTANT GUIDELINES:
 14. For identifiers, only include ISBNs, URLs, and clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
 15. For the creator and contributor fields, always normalise "Institute of Chartered Accountants in England and Wales" to "ICAEW"
 16. Acronyms (such as OECD, IFRS, FRC, HMRC, UK, VAT, etc.) must ALWAYS be in all capitals, regardless of their position in the sentence or title. Do NOT use title case for acronyms. For example, always use "OECD" (not "Oecd"), "IFRS" (not "Ifrs"), "FRC" (not "Frc")
-17. ALWAYS use British English spelling throughout all metadata fields. Examples: "organise" (not "organize"), "colour" (not "color"), "centre" (not "center"), "analyse" (not "analyze"), "recognise" (not "recognize"), "realise" (not "realize"), "specialise" (not "specialize"), "summarise" (not "summarize"), "optimise" (not "optimize"), "finalise" (not "finalize"), "prioritise" (not "prioritize"), "authorise" (not "authorize"), "categorise" (not "categorize"), "characterise" (not "characterize"), "emphasise" (not "emphasize"), "minimise" (not "minimize"), "maximise" (not "maximize"), "criticise" (not "criticize"), "apologise" (not "apologize"), "memorise" (not "memorize"), "standardise" (not "standardize"), "visualise" (not "visualize"), "labour" (not "labor"), "behaviour" (not "behavior"), "favour" (not "favor"), "honour" (not "honor"), "neighbour" (not "neighbor"), "defence" (not "defense"), "offence" (not "offense"), "licence" (noun, not "license"), "practice" (noun, not "practise"), "advice" (noun, not "advise"), "programme" (not "program" when referring to a schedule/plan), "catalogue" (not "catalog"), "dialogue" (not "dialog"), "analogue" (not "analog"), "manoeuvre" (not "maneuver"), "enrolment" (not "enrollment"), "fulfil" (not "fulfill"), "skilful" (not "skillful"), "travelled" (not "traveled"), "cancelled" (not "canceled"), "labelled" (not "labeled"), "modelling" (not "modeling"), "travelling" (not "traveling"), "jewellery" (not "jewelry"), "grey" (not "gray"), "cheque" (not "check" when referring to payment), "pyjamas" (not "pajamas"), "sceptical" (not "skeptical"). This applies to all generated text, including descriptions and any text you create, even if the source document uses American English spelling.
+17. When the user provides contextual background (e.g. "these are photos of Chartered Accountant's Hall"), use it to identify and name the subject in your description. Describe what is shown in the document but use the names, places, and events from the context (e.g. "Photograph showing Chartered Accountant's Hall, with...") rather than generic terms ("a building", "an office block"). Do not output a description that ignores the context and uses only generic wording.
+18. ALWAYS use British English spelling throughout all metadata fields. Examples: "organise" (not "organize"), "colour" (not "color"), "centre" (not "center"), "analyse" (not "analyze"), "recognise" (not "recognize"), "realise" (not "realize"), "specialise" (not "specialize"), "summarise" (not "summarize"), "optimise" (not "optimize"), "finalise" (not "finalize"), "prioritise" (not "prioritize"), "authorise" (not "authorize"), "categorise" (not "categorize"), "characterise" (not "characterize"), "emphasise" (not "emphasize"), "minimise" (not "minimize"), "maximise" (not "maximize"), "criticise" (not "criticize"), "apologise" (not "apologize"), "memorise" (not "memorize"), "standardise" (not "standardize"), "visualise" (not "visualize"), "labour" (not "labor"), "behaviour" (not "behavior"), "favour" (not "favor"), "honour" (not "honor"), "neighbour" (not "neighbor"), "defence" (not "defense"), "offence" (not "offense"), "licence" (noun, not "license"), "practice" (noun, not "practise"), "advice" (noun, not "advise"), "programme" (not "program" when referring to a schedule/plan), "catalogue" (not "catalog"), "dialogue" (not "dialog"), "analogue" (not "analog"), "manoeuvre" (not "maneuver"), "enrolment" (not "enrollment"), "fulfil" (not "fulfill"), "skilful" (not "skillful"), "travelled" (not "traveled"), "cancelled" (not "canceled"), "labelled" (not "labeled"), "modelling" (not "modeling"), "travelling" (not "traveling"), "jewellery" (not "jewelry"), "grey" (not "gray"), "cheque" (not "check" when referring to payment), "pyjamas" (not "pajamas"), "sceptical" (not "skeptical"). This applies to all generated text, including descriptions and any text you create, even if the source document uses American English spelling.
 
 ### XIP Metadata Fields
 
@@ -35,24 +36,10 @@ IMPORTANT GUIDELINES:
 
 ### ICAEW-Specific Fields
 
-**icaew:InternalReference (REQUIRED)**
-- Single value only
-- Format: YYYYMMDD-Document-Name
-- Use title case
-- Allowed characters: letters (A-Z, a-z), numbers (0-9), hyphens (-)
-- Not allowed: spaces, underscores, periods, commas, ampersands, or any other special characters
-- Replace spaces with hyphens
-- Replace '&' with "and"
-- Remove all other special characters
-- Acronyms and proper nouns must be all capitals
-- Use '00' to indicate missing day, month, or year (e.g., 20120200)
-- Include document title and faculty contributor (if applicable)
-- Include unique identifier (e.g., issue number, reference number)
-- Keep concise
-- Examples:
-  * 20240315-ICAEW-Guidance-on-Digital-Assets
-  * 20240200-Financial-Services-Faculty-Report
-  * 20240000-Annual-Report-2023
+**icaew:InternalReference (RESERVED)**
+- This field is reserved for future use
+- Always return an empty string ("") for this field
+- Do not attempt to extract or infer values for this field
 
 **icaew:ContentType (OPTIONAL)**
 - Single value only
@@ -300,36 +287,47 @@ IMPORTANT GUIDELINES:
   * ["David Tweedie", "Ernst and Young LLP"]
   * ["Mike Ashley", "KPMG Europe LLP"]
 
-**Subject (RESERVED)**
-- This field is reserved for future use
-- Always return an empty array ([]) for this field
-- Do not attempt to extract or infer values for this field
+**Subject (OPTIONAL)**
+- Multiple values allowed (return as array)
+- Use hierarchical topic classification from the ICAEW topic list provided below
+- When selecting a specific topic, you MUST include all parent topics above it in the hierarchy
+- Maximum of 10 subjects total
+- Use exact topic names from the hierarchical list (case-sensitive)
+- Format: For nested topics, include both the main topic and sub-topic (e.g., ["Financial reporting and accounting standards", "Accounting topics", "Accounting for assets"])
+- If selecting a deep topic, always include the full path from top-level down to that topic
+- Prefer more specific topics over general ones when appropriate
+- If a document covers multiple distinct topic areas, select the most relevant ones (up to 10)
+- If no relevant topics are found, return an empty array ([])
+- Examples of hierarchical selection:
+  * For a document about IFRS implementation: ["Financial reporting and accounting standards", "IFRSs", "IFRS 15 Revenue from contracts with customers"]
+  * For audit guidance: ["Audit and assurance", "Audit best practice", "Audit documentation"]
 
 **Source, Coverage, Rights (RESERVED)**
 - These fields are reserved for future use
 - Always return an empty string ("") for these fields
 - Do not attempt to extract or infer values for these fields
 
-**Description (OPTIONAL)**
+**Description (REQUIRED)**
 - Single value only
 - Briefly summarise the content - quite often a summary will be present in the document itself, if so make use of it.
 - Every description should at least describe what the document is (e.g. what type of document it is, who authored it) and what it is about.
+- For transcript files: describe the video or podcast content itself, not the transcript document. Write the description from the perspective of describing the original media (video/podcast), not as "a transcript of..." or "transcript of a...". The description should read as if it's describing the video or podcast directly.
 - Listing of contents may be helpful - but they are of secondary importance. Each item in the list of contents should be separated by a semicolon.
 - Should always finish with a full stop/period, question marks are also allowed
-- Use British English spelling throughout the description (see guideline 17)
+- Use British English spelling throughout the description (see guideline 18)
 - After this description append the following string: "(AI generated description)"
 - Examples:
-  * "Technical guidance on implementing IFRS 9 for financial instruments"
-  * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides."
-  * "A quarterly special report published by the Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports."
-  * "This publication forms part of the FinanceDirection thought leadership programme of the ICAEW Business and Management Faculty; it provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function."
+  * "Technical guidance on implementing IFRS 9 for financial instruments. (AI generated description)"
+  * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides. (AI generated description)"
+  * "A quarterly special report published by the Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports. (AI generated description)"
+  * "This publication forms part of the FinanceDirection thought leadership programme of the ICAEW Business and Management Faculty; it provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function. (AI generated description)"
 
 **Publisher (REQUIRED)**
 - Single value only
 - Use publisher name as credited in the document
 - If no publisher is explicitly credited:
   - For ICAEW publications, use "ICAEW"
-  - For external publications, use the organization name if available
+  - For external publications, use the organisation name if available
   - If no organization is identified, return an empty string ("") rather than defaulting to "ICAEW"
 - Examples:
   * "ICAEW" (for ICAEW publications)
@@ -409,11 +407,11 @@ Return metadata as a JSON object with the following structure. Fields can be str
     "entity.title": "string",
     "entity.description": "string",
     "icaew:ContentType": "string",
-    "icaew:InternalReference": "string",
+    "icaew:InternalReference": "",
     "icaew:Notes": "string",
     "Title": "string",
     "Creator": ["string", "string", ...],
-    "Subject": [],
+    "Subject": ["string", "string", ...],
     "Description": "string",
     "Publisher": "string",
     "Contributor": ["string", "string", ...],
@@ -433,14 +431,14 @@ Example outputs:
     "entity.title": "Commercial insight: expanding the CFO's horizons, September 2020",
     "entity.description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
     "icaew:ContentType": "Report",
-    "icaew:InternalReference": "20200900-Commercial-Insight-Expanding-The-CFOs-Horizons-Business-And-Management-Faculty-METCAH20201",
+    "icaew:InternalReference": "",
     "icaew:Notes": "",
     "Title": "Commercial insight: expanding the CFO's horizons, September 2020",
     "Creator": ["Business and Management Faculty", "ICAEW"],
     "Subject": [],
     "Description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
     "Publisher": "Silverdart Publishing",
-    "Contributor": "",
+    "Contributor": [],
     "Date": "2020-09",
     "Type": "Text",
     "Format": "pdf",
@@ -456,7 +454,7 @@ Example outputs:
     "entity.title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
     "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
     "icaew:ContentType": "Representation",
-    "icaew:InternalReference": "20100122-OECD-Discussion-Draft-On-The-Application-Of-Tax-Treaties-To-State-Owned-Entities-Including-Sovereign-Wealth-Funds-Tax-Faculty-TAXREP-4-10",
+    "icaew:InternalReference": "",
     "icaew:Notes": "",
     "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
     "Creator": ["Tax Faculty", "ICAEW"],
@@ -467,7 +465,7 @@ Example outputs:
     "Date": "2010-01-22",
     "Type": "Text",
     "Format": "pdf",
-    "Identifier": "TAXREP 4/10",
+    "Identifier": ["TAXREP 4/10"],
     "Source": "",
     "Language": ["en"],
     "Relation": ["Tax Representation"],
@@ -479,14 +477,14 @@ Example outputs:
     "entity.title": "Audit insights: banking, October 2013",
     "entity.description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
     "icaew:ContentType": "Report",
-    "icaew:InternalReference": "20131000-Audit-Insights-Banking-Financial-Services-Faculty-TECPLN12491",
+    "icaew:InternalReference": "",
     "icaew:Notes": "",
     "Title": "Audit insights: banking, October 2013",
     "Creator": ["Audit and Assurance Faculty", "Financial Services Faculty", "ICAEW"],
-    "Subject": [],
+    "Subject": ["Audit and assurance", "Financial services and regulation", "Financial services", "Banking"],
     "Description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
     "Publisher": "ICAEW",
-    "Contributor": "",
+    "Contributor": [],
     "Date": "2013-10",
     "Type": "Text",
     "Format": "pdf",
@@ -498,28 +496,820 @@ Example outputs:
     "Rights": ""
 }
 
+### ICAEW Topic List for Subject Classification
+
+- Accountancy profession and regulation
+  - Accountancy organisations
+  - Accountants
+    - Accountants awards and achievements
+    - Accountants disciplinary orders
+  - Accounting history
+  - Accounting qualifications
+    - ACA
+    - AQ
+    - BFP
+    - CFAB
+  - Professional standards
+    - Accountants disciplinary process
+    - Client complaints
+    - Ethics for accountants
+  - Training and development programmes
+    - Accountancy professional apprenticeship
+    - Accountants CPD
+    - Accounting skills certificate
+    - Accounting technician apprenticeship
+    - BASE competition
+    - Business sustainability programme
+    - Certificate in insolvency
+    - Corporate finance qualification
+    - Diploma in charity accounting
+    - IFRSs and financial reporting training programmes
+    - ISAs programme
+    - Leadership development programmes
+- Audit and assurance
+  - Assurance
+    - Agreed upon procedures engagements
+    - Assurance engagements
+    - Assurance maps
+    - Assurance on emerging forms of external reporting
+    - Assurance on internal controls
+    - Assurance on non financial information
+    - Assurance on service charge accounts
+    - Assurance on sustainability
+    - Assurance reports and conclusions
+    - Assurance review engagements
+    - Assurance subject matter
+    - Audit exemption
+    - Compilation engagements
+    - Financial references
+    - Grant reporting
+    - Master trust assurance
+    - Reporting to CAA ATOL
+    - Reporting to regulators
+    - Reporting to SRA
+    - Reporting to third parties
+  - Assurance standards
+    - ISAE 3000 Assurance engagements other than audits or reviews of historical financial information
+    - ISAE 3402 Assurance reports on controls at a service organization
+    - ISRE 2400 Engagements to review historical financial statements
+    - ISRS 4400 Engagements to perform agreed upon procedures engagements regarding financial information
+    - SSAE 18 Statement on standards for attestation engagements
+  - Audit best practice
+    - Audit materiality
+    - Audit of accounting estimates
+    - Audit of related parties
+    - Auditing UK GAAP
+    - Auditor access to information
+    - Auditor duty of care
+    - Auditor professional judgement
+    - Cold file review
+    - Data analytics on audit
+    - Fraud on audits
+    - Going concern and audit
+    - Group audits
+    - Letters of representation
+    - Management override
+    - Professional scepticism
+    - Quality control on audits
+    - Root cause analysis
+  - Audit ethics
+    - Auditor independence
+    - FRC ethical standard
+  - Audit process
+    - Audit documentation
+    - Audit engagement terms
+    - Audit evidence
+    - Audit fees and surveys
+    - Audit planning
+    - Audit reports and conclusions
+    - Audit risk assessment
+    - Audit subject matter
+  - Audit regulation and governance
+    - Audit register
+    - Audit regulations
+    - Audit tendering
+    - Auditor liability
+    - Auditor resignation
+    - Auditor rotation
+    - Shared and joint audit
+  - Auditing standards
+    - ISA 200 Overall objectives of the independent auditor and the conduct of an audit in accordance with international standards on auditing
+    - ISA 210 Agreeing the terms of audit engagements
+    - ISA 220 Quality management for an audit of financial statements
+    - ISA 230 Audit documentation
+    - ISA 240 The auditors responsibilities relating to fraud in an audit of financial statements
+    - ISA 250 Consideration of laws and regulations in an audit of financial statements
+    - ISA 260 Communication with those charged with governance
+    - ISA 265 Communicating deficiencies in internal control to those charged with governance and management
+    - ISA 300 Planning an audit of financial statements
+    - ISA 315 Identifying and assessing the risks of material misstatement through understanding the entity and its environment
+    - ISA 320 Materiality in planning and performing an audit
+    - ISA 330 The auditors responses to assessed risks
+    - ISA 402 Audit considerations relating to an entity using a service organization
+    - ISA 450 Evaluation of misstatements identified during the audit
+    - ISA 500 Audit evidence
+    - ISA 501 Audit evidence specific considerations for selected items
+    - ISA 505 External confirmations
+    - ISA 510 Initial audit engagements Opening balances
+    - ISA 520 Analytical procedures
+    - ISA 530 Audit sampling
+    - ISA 540 Auditing accounting estimates including fair value accounting estimates and related disclosures
+    - ISA 550 Related parties
+    - ISA 560 Subsequent events
+    - ISA 570 Going concern
+    - ISA 580 Written representations
+    - ISA 600 Special considerations Audits of group financial statements including the work of component auditors
+    - ISA 610 Using the work of internal auditors
+    - ISA 620 Using the work of an auditors expert
+    - ISA 700 Forming an opinion and reporting on financial statements
+    - ISA 701 Communicating key audit matters in the independent auditors report
+    - ISA 705 Modifications to the opinion in the independent auditors report
+    - ISA 706 Emphasis of matter paragraphs and other matter paragraphs in the independent auditors report
+    - ISA 710 Comparative information Corresponding figures and comparative financial statements
+    - ISA 720 The auditors responsibilities relating to other information in documents containing audited financial statements
+    - ISA 800 Special considerations Audits of financial statements prepared in accordance with special purpose frameworks
+    - ISA 805 Special considerations Audits of single financial statements and specific elements accounts or items of a financial statement
+    - ISA 810 Engagements to report on summary financial statements
+    - ISQC 1 Quality controls for firms that perform audits and reviews of financial statements and other assurance and related services engagements
+    - ISQM 1 Quality management for firms that perform audits or reviews of financial statements or other assurance or related services engagements
+    - ISQM 2 Engagement quality reviews
+  - Internal audit
+- Business management and strategy
+  - Balanced scorecard
+  - Benchmarking
+  - Business ethics
+    - Whistle blowing
+  - Business growth
+  - Business management
+  - Business performance management
+  - Business plans
+  - Change management
+  - Corporate strategy
+  - Cultural issues
+  - Due diligence
+  - Entrepreneurship
+  - Exporting and doing business abroad
+  - Importing
+  - Industrial relations
+  - Innovation
+  - Interim management
+  - Mergers and acquisitions strategy
+  - Organisational culture
+  - Risk management and internal control
+    - Business continuity
+    - Business risk management
+    - Hedging
+    - Internal control
+  - Succession planning
+- Business operations
+  - Business insurance
+  - Business mathematics
+  - Business tenancy
+  - Commercial disputes
+  - Coronavirus
+  - Customer services
+  - Health and safety
+  - Marketing and PR
+    - Advertising
+    - Brand management
+    - Consumer behaviour
+    - Market research
+    - Market segmentation
+    - Marketing plans
+    - Public relations
+    - Reputation management
+    - Social media and online marketing
+    - Thought leadership
+  - Operations management
+  - Outsourcing
+  - Pricing
+  - Project management
+  - Quality assurance
+  - Research and development
+  - Reshoring
+  - Sales
+  - Supply chain
+- Business sectors
+  - Accountancy services
+  - Aerospace and defence
+  - Architectural services
+  - Consumer goods and retail
+    - Clothing and footwear
+    - Jewellery
+    - Personal care products
+  - Education sector
+  - Employment agencies
+  - Energy sector
+    - Energy generation
+    - Energy utilities
+    - Nuclear power
+    - Renewable energy
+  - Entertainment sport and media
+    - Broadcast media
+    - Computer games
+    - Film industry
+    - Music industry
+    - Performing arts
+    - Publishing sector
+    - Sports sector
+  - Extractive industries
+  - Farming forestry and rural business
+    - Arable and Cropping
+    - Cereal crops
+    - Dairy farming
+    - Fishing industry
+    - Grazing livestock
+    - Horticulture
+    - Pig farming
+    - Poultry farming
+  - Healthcare
+    - Care homes
+    - Dentists
+    - NHS
+  - Manufacturing
+    - Automotive
+    - Chemical
+    - Food and drink products
+    - Heavy industry
+    - Packaging
+  - Pharmaceuticals
+  - Property and construction
+    - Construction
+    - Property commercial
+    - Property residential
+    - Property valuation
+  - Technology and telecoms
+    - Technology sector
+    - Telecoms sector
+  - Tourism and hospitality
+    - Hospitality industry
+    - Tourism sector
+  - Transport
+    - Aviation
+    - Marine transport
+    - Rail transport
+    - Road transport
+  - Veterinary Services
+  - Waste management
+- Corporate finance
+  - Debt finance
+    - Business loans
+    - Corporate bonds
+    - Factoring and invoice discounting
+    - Leveraged finance
+    - Peer to peer lending
+    - Recapitalisation
+  - Early stage funding
+    - Angel investing
+    - Crowd funding
+    - Grant funding
+    - Local and regional funding
+    - Start ups
+    - Venture capital
+  - Equity capital markets
+    - Initial public offering
+    - Shares and equities
+  - Mergers and acquisitions
+    - Acquisitions
+    - Disposals
+    - Mergers
+    - Reverse takeovers
+  - Private equity
+    - Management buy outs
+    - Mezzanine capital
+  - Project finance
+  - Prospective financial information
+- Corporate governance
+  - Board responsibilities
+    - Audit committees
+    - Board chair
+    - Board diversity
+    - Board effectiveness
+    - Directors duties
+    - Executive remuneration
+    - Nomination committees
+    - Non executive directors
+    - Risk committees
+  - Company secretarial
+  - Corporate governance codes and principles
+  - Investor relations
+  - Shareholder value
+  - Stakeholder model
+- Diversity and inclusion
+  - Age
+  - Disability
+    - Mental health
+    - Neurodiversity
+    - Physical, mobility or sensory impairment
+  - Gender
+  - LGBTQ
+  - Race, ethnicity and religion
+  - Social mobility
+- Economics
+  - Balance of trade
+  - Bank interest rates
+  - Consumer spending
+  - Deregulation
+  - Economic forecasts
+  - Economic growth
+  - Economic indicators
+  - Economic recovery
+  - Emerging markets
+  - Employment figures
+  - Exchange rates
+  - House prices
+  - Incoterms
+  - Industrial production
+  - Industrial strategy
+  - Inflation
+  - Market regulation
+  - Monetary policy
+  - Productivity
+  - Recessions
+  - Regional inequality
+  - Service sector activity
+  - World Economic Forum
+- Employment and human resources
+  - Apprenticeships
+  - Career and personal development
+    - Career breaks
+    - Career development
+    - Coaching and mentoring
+    - Communication and presentation
+    - CVs and interview skills
+    - Decision making skills
+    - Leadership skills
+    - Managing a portfolio career
+    - Managing meetings
+    - Negotiating skills
+    - Networking
+    - Professional training
+    - Team building
+    - Time management
+    - Volunteering
+    - Women in business
+    - Working abroad
+  - Employee compensation
+  - Employee performance management
+  - Employee retention
+  - Employment issues
+    - Discipline and grievance
+    - Employee sickness and absence
+    - Employment contracts
+    - Employment tribunals
+    - Flexible working
+    - Harassment
+    - Maternity paternity adoption
+    - Pay rights
+    - Stress management
+    - TUPE
+    - Work life balance
+    - Working time and holidays
+    - Workplace wellbeing
+  - Motivating employees
+  - Payroll
+  - Recruitment
+    - Psychometric testing
+  - Redundancies and terminations
+  - Remote working
+  - Retirement
+  - Talent management
+- Environment and sustainability
+  - Climate
+    - Climate change adaptation
+    - Climate policy
+    - Decarbonisation
+  - COP
+  - Nature and biodiversity
+    - Natural capital
+  - Sustainable development
+    - Social responsibility
+- Finance management
+  - Activity based costing
+  - Budgeting
+  - Business intelligence
+  - Corporate valuation
+  - Cost management
+  - Credit management
+  - Dividends
+  - Finance business partnering
+  - Finance function effectiveness
+  - Financial modelling and forecasting
+  - Financial ratios
+  - Investment appraisal
+  - Management accounting
+  - Treasury management
+  - Working capital and cash management
+- Financial reporting and accounting standards
+  - Accounting topics
+    - Accounting for assets
+    - Accounting for associates and joint arrangements
+    - Accounting for derivatives
+    - Accounting for employee benefits
+    - Accounting for equity
+    - Accounting for financial instruments
+    - Accounting for fixed assets
+    - Accounting for foreign currency
+    - Accounting for goodwill
+    - Accounting for income tax
+    - Accounting for intangible fixed assets
+    - Accounting for investment property
+    - Accounting for leases
+    - Accounting for payables
+    - Accounting for receivables
+    - Accounting for revenue
+    - Accounting for sustainability
+    - Accounting for tangible fixed assets
+    - Bookkeeping
+    - Consolidated financial statements
+    - Disclosure requirements
+    - Hedge accounting
+    - Narrative reporting
+    - Related party disclosures
+    - Reporting financial performance
+    - Statutory financial reporting requirements
+  - Financial reporting concepts
+    - Accruals basis
+    - Fair value
+    - Financial reports presentation
+    - Going concern
+    - Materiality
+    - Measurement
+    - Prudence
+    - Recognition
+    - Stewardship
+    - Substance over form
+    - True and fair
+  - FRSSE
+  - IFRS for SMEs
+  - IFRS Sustainability disclosure standards
+    - IFRS S1 General requirements for disclosure of sustainability related financial information
+    - IFRS S2 Climate related disclosures
+  - IFRSs
+    - Conceptual Framework for Financial Reporting
+    - IAS 1 Presentation of financial statements
+    - IAS 10 Events after the reporting period
+    - IAS 11 Construction contracts
+    - IAS 12 Income taxes
+    - IAS 16 Property plant and equipment
+    - IAS 17 Leases
+    - IAS 18 Revenue
+    - IAS 19 Employee benefits
+    - IAS 2 Inventories
+    - IAS 20 Accounting for government grants and disclosure of government assistance
+    - IAS 21 The effects of changes in foreign exchange rates
+    - IAS 23 Borrowing costs
+    - IAS 24 Related party disclosures
+    - IAS 26 Accounting and reporting by retirement benefit plans
+    - IAS 27 Separate financial statements
+    - IAS 28 Investments in associates and joint ventures
+    - IAS 29 Financial reporting in hyperinflationary economies
+    - IAS 32 Financial instruments presentation
+    - IAS 33 Earnings per share
+    - IAS 34 Interim financial reporting
+    - IAS 36 Impairment of assets
+    - IAS 37 Provisions contingent liabilities and contingent assets
+    - IAS 38 Intangible assets
+    - IAS 39 Financial instruments recognition and measurement
+    - IAS 40 Investment property
+    - IAS 41 Agriculture
+    - IAS 7 Statement of cash flows
+    - IAS 8 Accounting policies changes in accounting estimates and errors
+    - IFRS 1 First time adoption of IFRS
+    - IFRS 10 Consolidated financial statements
+    - IFRS 11 Joint arrangements
+    - IFRS 12 Disclosure of interests in other entities
+    - IFRS 13 Fair value measurement
+    - IFRS 14 Regulatory deferral accounts
+    - IFRS 15 Revenue from contracts with customers
+    - IFRS 16 Leases
+    - IFRS 17 Insurance contracts
+    - IFRS 18 Presentation and disclosure in financial statements
+    - IFRS 19 Subsidiaries without public accountability disclosures
+  - OLD UK GAAP
+    - FRS 1 Cash flow statements
+    - FRS 10 Goodwill and intangible assets
+    - FRS 11 Impairment of fixed assets and goodwill
+    - FRS 12 Provisions contingent liabilities and contingent assets
+    - FRS 13 Derivatives and other financial instruments disclosures
+    - FRS 15 Tangible fixed assets
+    - FRS 16 Current tax
+    - FRS 17 Retirement benefits
+    - FRS 18 Accounting policies
+    - FRS 19 Deferred tax
+    - FRS 2 Accounting for subsidiary undertakings
+    - FRS 20 Share based payment
+    - FRS 21 Events after the balance sheet date
+    - FRS 22 Earnings per share
+    - FRS 23 The effects of changes in foreign exchange rates
+    - FRS 24 Financial reporting in hyperinflationary economies
+    - FRS 25 Financial instruments presentation
+    - FRS 26 Financial instruments recognition and measurement
+    - FRS 27 Life assurance
+    - FRS 28 Corresponding amounts
+    - FRS 29 Financial instruments disclosures
+    - FRS 3 Reporting financial performance
+    - FRS 30 Heritage assets
+    - FRS 4 Capital instruments
+    - FRS 5 Reporting the substance of transactions
+    - FRS 6 Acquisitions and mergers
+    - FRS 7 Fair values in acquisitions accounting
+    - FRS 8 Related party disclosures
+    - FRS 9 Associates and joint ventures
+    - SSAP 13 Accounting for research and development
+    - SSAP 19 Accounting for investment properties
+    - SSAP 20 Foreign currency translation
+    - SSAP 21 Accounting for leases and hire purchase
+    - SSAP 25 Segmental reporting
+    - SSAP 4 Accounting for government grants
+    - SSAP 5 Accounting for value added tax
+    - SSAP 9 Stocks and long term contracts
+  - SORPs
+    - Charities SORP
+    - Further and higher education SORP
+    - Insurance SORP
+    - Limited Liability Partnerships SORP
+    - Pension schemes SORP
+    - Registered social housing providers SORP
+  - Sustainability reporting
+    - Corporate Sustainability Reporting Directive
+    - European Sustainability Reporting Standards
+  - UK GAAP
+    - FRS 100 Application of financial reporting requirements
+    - FRS 101 Reduced disclosure framework
+    - FRS 102 The financial reporting standard applicable in the UK and Republic of Ireland
+    - FRS 103 Insurance contracts
+    - FRS 104 Interim financial reporting
+    - FRS 105 The financial reporting standard applicable to the micro entities regime
+  - US GAAP
+- Financial services and regulation
+  - Financial instruments
+  - Financial regulation
+    - Bank of England
+    - Basel Accords
+    - DPB
+    - Financial Conduct Authority
+    - Financial Ombudsman Service
+    - Prudential Regulation Authority
+    - Retail distribution review
+    - Solvency II
+  - Financial services
+    - Asset management
+    - Banking
+    - Credit rating agencies
+    - Financial advisers
+    - Insurance sector
+    - Investment banking
+    - Islamic finance
+  - Personal finances
+    - Consumer credit
+    - Mortgages
+    - Wealth management
+- Government and public sector finance
+  - Government borrowing
+  - Local authority finance
+  - Public Private Partnerships
+  - Public sector audit and assurance
+  - Public sector finance
+  - Public sector financial management
+  - Public sector financial reporting
+- Information about ICAEW services and products
+- Information technology
+  - Artificial intelligence
+  - Blockchain
+  - Business and accounting software
+  - Cloud computing
+  - Cryptocurrency
+  - Data analytics
+    - Data driven decision making
+    - Data ethics
+    - Data modeling
+    - Data visualisation
+    - Data wrangling
+  - Excel and spreadsheets
+    - Excel charts and graphics
+    - Excel data tables
+    - Excel filtering and queries
+    - Excel reports and dashboard
+    - Formulas and functions
+    - Pivot tables
+    - VBA and macros
+    - Worksheet design and formatting
+  - FinTech
+  - Information security
+  - Internet of things
+  - IT infrastructure
+  - Mobile technologies
+  - Power BI
+  - Process digitisation
+  - Robotic process automation
+  - XBRL
+- Insolvency
+  - Corporate insolvency
+    - Administrations
+    - Company voluntary arrangements
+    - Corporate recovery
+    - Liquidations
+    - Receiverships
+  - Insolvency practice
+    - Insolvency ethics
+    - Insolvency licences
+    - Insolvency regulations
+    - SIPs
+  - Personal insolvency
+    - Individual voluntary arrangements
+    - Personal bankruptcy
+- Job roles
+  - Audit key partner
+  - Audit manager
+  - Audit partner
+  - Charity trustee
+  - Chief executive officer
+  - Chief financial officer
+  - External auditor
+  - Finance advisory partners directors and managers
+  - Finance business partner
+  - Finance director
+  - Finance manager
+  - Financial accountant
+  - Financial analyst
+  - Financial controller
+  - Financial risk analyst
+  - Forensic accountant
+  - Fund accountant
+  - Insolvency practitioner
+  - Interim manager
+  - Internal auditor
+  - Investor advisory partners directors and managers
+  - Legal advisory partners directors and managers
+  - Management accountant
+  - Mergers and acquisition advisory partners directors and managers
+  - Non executive director
+  - Non financial reporting specialist
+  - Partner in practice
+  - Private equity analyst
+  - Public auditor
+  - Responsible individual
+  - Self employment
+  - Tax adviser
+- Law
+  - Brexit
+  - Crime and misconduct
+    - Bribery and corruption
+    - Computer crime
+    - Corporate crime
+    - Corporate manslaughter
+    - Corporate negligence
+    - Fraud
+    - Industrial espionage
+    - Market abuse
+    - Organised crime
+    - Professional misconduct
+    - Restraint of trade
+    - Terrorism
+    - Theft
+  - Economic sanctions
+  - Legal issues
+    - Company law
+    - Competition law
+    - Conflict of interest
+    - Contract law
+    - Data protection
+    - European law
+    - Forensic accounting
+    - Intellectual property
+    - Legal professional privilege
+    - Proceeds of crime
+    - Property law
+    - Sarbanes Oxley Act
+    - Trusts law
+    - Wills and probate
+  - Legal sector
+  - Legal system
+  - Modern slavery
+  - Money laundering
+    - Suspicious Activity Reports
+  - Regulation of solicitors
+- Organisation or entity type
+  - Alternative business structures
+  - Charities
+  - Clubs and social enterprises
+  - Conglomerates
+  - Employee owned businesses
+  - Family businesses
+  - Franchises
+  - Micro entities
+  - Partnerships
+    - Limited liability partnerships
+  - Self employed
+  - SMEs
+- Pensions
+  - Annuities
+  - Auto enrolment
+  - Early pension release
+  - National Employment Savings Trust
+  - Occupational pensions
+  - Pension protection fund
+  - Pension schemes accounting and auditing
+  - Pensions regulation
+  - Personal pensions
+  - State pensions
+- Practice management
+  - Business advice
+  - Buying and selling a practice
+  - Client management
+  - Practice administration
+  - Practice marketing
+  - Practice regulation
+  - Practice structure
+  - Practice support
+- Taxation
+  - Budget and Finance Bill and Act
+    - Budget
+    - Finance Act measures
+    - Finance Bill
+  - Business taxation
+    - Basis period reform
+    - Business asset disposal relief
+    - Capital allowances
+    - Cash basis
+    - Charities taxation
+    - Construction Industry Scheme
+    - Corporation tax
+    - Digital Services Tax
+    - Partnership taxation
+    - Research and development taxation
+    - Self employed taxation
+  - CGT
+  - Customs duties
+  - Devolved taxes
+  - Employment taxation
+    - Company car tax
+    - NIC
+    - PAYE and RTI
+    - Taxation of benefits and expenses
+    - Taxation of intermediaries
+  - Environmental taxes
+  - Freeports and investment zones
+  - IHT
+  - International taxation
+    - BEPS
+    - Common Reporting Standard
+    - Double tax agreements
+    - Foreign Account Tax Compliance Act
+    - Offshore investments taxation
+    - Residence and domicile
+    - Transfer pricing
+  - Pensions taxation
+  - Personal taxation
+    - Income tax
+    - Savings and investments taxation
+  - Property taxation
+    - Annual Tax on Enveloped Dwellings
+    - Business rates
+    - Main residence
+    - REITs
+    - Residential Property Developer Tax
+    - Stamp duty land tax
+  - Tax compliance
+    - Digital tax system
+    - HMRC service issues
+    - Tax agents
+    - Tax avoidance
+    - Tax disputes
+    - Tax evasion
+    - Tax investigations
+    - Tax penalties
+    - Tax returns
+  - Tax planning
+  - Trusts taxation
+  - VAT
+  - Welfare and state benefits
+    - State benefits
+    - Tax credits
+    - Universal credit
+
 ### Validation Rules
-1. REQUIRED fields must not be empty: icaew:InternalReference, entity.title, Title, Creator, Publisher, Date, Type, Format, Language (empty strings "" for single-value fields, empty arrays [] for multi-value fields)
+1. REQUIRED fields must not be empty: entity.title, entity.description, Title, Creator, Publisher, Date, Type, Format, Language (empty strings "" for single-value fields, empty arrays [] for multi-value fields)
 2. entity.title must be an exact copy of Title
 3. entity.description must be an exact copy of Description
 4. Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY) with zero-padding for single digits
 5. Multiple values must be arrays of strings, not semicolon-separated strings
-6. No special characters in icaew:InternalReference except hyphens:
-   - Allowed: letters (A-Z, a-z), numbers (0-9), hyphens (-)
-   - Not allowed: spaces, underscores, periods, commas, ampersands, or any other special characters
-   - Replace spaces with hyphens
-   - Replace '&' with "and"
-   - Remove all other special characters
-7. All text should be properly encoded (no special characters or emojis)
-8. No trailing or leading whitespace in any field
-9. No explanatory text or notes in the values
-10. Output must be valid JSON
-11. Field values can be strings or arrays of strings (not null, numbers, or other types)
-12. Empty values must be empty strings ("") for single-value fields or empty arrays ([]) for multi-value fields, not null
-13. Title field must follow the order: title, subtitle, issue/volume, date
-14. Content type must be one of the controlled vocabulary terms (exact spelling and case)
-15. Identifiers must only include ISBNs, URLs, or clear ICAEW reference codes
-16. All text must use British English spelling throughout all metadata fields (see guideline 17 for examples). Convert any American English spellings to British English equivalents
+6. All text should be properly encoded (no special characters or emojis)
+7. No trailing or leading whitespace in any field
+8. No explanatory text or notes in the values
+9. Output must be valid JSON
+10. Field values can be strings or arrays of strings (not null, numbers, or other types)
+11. Empty values must be empty strings ("") for single-value fields or empty arrays ([]) for multi-value fields, not null
+12. Title field must follow the order: title, subtitle, issue/volume, date
+13. Content type must be one of the controlled vocabulary terms (exact spelling and case)
+14. Identifiers must only include ISBNs, URLs, or clear ICAEW reference codes
+15. All text must use British English spelling throughout all metadata fields (see guideline 18 for examples). Convert any American English spellings to British English equivalents
+16. Subject field validation:
+    - Maximum of 10 subjects allowed
+    - Subject names must exactly match those in the hierarchical topic list provided above (case-sensitive)
+    - For nested topics, all parent topics must be included in the hierarchical path
+    - Subject values must be arrays of strings, not empty values unless no relevant topics found
 
 If you encounter any issues or ambiguities in the document, use an empty string ("") for single-value fields or empty array ([]) for multi-value fields rather than making assumptions.'''
 

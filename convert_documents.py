@@ -9,16 +9,17 @@ This script processes all Office documents and image files in a directory and co
 import os
 import tempfile
 import subprocess
+import time
 from pathlib import Path
 from typing import List, Tuple
 
 
 def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
     """
-    Convert a DOCX/DOC/TXT/SRT or image file to PDF format.
+    Convert a DOCX/DOC/DOT/XLSX/XLS/XLSM/PPTX/PPT/TXT/SRT/VTT or image file to PDF format.
     
     Args:
-        input_path (str): Path to the input file (DOCX, DOC, TXT, SRT, JPG, JPEG, PNG, or TIFF)
+        input_path (str): Path to the input file (DOCX, DOC, DOT, XLSX, XLS, XLSM, PPTX, PPT, TXT, SRT, VTT, JPG, JPEG, PNG, or TIFF)
         
     Returns:
         Tuple[str, bool]: (path_to_pdf, was_converted)
@@ -36,7 +37,7 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
         return str(input_path), False
     
     # Check if it's a supported format
-    supported_formats = ['.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    supported_formats = ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
     if input_path.suffix.lower() not in supported_formats:
         raise ValueError(f"Unsupported file format: {input_path.suffix}. Supported formats: {', '.join(supported_formats)}")
     
@@ -91,20 +92,57 @@ def _convert_with_libreoffice(input_path: Path) -> str:
     temp_dir = tempfile.mkdtemp()
     output_dir = Path(temp_dir)
     
+    process = None
     try:
-        # LibreOffice command
+        # LibreOffice command with additional flags to prevent hanging
         cmd = [
             'libreoffice',
             '--headless',
+            '--invisible',
+            '--nocrashreport',
+            '--nodefault',
+            '--nofirststartwizard',
+            '--nolockcheck',
+            '--nologo',
+            '--norestore',
             '--convert-to', 'pdf',
             '--outdir', str(output_dir),
             str(input_path)
         ]
         
-        # Run conversion
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        # Run conversion with Popen to get process handle
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
         
-        if result.returncode == 0:
+        # Wait for completion with timeout
+        try:
+            stdout, stderr = process.communicate(timeout=60)
+            returncode = process.returncode
+        except subprocess.TimeoutExpired:
+            # Kill the process and all its children
+            print(f"LibreOffice timed out, killing process...")
+            process.kill()
+            # Wait for it to actually die
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                # Force kill if it won't die gracefully
+                process.terminate()
+                process.wait(timeout=5)
+            
+            # Also kill any remaining LibreOffice processes (nuclear option)
+            try:
+                subprocess.run(['pkill', '-9', '-f', 'soffice'], capture_output=True, timeout=5)
+            except Exception:
+                pass
+            
+            raise RuntimeError(f"LibreOffice conversion timed out for {input_path.name}")
+        
+        if returncode == 0:
             # Find the generated PDF file
             pdf_files = list(output_dir.glob('*.pdf'))
             if pdf_files:
@@ -115,6 +153,16 @@ def _convert_with_libreoffice(input_path: Path) -> str:
                 return str(final_pdf_path)
         
         raise RuntimeError(f"LibreOffice conversion failed for {input_path.name}")
+        
+    except Exception as e:
+        # Make sure to kill the process if something goes wrong
+        if process and process.poll() is None:
+            try:
+                process.kill()
+                process.wait(timeout=5)
+            except Exception:
+                pass
+        raise
         
     finally:
         # Clean up temporary directory
@@ -334,7 +382,7 @@ def get_supported_formats() -> list:
     Returns:
         list: List of supported file extensions
     """
-    return ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    return ['.pdf', '.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
 
 
 def is_supported_format(file_path: str) -> bool:
@@ -394,12 +442,22 @@ def convert_directory(directory_path: str) -> List[str]:
                 converted_count += 1
                 # Store the original format mapping
                 original_ext = Path(file_path).suffix.lower()
-                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
+                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
                     format_mapping[str(pdf_path)] = original_ext[1:]  # Remove the dot
+                
+                # Small delay after LibreOffice conversions to ensure cleanup
+                if original_ext in ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt']:
+                    time.sleep(0.5)
                 
         except Exception as e:
             print(f"Failed to convert {file_path}: {str(e)}")
             # If conversion fails, skip the file
+            # Kill any lingering LibreOffice processes before continuing
+            try:
+                subprocess.run(['pkill', '-9', '-f', 'soffice'], capture_output=True, timeout=5)
+                time.sleep(1)  # Give it a moment to clean up
+            except Exception:
+                pass
             continue
     
     # Write format mapping to a JSON file
@@ -422,7 +480,7 @@ def main():
     
     if len(sys.argv) != 2:
         print("Usage: python convert_documents.py <directory_path>")
-        print("This script converts all DOCX/DOC/XLSX/XLS/PPTX/PPT/TXT/SRT/VTT and image files (JPG, PNG, TIFF) in the specified directory to PDF.")
+        print("This script converts all DOCX/DOC/DOT/XLSX/XLS/XLSM/PPTX/PPT/TXT/SRT/VTT and image files (JPG, PNG, TIFF) in the specified directory to PDF.")
         sys.exit(1)
     
     directory_path = sys.argv[1]

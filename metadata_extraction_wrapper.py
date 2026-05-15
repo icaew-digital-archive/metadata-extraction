@@ -88,11 +88,15 @@ Examples:
   # Full workflow with Preservica download:
   python metadata_extraction_wrapper.py
   python metadata_extraction_wrapper.py --preservica-folder-ref 12345678-1234-1234-1234-123456789abc
-  python metadata_extraction_wrapper.py --preservica-folder-ref 12345678-1234-1234-1234-123456789abc --output-dir ./my-downloads
+  python metadata_extraction_wrapper.py --preservica-folder-ref 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba --output-dir ./my-downloads --json-file my_metadata.json --csv-file my_metadata.csv
+  python metadata_extraction_wrapper.py --preservica-folder-ref 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba --exclude-extensions mp4 avi mov --output-dir ./my-downloads
   
   # Work with existing files (skip download):
   python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files
   python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --json-file my_metadata.json --csv-file my_metadata.csv
+
+  # With custom context for the extraction prompt:
+  python metadata_extraction_wrapper.py --skip-download --output-dir ./my-downloads --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
         """
     )
 
@@ -124,6 +128,20 @@ Examples:
         '--skip-download',
         action='store_true',
         help='Skip Preservica download step and work with existing files in output directory'
+    )
+
+    parser.add_argument(
+        '--exclude-extensions',
+        nargs='+',
+        default=None,
+        help='File extensions to exclude from download (passed through to download_preservica_assets.py). Example: --exclude-extensions mp4 avi mov'
+    )
+
+    parser.add_argument(
+        '--context-prompt',
+        type=str,
+        default=None,
+        help='Custom context to prepend to the extraction prompt (e.g. "What follows is a series of photos showing Chartered Accountant\'s Hall")'
     )
 
     return parser.parse_args()
@@ -197,18 +215,24 @@ def main():
     json_output = Path(args.json_file) if args.json_file else Path(JSON_OUTPUT)
     csv_output = Path(args.csv_file) if args.csv_file else Path(CSV_OUTPUT)
     skip_download = args.skip_download
+    exclude_extensions = args.exclude_extensions
 
     print(f"Using folder ID: {folder_id}")
     print(f"Output directory: {output_dir}")
     print(f"JSON output: {json_output}")
     print(f"CSV output: {csv_output}")
     print(f"Skip download: {skip_download}")
+    if exclude_extensions:
+        print(f"Exclude extensions: {', '.join(exclude_extensions)}")
+    context_prompt = args.context_prompt if args.context_prompt else None
+    if context_prompt:
+        print(f"Context prompt: {context_prompt[:60]}..." if len(context_prompt) > 60 else f"Context prompt: {context_prompt}")
 
     # Step 1: Run the download script (unless skipped)
     if not skip_download:
         print("\nStep 1: Downloading assets from Preservica")
 
-        download_cmd = ['python', DOWNLOAD_SCRIPT]
+        download_cmd = [sys.executable, DOWNLOAD_SCRIPT]
 
         # Add the appropriate download source argument
         if folder_id:
@@ -223,8 +247,8 @@ def main():
             print("Error: No download source specified. Please set one of FOLDER_ID, FOLDERS_FILE, ASSET_ID, or ASSETS_FILE.")
             sys.exit(1)
 
-        # Add output directory
-        download_cmd.append(str(output_dir))
+        if exclude_extensions:
+            download_cmd.extend(['--exclude-extensions', *exclude_extensions])
 
         # Add optional arguments
         if USE_ASSET_REF:
@@ -232,6 +256,13 @@ def main():
 
         if ORIGINAL_ONLY:
             download_cmd.append('--original-only')
+
+        # Add output directory (positional) last
+        if exclude_extensions:
+            # download_preservica_assets.py uses nargs='+', so without '--' it will
+            # consume the positional download_folder as another extension value.
+            download_cmd.append('--')
+        download_cmd.append(str(output_dir))
 
         if not run_command(download_cmd, "Preservica asset download"):
             print("Download step failed. Stopping orchestration.")
@@ -248,7 +279,7 @@ def main():
     # Step 3: Convert any DOCX/DOC files to PDF
     print("\nStep 3: Converting documents to PDF format")
 
-    convert_cmd = ['python', CONVERT_SCRIPT, str(output_dir)]
+    convert_cmd = [sys.executable, CONVERT_SCRIPT, str(output_dir)]
 
     if not run_command(convert_cmd, "Document conversion"):
         print("Document conversion step failed.")
@@ -257,7 +288,7 @@ def main():
     # Step 4: Run the metadata extraction script (main.py now writes to JSON)
     print("\nStep 4: Extracting metadata from PDF files")
 
-    extract_cmd = ['python', EXTRACTION_SCRIPT, '--folder',
+    extract_cmd = [sys.executable, EXTRACTION_SCRIPT, '--folder',
                    str(output_dir), '--json-file', str(json_output)]
 
     # Add optional page limit arguments
@@ -266,6 +297,10 @@ def main():
     if LAST_PAGES > 0:
         extract_cmd.extend(['--last', str(LAST_PAGES)])
 
+    # Add optional context prompt
+    if context_prompt:
+        extract_cmd.extend(['--context-prompt', context_prompt])
+
     if not run_command(extract_cmd, "Metadata extraction"):
         print("Metadata extraction step failed.")
         sys.exit(1)
@@ -273,7 +308,7 @@ def main():
     # Step 5: Convert JSON to CSV
     print("\nStep 5: Converting JSON metadata to CSV format")
 
-    convert_json_cmd = ['python', 'json_to_csv_converter.py', str(json_output), str(csv_output)]
+    convert_json_cmd = [sys.executable, 'json_to_csv_converter.py', str(json_output), str(csv_output)]
 
     if not run_command(convert_json_cmd, "JSON to CSV conversion"):
         print("JSON to CSV conversion step failed.")
