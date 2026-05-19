@@ -38,6 +38,12 @@ Examples:
   # or
   python main.py -d path/to/pdf/directory -l 2 -j output.json
 
+  # With custom context for the extraction prompt:
+  python main.py --folder path/to/pdf/directory -j output.json --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
+
+  # Disable subject classification (Subject field will be empty):
+  python main.py --folder path/to/pdf/directory -j output.json --no-subjects
+
   # Convert JSON to CSV after processing:
   python json_to_csv_converter.py output.json output.csv
 '''
@@ -61,6 +67,15 @@ Examples:
     parser.add_argument('--json-file', '-j',
                         required=True,
                         help='JSON file to write metadata to')
+
+    parser.add_argument('--context-prompt',
+                        type=str,
+                        default=None,
+                        help='Custom context to prepend to the extraction prompt (e.g. "What follows is a series of photos showing Chartered Accountant\'s Hall")')
+
+    parser.add_argument('--no-subjects',
+                        action='store_true',
+                        help='Disable subject classification (Subject field will always be empty)')
 
     return parser
 
@@ -118,7 +133,7 @@ def main() -> None:
         print(f"\nStarting to process {total_files} PDF file(s)")
 
         # Initialize metadata extractor and writer
-        extractor = MetadataExtractor()
+        extractor = MetadataExtractor(include_subjects=not args.no_subjects)
         writer = JSONMetadataWriter(args.json_file)
 
         # Track processed and failed files
@@ -167,7 +182,7 @@ def main() -> None:
                     original_format = 'pdf'
                 
                 metadata, original_path, detected_format = extractor.extract_metadata(
-                    pdf_path, args.first, args.last, original_format)
+                    pdf_path, args.first, args.last, original_format, context_prompt=args.context_prompt)
 
                 # Print metadata to console
                 print(f"\n[{index}/{total_files}] Extracted Metadata:")
