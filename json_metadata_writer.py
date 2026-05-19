@@ -20,8 +20,17 @@ class JSONMetadataWriter:
         self._initialize_json()
 
     def _initialize_json(self) -> None:
-        """Create JSON file with initial structure if it doesn't exist."""
-        if not os.path.exists(self.json_file):
+        """Create JSON file with initial structure if it doesn't exist or is empty/invalid."""
+        needs_init = True
+        if os.path.exists(self.json_file) and os.path.getsize(self.json_file) > 0:
+            try:
+                with open(self.json_file, 'r', encoding='utf-8') as f:
+                    json.load(f)
+                needs_init = False
+            except json.JSONDecodeError:
+                pass
+
+        if needs_init:
             initial_data = {
                 "metadata": [],
                 "created_at": datetime.now().isoformat(),

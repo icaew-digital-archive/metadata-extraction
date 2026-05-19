@@ -358,7 +358,7 @@ IMPORTANT GUIDELINES:
   * Still Image (for photographs, diagrams)
   * Sound (for audio recordings)
   * Dataset (for spreadsheets, databases)
-  * Interactive resource (for web pages, applications)
+  * Interactive Resource (for web pages, applications)
   * Collection (for sets of related items)
 - Default to "Text" for PDF documents
 - If type cannot be determined, use "Text" as default
