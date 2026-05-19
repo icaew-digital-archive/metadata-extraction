@@ -89,4 +89,12 @@ class OpenAIClient:
                 }
             ]
         )
-        return response.output_text
+        text = response.output_text
+        if not text:
+            raise ValueError("Empty response from model — no output text returned.")
+        # Strip markdown code fences the model may wrap the JSON in
+        text = text.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            text = "\n".join(lines[1:-1]).strip()
+        return text
