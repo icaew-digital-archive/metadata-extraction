@@ -85,12 +85,18 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Full workflow with Preservica download:
+  # Full workflow with Preservica download (folder):
   python metadata_extraction_wrapper.py
   python metadata_extraction_wrapper.py --preservica-folder-ref 12345678-1234-1234-1234-123456789abc
   python metadata_extraction_wrapper.py --preservica-folder-ref 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba --output-dir ./my-downloads --json-file my_metadata.json --csv-file my_metadata.csv
   python metadata_extraction_wrapper.py --preservica-folder-ref 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba --exclude-extensions mp4 avi mov --output-dir ./my-downloads
-  
+
+  # Download a single asset by ID:
+  python metadata_extraction_wrapper.py --preservica-asset-ref cc56e888-8d18-5582-0d41-65c168d611ee --output-dir ./my-downloads
+
+  # Download multiple specific assets from a text file (one UUID per line):
+  python metadata_extraction_wrapper.py --preservica-assets-file assets.txt --output-dir ./my-downloads
+
   # Work with existing files (skip download):
   python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files
   python metadata_extraction_wrapper.py --skip-download --output-dir ./existing-files --json-file my_metadata.json --csv-file my_metadata.csv
@@ -106,7 +112,19 @@ Examples:
     parser.add_argument(
         '--preservica-folder-ref',
         type=str,
-        help='Preservica folder ID to download (overrides hardcoded FOLDER_ID)'
+        help='Preservica folder UUID to download (overrides hardcoded FOLDER_ID)'
+    )
+
+    parser.add_argument(
+        '--preservica-asset-ref',
+        type=str,
+        help='Single Preservica asset UUID to download'
+    )
+
+    parser.add_argument(
+        '--preservica-assets-file',
+        type=str,
+        help='Path to a text file containing Preservica asset UUIDs, one per line'
     )
 
     parser.add_argument(
@@ -220,13 +238,20 @@ def main():
 
     # Use CLI arguments if provided, otherwise fall back to hardcoded values
     folder_id = args.preservica_folder_ref if args.preservica_folder_ref else FOLDER_ID
+    asset_ref = args.preservica_asset_ref if args.preservica_asset_ref else None
+    assets_file = args.preservica_assets_file if args.preservica_assets_file else None
     output_dir = Path(args.output_dir) if args.output_dir else Path(WORKING_DIR)
     json_output = Path(args.json_file) if args.json_file else Path(JSON_OUTPUT)
     csv_output = Path(args.csv_file) if args.csv_file else Path(CSV_OUTPUT)
     skip_download = args.skip_download
     exclude_extensions = args.exclude_extensions
 
-    print(f"Using folder ID: {folder_id}")
+    if folder_id:
+        print(f"Using folder ID: {folder_id}")
+    elif asset_ref:
+        print(f"Using asset ref: {asset_ref}")
+    elif assets_file:
+        print(f"Using assets file: {assets_file}")
     print(f"Output directory: {output_dir}")
     print(f"JSON output: {json_output}")
     print(f"CSV output: {csv_output}")
@@ -248,6 +273,10 @@ def main():
         # Add the appropriate download source argument
         if folder_id:
             download_cmd.extend(['--folder', folder_id])
+        elif asset_ref:
+            download_cmd.extend(['--asset', asset_ref])
+        elif assets_file:
+            download_cmd.extend(['--assets-file', assets_file])
         elif 'FOLDERS_FILE' in globals() and FOLDERS_FILE:
             download_cmd.extend(['--folders-file', FOLDERS_FILE])
         elif 'ASSET_ID' in globals() and ASSET_ID:
@@ -255,7 +284,7 @@ def main():
         elif 'ASSETS_FILE' in globals() and ASSETS_FILE:
             download_cmd.extend(['--assets-file', ASSETS_FILE])
         else:
-            print("Error: No download source specified. Please set one of FOLDER_ID, FOLDERS_FILE, ASSET_ID, or ASSETS_FILE.")
+            print("Error: No download source specified. Provide --preservica-folder-ref, --preservica-asset-ref, or --preservica-assets-file.")
             sys.exit(1)
 
         if exclude_extensions:

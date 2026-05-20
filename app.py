@@ -185,8 +185,9 @@ input_mode = st.radio(
 
 # Defaults for variables only set inside the Preservica block
 preservica_mode = input_mode == "Preservica"
-skip_download = False
+preservica_download_by = "Folder"
 preservica_folder_ref = ""
+preservica_asset_ids: List[str] = []
 effective_output_dir = ""
 exclude_extensions: List[str] = []
 use_asset_ref = True
@@ -241,7 +242,7 @@ elif input_mode == "Local folder":
         folder_input = st.text_input(
             "Folder path",
             value=st.session_state.get("local_folder", ""),
-            placeholder="/home/user/documents/pdfs",
+            placeholder="/home/user/documents/files",
             label_visibility="collapsed",
         )
     with col_btn:
@@ -276,16 +277,30 @@ elif input_mode == "Local folder":
 # ── input: preservica ─────────────────────────────────────────────────────────
 
 else:
-    skip_download = st.checkbox(
-        "Skip download — use existing files in output directory",
-        value=False,
+    preservica_download_by = st.radio(
+        "Download by",
+        ["Folder", "Asset IDs"],
+        horizontal=True,
+        help=(
+            "**Folder** — download all assets in a Preservica folder using its UUID.  \n"
+            "**Asset IDs** — supply one or more specific asset UUIDs."
+        ),
     )
 
-    if not skip_download:
+    if preservica_download_by == "Folder":
         preservica_folder_ref = st.text_input(
             "Preservica folder reference (UUID)",
             placeholder="e.g. 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba",
         )
+    else:
+        asset_ids_raw = st.text_area(
+            "Asset IDs (one per line)",
+            placeholder="e.g.\ncc56e888-8d18-5582-0d41-65c168d611ee\n0a5d69bc-d85b-4482-a45c-8b20c40ef1ba",
+            height=150,
+        )
+        preservica_asset_ids = [
+            line.strip() for line in asset_ids_raw.splitlines() if line.strip()
+        ]
 
     col_out, col_btn2 = st.columns([5, 1])
     with col_out:
@@ -328,8 +343,11 @@ else:
             help="Download only the original (first generation) file for each asset.",
         )
 
-    if not skip_download and not preservica_folder_ref:
+    if preservica_download_by == "Folder" and not preservica_folder_ref:
         st.info("Enter a Preservica folder reference to begin.")
+        st.stop()
+    elif preservica_download_by == "Asset IDs" and not preservica_asset_ids:
+        st.info("Enter at least one asset ID to begin.")
         st.stop()
 
     if not effective_output_dir:
@@ -349,11 +367,7 @@ if not preservica_mode and file_labels:
 
 # ── extract button ────────────────────────────────────────────────────────────
 
-btn_label = (
-    "Download and Extract Metadata"
-    if preservica_mode and not skip_download
-    else "Extract Metadata"
-)
+btn_label = "Download and Extract Metadata" if preservica_mode else "Extract Metadata"
 
 if st.button(btn_label, type="primary", use_container_width=True):
 
@@ -375,42 +389,66 @@ if st.button(btn_label, type="primary", use_container_width=True):
     if preservica_mode:
 
         # Step 1: Download from Preservica
-        if not skip_download:
-            download_script = os.getenv('PYPRESERVICA_DOWNLOAD_SCRIPT', '')
-            if not download_script:
-                st.error(
-                    "Preservica download script is not configured. "
-                    "Set `PYPRESERVICA_DOWNLOAD_SCRIPT` in your `.env` file."
-                )
-                st.stop()
-            if not os.path.isfile(download_script):
-                st.error(f"Download script not found: `{download_script}`")
-                st.stop()
+        download_script = os.getenv('PYPRESERVICA_DOWNLOAD_SCRIPT', '')
+        if not download_script:
+            st.error(
+                "Preservica download script is not configured. "
+                "Set `PYPRESERVICA_DOWNLOAD_SCRIPT` in your `.env` file."
+            )
+            st.stop()
+        if not os.path.isfile(download_script):
+            st.error(f"Download script not found: `{download_script}`")
+            st.stop()
 
-            os.makedirs(effective_output_dir, exist_ok=True)
+        os.makedirs(effective_output_dir, exist_ok=True)
 
-            with st.status("Downloading assets from Preservica…", expanded=True) as dl_status:
+        with st.status("Downloading assets from Preservica…", expanded=True) as dl_status:
+            if preservica_download_by == "Asset IDs":
+                if len(preservica_asset_ids) == 1:
+                    download_cmd = [sys.executable, download_script, '--asset', preservica_asset_ids[0]]
+                else:
+                    tmp_assets = tempfile.NamedTemporaryFile(
+                        mode='w', suffix='.txt', delete=False, prefix='preservica_assets_'
+                    )
+                    tmp_assets.write('\n'.join(preservica_asset_ids))
+                    tmp_assets.close()
+                    st.session_state['_assets_tmp'] = tmp_assets.name
+                    download_cmd = [sys.executable, download_script, '--assets-file', tmp_assets.name]
+            else:
                 download_cmd = [sys.executable, download_script, '--folder', preservica_folder_ref]
-                if use_asset_ref:
-                    download_cmd.append('--use-asset-ref')
-                if original_only:
-                    download_cmd.append('--original-only')
-                if exclude_extensions:
-                    download_cmd.extend(['--exclude-extensions', *exclude_extensions, '--'])
-                download_cmd.append(effective_output_dir)
+            if use_asset_ref:
+                download_cmd.append('--use-asset-ref')
+            if original_only:
+                download_cmd.append('--original-only')
+            if exclude_extensions:
+                download_cmd.extend(['--exclude-extensions', *exclude_extensions, '--'])
+            download_cmd.append(effective_output_dir)
 
-                success, output = run_subprocess(download_cmd)
-                if output:
-                    st.code(output, language=None)
-                if not success:
-                    dl_status.update(label="Download failed", state="error")
-                    st.stop()
-                dl_status.update(label="Download complete", state="complete")
+            success, output = run_subprocess(download_cmd)
+            if output:
+                st.code(output, language=None)
+            # Clean up temp assets file if one was created
+            tmp_assets_path = st.session_state.pop('_assets_tmp', None)
+            if tmp_assets_path and os.path.exists(tmp_assets_path):
+                try:
+                    os.unlink(tmp_assets_path)
+                except OSError:
+                    pass
+
+            if not success:
+                dl_status.update(label="Download failed", state="error")
+                st.stop()
+            dl_status.update(label="Download complete", state="complete")
 
         # Step 2: Convert documents to PDF
-        with st.status("Converting documents to PDF…", expanded=False) as conv_status:
+        with st.status("Converting documents to PDF…", expanded=True) as conv_status:
             try:
                 converted = convert_directory(effective_output_dir)
+                if converted:
+                    for p in converted:
+                        st.write(f"Converted: `{os.path.basename(p)}`")
+                else:
+                    st.write("No conversion needed — all files already PDF.")
                 conv_status.update(
                     label=f"Conversion complete — {len(converted)} file(s) converted",
                     state="complete",
@@ -430,10 +468,15 @@ if st.button(btn_label, type="primary", use_container_width=True):
     # ── Select files / Local folder pipeline (convert + find PDFs) ───────────
 
     if not preservica_mode:
-        with st.status("Preparing files…", expanded=False) as prep_status:
+        with st.status("Preparing files…", expanded=True) as prep_status:
             try:
                 converted = convert_directory(source_dir)
                 count = len(converted)
+                if converted:
+                    for p in converted:
+                        st.write(f"Converted: `{os.path.basename(p)}`")
+                else:
+                    st.write("No conversion needed — all files already PDF.")
                 label = f"Converted {count} file(s) to PDF" if count else "No conversion needed"
                 prep_status.update(label=label, state="complete")
             except Exception as e:
@@ -478,30 +521,46 @@ if st.button(btn_label, type="primary", use_container_width=True):
     total    = len(pdf_paths)
     progress = st.progress(0, text="Starting…")
 
-    for i, pdf_path in enumerate(pdf_paths, 1):
-        filename = os.path.basename(pdf_path)
-        progress.progress(i / total, text=f"Processing {i}/{total}: {filename}")
+    with st.status("Extracting metadata…", expanded=True) as ext_status:
+        for i, pdf_path in enumerate(pdf_paths, 1):
+            filename = os.path.basename(pdf_path)
+            progress.progress((i - 1) / total, text=f"Processing {i}/{total}: {filename}…")
 
-        try:
-            raw, original_path, detected_format = extractor.extract_metadata(
-                pdf_path,
-                first_pages,
-                last_pages,
-                "pdf",
-                context_prompt=context_prompt.strip() or None,
-            )
-            metadata = json.loads(strip_code_fences(raw))
-            writer.write_metadata(raw, pdf_path, "pdf")
+            try:
+                raw, original_path, detected_format = extractor.extract_metadata(
+                    pdf_path,
+                    first_pages,
+                    last_pages,
+                    "pdf",
+                    context_prompt=context_prompt.strip() or None,
+                )
+                metadata = json.loads(strip_code_fences(raw))
+                writer.write_metadata(raw, pdf_path, "pdf")
 
-            st.session_state.results.append(
-                {
-                    "filename": filename,
-                    "metadata": metadata,
-                    "extracted_at": datetime.now().isoformat(),
-                }
-            )
-        except Exception as e:
-            st.session_state.errors.append({"filename": filename, "error": str(e)})
+                title = metadata.get("Title") or "—"
+                content_type = metadata.get("icaew:ContentType") or ""
+                detail = f"{content_type} — {title}" if content_type else title
+                st.write(f":white_check_mark: **{filename}** — {detail}")
+
+                st.session_state.results.append(
+                    {
+                        "filename": filename,
+                        "metadata": metadata,
+                        "extracted_at": datetime.now().isoformat(),
+                    }
+                )
+            except Exception as e:
+                st.write(f":x: **{filename}** — {e}")
+                st.session_state.errors.append({"filename": filename, "error": str(e)})
+
+            progress.progress(i / total, text=f"Processed {i}/{total}: {filename}")
+
+        n_ok  = len(st.session_state.results)
+        n_err = len(st.session_state.errors)
+        summary = f"Extraction complete — {n_ok} succeeded"
+        if n_err:
+            summary += f", {n_err} failed"
+        ext_status.update(label=summary, state="complete" if n_ok else "error")
 
     progress.empty()
 

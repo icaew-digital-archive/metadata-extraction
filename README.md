@@ -19,6 +19,54 @@ This project showcases an end-to-end document processing pipeline that:
 
 *This demo shows the complete workflow: downloading assets from Preservica, AI-powered metadata extraction using OpenAI, and JSON output generation.*
 
+## Web UI (Experimental)
+
+A browser-based interface built with [Streamlit](https://streamlit.io) is available as an alternative to the command line.
+
+### Starting the UI
+
+```bash
+streamlit run app.py
+```
+
+The app opens automatically in your browser at `http://localhost:8501`.
+
+### Input Modes
+
+| Mode | Description |
+|------|-------------|
+| **Select files** | Upload PDFs, Office documents, or images directly from your computer |
+| **Local folder** | Point to a directory on disk; non-PDF files are converted to PDF automatically |
+| **Preservica** | Download and process assets from a Preservica repository using a folder reference UUID |
+
+### Sidebar Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Subject classification** | Classify documents against the ICAEW topic hierarchy (enabled by default; disable to leave the Subject field empty) |
+| **Pages from start / end** | Restrict extraction to the opening and/or closing pages of each document; set both to 0 to process the full document |
+| **Context prompt** | Optional background text to help the model identify subjects — for example, the collection, event, or location the documents belong to |
+| **JSON / CSV save paths** | Save output files directly to disk; leave blank to use only the download buttons |
+
+### Results and Downloads
+
+After extraction, each document's metadata appears in an expandable card showing title, content type, date, creator, publisher, description, subjects, and identifiers. A collapsible **Full JSON** view is available inside each card.
+
+Use the **Download JSON** and **Download CSV** buttons at the bottom of the page to export results.
+
+### Preservica-Specific Options
+
+When **Preservica** mode is selected, additional options appear:
+
+- **Download by** — choose between **Folder** (all assets under a folder UUID) or **Asset IDs** (one or more specific asset UUIDs entered one per line)
+- **Exclude file extensions** — skip specific file types during download (e.g. `mp4 avi mov`), space-separated
+- **Use asset reference in filenames** — prefix downloaded filenames with the Preservica asset reference number
+- **Original files only** — download only the first-generation file for each asset
+
+> **Note:** The `PYPRESERVICA_DOWNLOAD_SCRIPT` environment variable must be set in your `.env` file to enable Preservica downloads.
+
+---
+
 ## System Flow
 
 ```mermaid
@@ -150,8 +198,17 @@ The tool supports the following file formats:
 The system demonstrates a complete document processing workflow:
 
 ```bash
-# Complete workflow
-python metadata_extraction_wrapper.py
+# Complete workflow (Preservica folder)
+python metadata_extraction_wrapper.py --preservica-folder-ref <uuid> --output-dir ./downloads
+
+# Download a single asset by ID
+python metadata_extraction_wrapper.py --preservica-asset-ref <uuid> --output-dir ./downloads
+
+# Download a list of specific assets (one UUID per line in assets.txt)
+python metadata_extraction_wrapper.py --preservica-assets-file assets.txt --output-dir ./downloads
+
+# Skip download, process existing files
+python metadata_extraction_wrapper.py --skip-download --output-dir ./downloads
 
 # Individual components
 python convert_documents.py <directory_path>  # Convert to PDF
@@ -232,12 +289,19 @@ The system automatically creates a `format_mapping.json` file during document co
 
 ## Dependencies
 
-- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab
+- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, streamlit (web UI)
 - **External Tools**: LibreOffice or Pandoc for document conversion
+
+Install all Python dependencies with:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## File Structure
 
 Key files:
+- `app.py` - Streamlit web UI (experimental)
 - `metadata_extraction_wrapper.py` - Main orchestration script
 - `main.py` - Metadata extraction CLI
 - `convert_documents.py` - Multi-format to PDF conversion
