@@ -289,13 +289,19 @@ The system automatically creates a `format_mapping.json` file during document co
 
 ## Dependencies
 
-- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, streamlit (web UI)
+- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, Pillow, pyPreservica, streamlit (web UI)
 - **External Tools**: LibreOffice or Pandoc for document conversion
 
 Install all Python dependencies with:
 
 ```bash
 pip install -r requirements.txt
+```
+
+The web UI's **Browse** folder picker also requires `tkinter`, which on Ubuntu/Debian must be installed separately:
+
+```bash
+sudo apt install python3-tk
 ```
 
 ## File Structure

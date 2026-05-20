@@ -17,7 +17,7 @@ from typing import List, Optional, Tuple
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 
 # Make the tool's modules importable
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -86,7 +86,7 @@ def browse_for_folder() -> str:
 def run_subprocess(cmd: List[str]) -> Tuple[bool, str]:
     """Run a subprocess, returning (success, combined output)."""
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, env=os.environ.copy())
         output = result.stdout
         if result.stderr:
             output += "\n" + result.stderr
@@ -343,13 +343,6 @@ else:
             help="Download only the original (first generation) file for each asset.",
         )
 
-    if preservica_download_by == "Folder" and not preservica_folder_ref:
-        st.info("Enter a Preservica folder reference to begin.")
-        st.stop()
-    elif preservica_download_by == "Asset IDs" and not preservica_asset_ids:
-        st.info("Enter at least one asset ID to begin.")
-        st.stop()
-
     if not effective_output_dir:
         st.info("Enter an output directory, or click Browse.")
         st.stop()
@@ -369,7 +362,15 @@ if not preservica_mode and file_labels:
 
 btn_label = "Download and Extract Metadata" if preservica_mode else "Extract Metadata"
 
-if st.button(btn_label, type="primary", use_container_width=True):
+if preservica_mode:
+    preservica_ready = (
+        (preservica_download_by == "Folder" and bool(preservica_folder_ref)) or
+        (preservica_download_by == "Asset IDs" and bool(preservica_asset_ids))
+    )
+else:
+    preservica_ready = True
+
+if st.button(btn_label, type="primary", use_container_width=True, disabled=not preservica_ready):
 
     # Validate output paths
     if json_output_path:
