@@ -390,13 +390,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     if preservica_mode:
 
         # Step 1: Download from Preservica
-        download_script = os.getenv('PYPRESERVICA_DOWNLOAD_SCRIPT', '')
-        if not download_script:
-            st.error(
-                "Preservica download script is not configured. "
-                "Set `PYPRESERVICA_DOWNLOAD_SCRIPT` in your `.env` file."
-            )
-            st.stop()
+        download_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'download_preservica_assets.py')
         if not os.path.isfile(download_script):
             st.error(f"Download script not found: `{download_script}`")
             st.stop()
