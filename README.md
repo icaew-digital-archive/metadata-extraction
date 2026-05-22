@@ -1,6 +1,6 @@
 # Metadata Extraction Tool
 
-An experimental AI-powered metadata extraction system that processes various document formats and extracts structured metadata using OpenAI's API. The system follows ICAEW-specific conventions and demonstrates automated document processing workflows.
+An experimental AI-powered metadata extraction system that processes various document formats and extracts structured metadata using OpenAI's API. Extraction rules are driven by configurable YAML profiles, making the tool adaptable to different organisations and metadata conventions.
 
 ## Overview
 
@@ -8,6 +8,7 @@ This project showcases an end-to-end document processing pipeline that:
 - Downloads assets from Preservica digital preservation system or processes local files
 - Converts multiple document formats to PDF for consistent processing
 - Extracts structured metadata using AI/LLM technology
+- Applies organisation-specific conventions via configurable YAML profiles
 - Maintains asset ID links for metadata updates and further processing
 - Outputs results in both JSON and CSV formats
 - Updates Preservica metadata using the extracted information
@@ -43,7 +44,8 @@ The app opens automatically in your browser at `http://localhost:8501`.
 
 | Setting | Description |
 |---------|-------------|
-| **Subject classification** | Classify documents against the ICAEW topic hierarchy (enabled by default; disable to leave the Subject field empty) |
+| **Profile** | Select the metadata extraction profile that defines the organisation-specific conventions and output fields (see [Profiles](#profiles)) |
+| **Subject classification** | Classify documents against the topic hierarchy defined in the active profile (enabled by default; disable to leave the Subject field empty) |
 | **Pages from start / end** | Restrict extraction to the opening and/or closing pages of each document; set both to 0 to process the full document |
 | **Context prompt** | Optional background text to help the model identify subjects — for example, the collection, event, or location the documents belong to |
 | **JSON / CSV save paths** | Save output files directly to disk; leave blank to use only the download buttons |
@@ -219,54 +221,50 @@ python json_to_csv_converter.py output.json output.csv  # Convert to CSV
 ### Key Features
 
 - **Multi-format Support**: Handles PDF, DOCX, DOC, XLSX, PPTX, PPT, TXT, SRT, VTT, and image files
+- **Profile-Based Configuration**: YAML profiles define extraction rules, field vocabulary, and output structure per organisation
 - **Format Preservation**: Maintains original format information through conversion process
 - **AI-Powered Extraction**: Uses OpenAI's API for intelligent metadata extraction
 - **Dual Output**: Generates both JSON (structured) and CSV (tabular) outputs
 - **Page Selection**: Supports processing specific page ranges for large documents
 
+## Profiles
+
+Extraction rules, field vocabulary, and output structure are defined in YAML profile files stored in the `profiles/` directory. Two profiles are included:
+
+| Profile | File | Description |
+|---------|------|-------------|
+| **ICAEW** | `profiles/icaew.yaml` | Full ICAEW digital archive conventions — XIP fields, `icaew:ContentType` vocabulary, British English rules, ICAEW topic hierarchy |
+| **Default** | `profiles/default.yaml` | Minimal generic Dublin Core profile — a clean starting point for any organisation |
+
+The active profile is selected from the sidebar in the UI, or via `--profile` on the command line. To create a profile for your own organisation, copy `profiles/default.yaml`, rename it, and edit the fields. See [GETTING_STARTED.md](GETTING_STARTED.md) for a step-by-step guide.
+
 ## Metadata Schema
 
-The system extracts structured metadata following ICAEW conventions:
+The output fields depend on the active profile. All profiles produce at minimum the standard Dublin Core fields:
 
-### Core Fields
-- `assetId`: File identifier
-- `entity.title`: Document title
-- `entity.description`: Document description
+- `Title`, `Creator`, `Subject`, `Description`, `Publisher`, `Contributor`
+- `Date`, `Type`, `Format`, `Identifier`, `Language`, `Relation`
+- `Source`, `Coverage`, `Rights` (reserved — always empty)
 
-### ICAEW-Specific Fields
-- `icaew:ContentType`: Content type (e.g., "Technical release", "Annual report", "Article")
-- `icaew:InternalReference`: Formatted reference (YYYYMMDD-Document-Name format)
-- `icaew:Notes`: Additional notes or comments
-
-### Dublin Core Fields
-- `dc:title`: Document title
-- `dc:creator`: Authors, faculties, and organizations
-- `dc:description`: Document summary
-- `dc:publisher`: Publisher name
-- `dc:contributor`: External institutions
-- `dc:date`: Document date (YYYY-MM-DD format)
-- `dc:type`: DCMI type values
-- `dc:format`: Original file format
-- `dc:identifier`: ISBNs, URLs, reference codes
-- `dc:language`: ISO 639-1 language codes
-- `dc:relation`: Parent folder or collection names
+The **ICAEW profile** additionally outputs:
+- `entity.title`, `entity.description` — mirror fields used by Preservica's XIP schema
+- `icaew:ContentType` — controlled vocabulary content type (Annual report, Article, Report, Technical release, etc.)
+- `icaew:InternalReference` — reserved for future use
+- `icaew:Notes` — free-text notes
 
 ## AI Integration
 
-### Content Type Classification
-The system uses AI to classify documents into controlled vocabulary categories:
-- Annual report, Article, Biographical profile, Company profile, Course, Database
-- eBook, eBook chapter, eLearning module, Event, Form, Helpsheets and support
-- Hub page, ICAEW consultation and response, Internal ICAEW policy, Journal
-- Learning material, Legal precedent, Library book, Library journal, Listing
-- Member reward, Minutes and board papers, Newsletter, No content type, Podcast
-- Press release, Promotional material, Regional news, Regulations, Report
-- Representation, Research guide, Speech or presentation, Synopsis, Technical release
-- Thought leadership report, Transcript, Video, Webinar, Website
+### How the AI is guided
+The AI model is given a detailed system prompt assembled from the active profile. The prompt includes:
+- A role statement describing the archive and its conventions
+- Numbered extraction guidelines (generic rules + any profile-specific additions)
+- Full field-by-field instructions for every output field
+- A subject topic list for classification (if the profile provides one)
+- Example outputs showing the expected JSON structure and field values
 
 ### AI Configuration
 - Uses OpenAI's GPT models for intelligent metadata extraction
-- Configurable prompts and extraction rules in `config.py`
+- All rules and conventions are defined in YAML profiles — no code changes needed to adapt the tool
 - Handles complex document structures and varied content types
 
 ## Format Mapping and Preservation
@@ -289,7 +287,7 @@ The system automatically creates a `format_mapping.json` file during document co
 
 ## Dependencies
 
-- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, Pillow, pyPreservica, streamlit (web UI)
+- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, Pillow, pyPreservica, pyyaml, streamlit (web UI)
 - **External Tools**: LibreOffice or Pandoc for document conversion
 
 Install all Python dependencies with:
@@ -316,7 +314,10 @@ Key files:
 - `json_metadata_writer.py` - JSON output handling
 - `json_to_csv_converter.py` - JSON to CSV conversion
 - `openai_client.py` - OpenAI API integration
-- `config.py` - Configuration and prompts
+- `config.py` - Prompt builder; loads profiles and assembles the AI system prompt
+- `profiles/icaew.yaml` - ICAEW digital archive extraction profile
+- `profiles/default.yaml` - Generic Dublin Core profile (starting point for customisation)
+- `topic_list.txt` - ICAEW subject topic hierarchy used by the ICAEW profile
 
 ## Workflow
 
@@ -364,3 +365,5 @@ This is an experimental project demonstrating AI-powered document processing cap
 - **Modular Architecture**: Component-based design for flexibility
 
 The project serves as a proof-of-concept for automated document processing workflows using modern AI technologies, with the ultimate goal of enhancing Preservica metadata through AI-powered extraction and bulk update capabilities.
+
+For installation and setup instructions, including how to create a custom profile for your organisation, see [GETTING_STARTED.md](GETTING_STARTED.md).
