@@ -170,7 +170,7 @@ with st.sidebar:
 # ── main area ─────────────────────────────────────────────────────────────────
 
 st.title("ICAEW Metadata Extractor")
-st.caption("Extract structured metadata from PDF documents using AI.")
+st.caption("Extract structured metadata from documents and images using AI.")
 
 input_mode = st.radio(
     "Input source",
@@ -513,8 +513,9 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     st.session_state.errors    = []
     st.session_state.json_path = active_json_path
 
-    total    = len(pdf_paths)
-    progress = st.progress(0, text="Starting…")
+    total          = len(pdf_paths)
+    progress_slot  = st.empty()
+    progress       = progress_slot.progress(0, text="Starting…")
 
     with st.status("Extracting metadata…", expanded=True) as ext_status:
         for i, pdf_path in enumerate(pdf_paths, 1):
@@ -557,7 +558,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
             summary += f", {n_err} failed"
         ext_status.update(label=summary, state="complete" if n_ok else "error")
 
-    progress.empty()
+    progress_slot.empty()
 
     # Clean up working files after the run
     def _delete_dir_contents(folder: str) -> None:
@@ -608,15 +609,20 @@ for result in results:
     meta = result["metadata"]
     with st.expander(f"📄 {result['filename']}", expanded=True):
 
-        # Key metrics row
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Content type", meta.get("icaew:ContentType") or "—")
-        col2.metric("Date",         meta.get("Date")              or "—")
-        col3.metric("Format",       meta.get("Format")            or "—")
-
-        # Title
+        # Top row: title + key fields
         st.markdown("**Title**")
         st.write(meta.get("Title") or "—")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown("**Content type**")
+            st.write(meta.get("icaew:ContentType") or "—")
+        with col2:
+            st.markdown("**Date**")
+            st.write(meta.get("Date") or "—")
+        with col3:
+            st.markdown("**Format**")
+            st.write(meta.get("Format") or "—")
 
         # Creator / Publisher
         col_a, col_b = st.columns(2)
