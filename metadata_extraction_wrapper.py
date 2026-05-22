@@ -38,10 +38,7 @@ load_dotenv(override=True)
 # export CONVERT_DOCUMENTS_SCRIPT="/path/to/convert_documents.py"
 
 # Download script path
-DOWNLOAD_SCRIPT = os.getenv(
-    'PYPRESERVICA_DOWNLOAD_SCRIPT',
-    "fallback_path_here"
-)
+DOWNLOAD_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'download_preservica_assets.py')
 
 # Convert script path (relative to current directory by default)
 CONVERT_SCRIPT = os.getenv(

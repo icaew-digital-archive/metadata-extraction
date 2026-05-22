@@ -17,7 +17,7 @@ from typing import List, Optional, Tuple
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 
 # Make the tool's modules importable
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -86,7 +86,7 @@ def browse_for_folder() -> str:
 def run_subprocess(cmd: List[str]) -> Tuple[bool, str]:
     """Run a subprocess, returning (success, combined output)."""
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, env=os.environ.copy())
         output = result.stdout
         if result.stderr:
             output += "\n" + result.stderr
@@ -170,7 +170,7 @@ with st.sidebar:
 # ── main area ─────────────────────────────────────────────────────────────────
 
 st.title("ICAEW Metadata Extractor")
-st.caption("Extract structured metadata from PDF documents using AI.")
+st.caption("Extract structured metadata from documents and images using AI.")
 
 input_mode = st.radio(
     "Input source",
@@ -343,13 +343,6 @@ else:
             help="Download only the original (first generation) file for each asset.",
         )
 
-    if preservica_download_by == "Folder" and not preservica_folder_ref:
-        st.info("Enter a Preservica folder reference to begin.")
-        st.stop()
-    elif preservica_download_by == "Asset IDs" and not preservica_asset_ids:
-        st.info("Enter at least one asset ID to begin.")
-        st.stop()
-
     if not effective_output_dir:
         st.info("Enter an output directory, or click Browse.")
         st.stop()
@@ -369,7 +362,15 @@ if not preservica_mode and file_labels:
 
 btn_label = "Download and Extract Metadata" if preservica_mode else "Extract Metadata"
 
-if st.button(btn_label, type="primary", use_container_width=True):
+if preservica_mode:
+    preservica_ready = (
+        (preservica_download_by == "Folder" and bool(preservica_folder_ref)) or
+        (preservica_download_by == "Asset IDs" and bool(preservica_asset_ids))
+    )
+else:
+    preservica_ready = True
+
+if st.button(btn_label, type="primary", use_container_width=True, disabled=not preservica_ready):
 
     # Validate output paths
     if json_output_path:
@@ -389,13 +390,7 @@ if st.button(btn_label, type="primary", use_container_width=True):
     if preservica_mode:
 
         # Step 1: Download from Preservica
-        download_script = os.getenv('PYPRESERVICA_DOWNLOAD_SCRIPT', '')
-        if not download_script:
-            st.error(
-                "Preservica download script is not configured. "
-                "Set `PYPRESERVICA_DOWNLOAD_SCRIPT` in your `.env` file."
-            )
-            st.stop()
+        download_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'download_preservica_assets.py')
         if not os.path.isfile(download_script):
             st.error(f"Download script not found: `{download_script}`")
             st.stop()
@@ -518,8 +513,9 @@ if st.button(btn_label, type="primary", use_container_width=True):
     st.session_state.errors    = []
     st.session_state.json_path = active_json_path
 
-    total    = len(pdf_paths)
-    progress = st.progress(0, text="Starting…")
+    total          = len(pdf_paths)
+    progress_slot  = st.empty()
+    progress       = progress_slot.progress(0, text="Starting…")
 
     with st.status("Extracting metadata…", expanded=True) as ext_status:
         for i, pdf_path in enumerate(pdf_paths, 1):
@@ -562,7 +558,7 @@ if st.button(btn_label, type="primary", use_container_width=True):
             summary += f", {n_err} failed"
         ext_status.update(label=summary, state="complete" if n_ok else "error")
 
-    progress.empty()
+    progress_slot.empty()
 
     # Clean up working files after the run
     def _delete_dir_contents(folder: str) -> None:
@@ -613,15 +609,20 @@ for result in results:
     meta = result["metadata"]
     with st.expander(f"📄 {result['filename']}", expanded=True):
 
-        # Key metrics row
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Content type", meta.get("icaew:ContentType") or "—")
-        col2.metric("Date",         meta.get("Date")              or "—")
-        col3.metric("Format",       meta.get("Format")            or "—")
-
-        # Title
+        # Top row: title + key fields
         st.markdown("**Title**")
         st.write(meta.get("Title") or "—")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown("**Content type**")
+            st.write(meta.get("icaew:ContentType") or "—")
+        with col2:
+            st.markdown("**Date**")
+            st.write(meta.get("Date") or "—")
+        with col3:
+            st.markdown("**Format**")
+            st.write(meta.get("Format") or "—")
 
         # Creator / Publisher
         col_a, col_b = st.columns(2)

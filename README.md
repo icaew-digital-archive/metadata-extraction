@@ -63,7 +63,7 @@ When **Preservica** mode is selected, additional options appear:
 - **Use asset reference in filenames** — prefix downloaded filenames with the Preservica asset reference number
 - **Original files only** — download only the first-generation file for each asset
 
-> **Note:** The `PYPRESERVICA_DOWNLOAD_SCRIPT` environment variable must be set in your `.env` file to enable Preservica downloads.
+> **Note:** Preservica credentials (`USERNAME`, `PASSWORD`, `TENANT`, `SERVER`) must be set in your `.env` file to enable Preservica downloads.
 
 ---
 
@@ -289,7 +289,7 @@ The system automatically creates a `format_mapping.json` file during document co
 
 ## Dependencies
 
-- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, streamlit (web UI)
+- **Python Packages**: openai, python-dotenv, PyPDF2, reportlab, Pillow, pyPreservica, streamlit (web UI)
 - **External Tools**: LibreOffice or Pandoc for document conversion
 
 Install all Python dependencies with:
@@ -298,10 +298,17 @@ Install all Python dependencies with:
 pip install -r requirements.txt
 ```
 
+The web UI's **Browse** folder picker also requires `tkinter`, which on Ubuntu/Debian must be installed separately:
+
+```bash
+sudo apt install python3-tk
+```
+
 ## File Structure
 
 Key files:
 - `app.py` - Streamlit web UI (experimental)
+- `download_preservica_assets.py` - Preservica asset download script
 - `metadata_extraction_wrapper.py` - Main orchestration script
 - `main.py` - Metadata extraction CLI
 - `convert_documents.py` - Multi-format to PDF conversion
