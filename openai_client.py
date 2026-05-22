@@ -10,19 +10,20 @@ from config import get_system_prompt, DEFAULT_MODEL, FILE_PURPOSE
 
 
 class OpenAIClient:
-    def __init__(self, include_subjects: bool = True) -> None:
+    def __init__(self, include_subjects: bool = True, profile_path: str = None) -> None:
         """Initialize the OpenAI client with API key from environment variables.
 
         Args:
-            include_subjects (bool): Whether to include subject classification in the
-                system prompt. When False, the Subject field is treated as reserved
-                and the topic list is omitted. Defaults to True.
+            include_subjects: Whether to include subject classification in the prompt.
+                When False, the Subject field is treated as reserved and the topic
+                list is omitted. Defaults to True.
+            profile_path: Path to a YAML profile file. Defaults to the ICAEW profile.
         """
         load_dotenv()
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         if not os.getenv('OPENAI_API_KEY'):
             raise ValueError("OPENAI_API_KEY environment variable not set")
-        self.system_prompt = get_system_prompt(include_subjects)
+        self.system_prompt = get_system_prompt(include_subjects, profile_path)
 
     def upload_file(self, file_path: str) -> str:
         """
@@ -56,7 +57,7 @@ class OpenAIClient:
             str: The extracted metadata
         """
         print("Extracting metadata...")
-        user_text = "Please analyze this document and extract metadata according to the ICAEW conventions. Return the metadata in the specified format."
+        user_text = "Please analyse this document and extract metadata according to the conventions specified. Return the metadata in the specified JSON format."
         if context_prompt:
             user_text = (
                 "The following is background context that identifies the subject, place, or event. "

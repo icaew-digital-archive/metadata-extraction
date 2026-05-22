@@ -9,14 +9,14 @@ from openai_client import OpenAIClient
 
 
 class MetadataExtractor:
-    def __init__(self, include_subjects: bool = True) -> None:
+    def __init__(self, include_subjects: bool = True, profile_path: str = None) -> None:
         """Initialize the metadata extractor with an OpenAI client.
 
         Args:
-            include_subjects (bool): Whether to include subject classification in the
-                system prompt. Passed through to OpenAIClient. Defaults to True.
+            include_subjects: Whether to include subject classification. Defaults to True.
+            profile_path: Path to a YAML profile file. Defaults to the ICAEW profile.
         """
-        self.client = OpenAIClient(include_subjects=include_subjects)
+        self.client = OpenAIClient(include_subjects=include_subjects, profile_path=profile_path)
 
     def extract_metadata(self, pdf_path: str, first_pages: int = 0, last_pages: int = 0, original_format: str = None, context_prompt: Optional[str] = None) -> Tuple[str, str, str]:
         """

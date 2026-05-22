@@ -168,6 +168,13 @@ Examples:
         help='Disable subject classification (Subject field will always be empty)'
     )
 
+    parser.add_argument(
+        '--profile',
+        type=str,
+        default=None,
+        help='Path to a YAML profile file, or a profile name inside profiles/ (e.g., "default")'
+    )
+
     return parser.parse_args()
 
 
@@ -260,6 +267,9 @@ def main():
         print(f"Context prompt: {context_prompt[:60]}..." if len(context_prompt) > 60 else f"Context prompt: {context_prompt}")
     no_subjects = args.no_subjects
     print(f"Subject classification: {'disabled' if no_subjects else 'enabled'}")
+    profile = args.profile if args.profile else None
+    if profile:
+        print(f"Profile: {profile}")
 
     # Step 1: Run the download script (unless skipped)
     if not skip_download:
@@ -340,6 +350,9 @@ def main():
 
     if no_subjects:
         extract_cmd.append('--no-subjects')
+
+    if profile:
+        extract_cmd.extend(['--profile', profile])
 
     if not run_command(extract_cmd, "Metadata extraction"):
         print("Metadata extraction step failed.")

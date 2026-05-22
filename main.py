@@ -1,6 +1,6 @@
 """
 Metadata extraction tool for PDF files using OpenAI's API.
-Extracts metadata following configurable conventions defined in config.py.
+Extracts metadata following conventions defined in a YAML profile (see profiles/).
 """
 
 import argparse
@@ -14,7 +14,7 @@ from json_metadata_writer import JSONMetadataWriter
 def create_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(
-        description='Extract metadata from PDF files using ICAEW conventions.',
+        description='Extract metadata from PDF files using a configurable profile.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 Examples:
@@ -77,6 +77,12 @@ Examples:
                         action='store_true',
                         help='Disable subject classification (Subject field will always be empty)')
 
+    parser.add_argument('--profile',
+                        type=str,
+                        default=None,
+                        help='Path to a YAML profile file (default: profiles/icaew.yaml). '
+                             'Can be a filename inside profiles/ (e.g., "default") or a full path.')
+
     return parser
 
 
@@ -132,8 +138,19 @@ def main() -> None:
         total_files = len(pdf_files)
         print(f"\nStarting to process {total_files} PDF file(s)")
 
+        # Resolve profile path
+        profile_path = None
+        if args.profile:
+            p = args.profile
+            if not os.path.isabs(p) and not os.path.exists(p):
+                # Try as a name inside profiles/
+                candidate = os.path.join(os.path.dirname(os.path.abspath(__file__)), "profiles", p if p.endswith((".yaml", ".yml")) else p + ".yaml")
+                if os.path.exists(candidate):
+                    p = candidate
+            profile_path = p
+
         # Initialize metadata extractor and writer
-        extractor = MetadataExtractor(include_subjects=not args.no_subjects)
+        extractor = MetadataExtractor(include_subjects=not args.no_subjects, profile_path=profile_path)
         writer = JSONMetadataWriter(args.json_file)
 
         # Track processed and failed files

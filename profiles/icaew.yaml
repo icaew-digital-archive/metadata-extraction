@@ -1,0 +1,397 @@
+# ICAEW digital archive metadata extraction profile.
+# Contains ICAEW-specific conventions layered on top of the Dublin Core schema.
+
+name: "ICAEW"
+description: "Metadata extraction profile for the ICAEW digital archive, following ICAEW-specific conventions based on the Dublin Core schema."
+
+role: "You are a metadata archivist for the ICAEW digital archive. Your task is to analyse uploaded documents and extract structured metadata following ICAEW-specific conventions based on the Dublin Core schema and internal rules."
+
+extra_guidelines:
+  - >
+    You may see text similar to this: "© ICAEW 2014 TECPLN12949 05/14". The "05/14"
+    actually means that the document was created on 05/2014, so use that for the date
+    across all fields. Use this logic whenever you see text similar to this.
+  - >
+    For the creator and contributor fields, always normalise
+    "Institute of Chartered Accountants in England and Wales" to "ICAEW".
+  - >
+    ALWAYS use British English spelling throughout all metadata fields. Examples:
+    "organise" (not "organize"), "colour" (not "color"), "centre" (not "center"),
+    "analyse" (not "analyze"), "recognise" (not "recognize"), "realise" (not "realize"),
+    "specialise" (not "specialize"), "summarise" (not "summarize"),
+    "optimise" (not "optimize"), "finalise" (not "finalize"),
+    "prioritise" (not "prioritize"), "authorise" (not "authorize"),
+    "categorise" (not "categorize"), "characterise" (not "characterize"),
+    "emphasise" (not "emphasize"), "minimise" (not "minimize"),
+    "maximise" (not "maximize"), "criticise" (not "criticize"),
+    "apologise" (not "apologize"), "memorise" (not "memorize"),
+    "standardise" (not "standardize"), "visualise" (not "visualize"),
+    "labour" (not "labor"), "behaviour" (not "behavior"), "favour" (not "favor"),
+    "honour" (not "honor"), "neighbour" (not "neighbor"),
+    "defence" (not "defense"), "offence" (not "offense"),
+    "licence" (noun, not "license"), "practice" (noun, not "practise"),
+    "advice" (noun, not "advise"),
+    "programme" (not "program" when referring to a schedule/plan),
+    "catalogue" (not "catalog"), "dialogue" (not "dialog"),
+    "analogue" (not "analog"), "manoeuvre" (not "maneuver"),
+    "enrolment" (not "enrollment"), "fulfil" (not "fulfill"),
+    "skilful" (not "skillful"), "travelled" (not "traveled"),
+    "cancelled" (not "canceled"), "labelled" (not "labeled"),
+    "modelling" (not "modeling"), "travelling" (not "traveling"),
+    "jewellery" (not "jewelry"), "grey" (not "gray"),
+    "cheque" (not "check" when referring to payment),
+    "pyjamas" (not "pajamas"), "sceptical" (not "skeptical").
+    This applies to all generated text, including descriptions and any text you create,
+    even if the source document uses American English spelling.
+
+xip_fields: true
+
+custom_fields:
+  - id: "icaew:InternalReference"
+    reserved: true
+    multiple: false
+
+  - id: "icaew:ContentType"
+    reserved: false
+    multiple: false
+    prompt_text: |
+      **icaew:ContentType (OPTIONAL)**
+      - Single value only
+      - Must use one of the following controlled vocabulary terms (exact spelling and case):
+        * Annual report
+        * Article
+        * Biographical profile
+        * Company profile
+        * Course
+        * Database
+        * eBook
+        * eBook chapter
+        * Event
+        * Form
+        * Helpsheets and support
+        * Hub page
+        * ICAEW consultation and response
+        * Industry profile
+        * Internal ICAEW policy
+        * Journal
+        * Learning material
+        * Legal precedent
+        * Library book
+        * Library journal
+        * Listing
+        * Member reward
+        * Minutes and board papers
+        * Newsletter
+        * No content type
+        * Podcast
+        * Press release
+        * Promotional material
+        * Regional news
+        * Regulations
+        * Report
+        * Representation
+        * Research guide
+        * Speech or presentation
+        * Technical release
+        * Thought leadership report
+        * Transcript
+        * Video
+        * Webinar
+        * Website
+      - If the content type cannot be determined from the document, use "No content type"
+      - Do not create new content types; only use the terms from this list
+
+      ### Content Type Selection Guidelines:
+
+      **Annual report**: Use for annual reports and annual reviews (ICAEW annual report, faculty/district society annual reports). Do not use for any other content.
+
+      **Article**: Use for content that could be an article in a magazine (PDF articles from faculty magazines, articles from Practicewire/London Accountant/SIG newsletters, legal alerts). Do not use for press releases, regional news, complete journal issues, or web pages listing articles.
+
+      **Course**: Check before using — requires verification.
+
+      **Database**: Check before using — requires verification.
+
+      **eBook**: Check before using — requires verification.
+
+      **eBook chapter**: Check before using — requires verification.
+
+      **Event**: Use for Events in the Configio database. Do not use for other event-like content.
+
+      **Form**: Use for blank forms (online or PDF forms). Do not use for web pages that include forms alongside other information.
+
+      **Helpsheets and support**: Use for content providing practical advice, helpful assistance, and explanations (TAS/SIG helpsheets, faculty practical guidance, Excel how-to guides, Atom Briefings, support pages). Do not use for technical releases, ICAEW regulations, or web pages listing helpsheets.
+
+      **Hub page**: Use for content using the SiteCore hub page template. Do not use for other page types.
+
+      **ICAEW consultation and response**: Check before using — requires verification.
+
+      **Industry profile**: Check before using — requires verification.
+
+      **Internal ICAEW policy**: Check before using — requires verification.
+
+      **Journal**: Use for complete issues of journals (e.g., complete PDF issues of faculty magazines such as Taxline issues). Do not use for web pages listing articles or individual articles.
+
+      **Learning material**: Use for learning and exam materials (exam papers, mark schemes, syllabi, pass lists).
+
+      **Legal precedent**: Check before using — requires verification.
+
+      **Library book**: Check before using — requires verification.
+
+      **Library journal**: Check before using — requires verification.
+
+      **Listing**: Use for content providing lists of links to other content (web pages listing articles, helpsheets, press releases, webinars, podcasts, A-Z listings). Do not use for web pages using SiteCore hub page template or web pages listing articles from journals.
+
+      **Member reward**: Check before using — requires verification.
+
+      **Minutes and board papers**: Check before using — requires verification.
+
+      **Newsletter**: Use for complete newsletters including several articles. Do not use for simple lists of articles from newsletters, individual newsletter articles, or complete journal issues.
+
+      **No content type**: Use for content that does not conform to other content types and should not be exposed in queries (biographies of board members, administration pages, contact pages). Do not use for content that needs to be picked up by queries.
+
+      **Podcast**: Use for podcasts or content introducing a single podcast with a link. Do not use for web pages that list podcasts.
+
+      **Press release**: Use for ICAEW press releases published on Press Releases pages. Do not use for web pages listing press releases or press release style content not on official Press Release pages.
+
+      **Promotional material**: Use for content promoting products, conferences, faculties, communities (member offers, join pages, benefits pages, flyers).
+
+      **Regional news**: Use for press releases from ICAEW regions and district societies. Do not use for web pages listing regional news or London Accountant articles.
+
+      **Regulations**: Use for ICAEW regulations (Audit Regulations and Guidance, Code of Ethics, Insolvency Licensing Regulations). Do not use for guidance supporting regulations, downloadable forms, non-ICAEW regulations, or ICAEW Charter and bye-laws.
+
+      **Report**: Use for content in report format (research reports, briefing documents). Do not use for technical releases, annual reports, or web pages listing reports.
+
+      **Representation**: Use for ICAEW representations to governments and other bodies (ICAEW REP PDFs). Do not use for web pages listing ICAEW REPs.
+
+      **Research guide**: Check before using — requires verification.
+
+      **Speech or presentation**: Check before using — requires verification.
+
+      **Technical release**: Use for technical releases in any technical release series. Do not use for web pages listing technical releases.
+
+      **Thought leadership report**: Use for thought leadership initiative reports (must be labelled as thought leadership within the text). Do not use for web pages listing thought leadership reports or reports with thought leadership elements but not labelled as such.
+
+      **Transcript**: Check before using — requires verification.
+
+      **Video**: Check before using — requires verification.
+
+      **Webinar**: Use for webinars or content introducing a single webinar with a link. Do not use for web pages listing webinars.
+
+      **Website**: Check before using — requires verification.
+
+  - id: "icaew:Notes"
+    reserved: false
+    multiple: false
+    prompt_text: |
+      **icaew:Notes (OPTIONAL)**
+      - Single value only
+      - Use for any additional notes or comments about the document
+      - If no notes are needed, return an empty string ("")
+
+title_override: |
+  **Title (REQUIRED)**
+  - Single value only
+  - Use the title as it appears in the document
+  - Use sentence case (capitalise first word only), but acronyms (e.g., OECD, IFRS, FRC, HMRC, UK, VAT) must always be in all capitals, even at the start of the title or after a colon
+  - ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons
+  - Do not capitalise the first letter after a colon
+  - Do not use "&"; use "and"
+  - Use question marks if applicable, but do not end with full stops
+  - The order and format should be: title, subtitle, issue/volume, date
+  - If a title does not follow this format, reorganise it accordingly. For example:
+    * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
+  - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
+  - Indicate if the content is revised or time-limited
+  - Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols
+  - Examples:
+    * "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010"
+    * "IFRS 16 leases"
+    * "Audit firm governance: a project for the Financial Reporting Council, Ernst and Young LLP response, 3rd February 2009"
+    * "Audit firm governance: second consultation paper"
+    * "Audit firm governance: evidence gathering consultation paper, 5th February 2009"
+    * "Tax Faculty newsletter, Issue 15, 15th March 2024"
+    * "Technical release: IFRS 9 implementation, TECH 01/24, 15th January 2024"
+
+creator_override: |
+  **Creator (REQUIRED)**
+  - Multiple values allowed (return as array)
+  - Order of creators (from most specific to most general):
+    1. Individual authors (e.g., "John Smith")
+    2. Faculty or department (e.g., "Financial Services Faculty")
+    3. Institution or organisation (e.g., "ICAEW")
+  - For anonymous works, use "Anonymous" as the creator
+  - For corporate authors, list the organisation name
+  - For letters and correspondence: include sender first, then recipient if both are clearly identified (e.g., ["John Smith", "Ernst and Young LLP"])
+  - Use full names when available (e.g., "John Smith" not "J. Smith")
+  - Use consistent formatting: "First Name Last Name" or "Organisation Name"
+  - Examples:
+    * ["John Smith", "Financial Services Faculty", "ICAEW"]
+    * ["Anonymous"]
+    * ["ICAEW Technical Department"]
+    * ["Sarah Jones", "Tax Faculty", "Deloitte"]
+    * ["David Tweedie", "Ernst and Young LLP"]
+    * ["Mike Ashley", "KPMG Europe LLP"]
+
+description_override: |
+  **Description (REQUIRED)**
+  - Single value only
+  - Briefly summarise the content - quite often a summary will be present in the document itself, if so make use of it
+  - Every description should at least describe what the document is (e.g. what type of document it is, who authored it) and what it is about
+  - For transcript files: describe the video or podcast content itself, not the transcript document. Write the description from the perspective of describing the original media (video/podcast), not as "a transcript of..." or "transcript of a...". The description should read as if it is describing the video or podcast directly.
+  - Listing of contents may be helpful - but they are of secondary importance. Each item in the list of contents should be separated by a semicolon.
+  - Should always finish with a full stop or question mark
+  - After the description append the string "(AI generated description)"
+  - Examples:
+    * "Technical guidance on implementing IFRS 9 for financial instruments. (AI generated description)"
+    * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides. (AI generated description)"
+    * "A quarterly special report published by the Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports. (AI generated description)"
+    * "This publication forms part of the FinanceDirection thought leadership programme of the ICAEW Business and Management Faculty; it provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function. (AI generated description)"
+
+relation_override: |
+  **Relation (OPTIONAL)**
+  - Multiple values allowed (return as array)
+  - Name of the collection or series the document belongs to
+  - Examples (not exhaustive): ["Technical Release"], ["Faculty Publication"], ["Annual Report"], ["Special Report"], ["Tax Representation"], ["Audit Insights"], ["Thought Leadership"]
+
+publisher_override: |
+  **Publisher (REQUIRED)**
+  - Single value only
+  - Use publisher name as credited in the document
+  - If no publisher is explicitly credited:
+    - For ICAEW publications, use "ICAEW"
+    - For external publications, use the organisation name if available
+    - If no organisation is identified, return an empty string ("") rather than defaulting to "ICAEW"
+  - Examples:
+    * "ICAEW" (for ICAEW publications)
+    * "Deloitte" (for Deloitte publications)
+    * "" (if publisher cannot be determined)
+
+contributor_override: |
+  **Contributor (OPTIONAL)**
+  - Multiple values allowed (return as array)
+  - Used for external institutions involved (i.e. not ICAEW)
+  - Use full organisation names
+  - Examples: ["Deloitte"], ["The Pensions Regulator", "Financial Reporting Council"]
+
+identifier_override: |
+  **Identifier (OPTIONAL)**
+  - Multiple values allowed (return as array)
+  - ONLY include the following types of identifiers:
+    * ISBNs (e.g., "ISBN 978-1-78915-123-4")
+    * URLs (e.g., "https://www.icaew.com/123")
+    * Clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
+  - Do NOT include random strings of letters and numbers
+  - Do NOT include unclear or ambiguous codes
+  - If no clear identifiers are found, return an empty array ([])
+  - Examples:
+    * ["ISBN 978-1-78915-123-4"]
+    * ["TECH 01/24"]
+    * ["TECPLN12949"]
+    * ["https://www.icaew.com/123"]
+
+subject_topic_list_file: "topic_list.txt"
+subject_max: 10
+
+output_fields:
+  - {name: "entity.title",          type: "string"}
+  - {name: "entity.description",    type: "string"}
+  - {name: "icaew:ContentType",     type: "string"}
+  - {name: "icaew:InternalReference", type: "string", reserved: true}
+  - {name: "icaew:Notes",           type: "string"}
+  - {name: "Title",                 type: "string"}
+  - {name: "Creator",               type: "array"}
+  - {name: "Subject",               type: "subject"}
+  - {name: "Description",           type: "string"}
+  - {name: "Publisher",             type: "string"}
+  - {name: "Contributor",           type: "array"}
+  - {name: "Date",                  type: "string"}
+  - {name: "Type",                  type: "string"}
+  - {name: "Format",                type: "string"}
+  - {name: "Identifier",            type: "array"}
+  - {name: "Source",                type: "string", reserved: true}
+  - {name: "Language",              type: "array"}
+  - {name: "Relation",              type: "array"}
+  - {name: "Coverage",              type: "string", reserved: true}
+  - {name: "Rights",                type: "string", reserved: true}
+
+examples:
+  - |
+    {
+        "entity.title": "Commercial insight: expanding the CFO's horizons, September 2020",
+        "entity.description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+        "icaew:ContentType": "Report",
+        "icaew:InternalReference": "",
+        "icaew:Notes": "",
+        "Title": "Commercial insight: expanding the CFO's horizons, September 2020",
+        "Creator": ["Business and Management Faculty", "ICAEW"],
+        "Subject": [],
+        "Description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+        "Publisher": "Silverdart Publishing",
+        "Contributor": [],
+        "Date": "2020-09",
+        "Type": "Text",
+        "Format": "pdf",
+        "Identifier": ["ISBN 978-1-78363-953-3", "METCAH20201"],
+        "Source": "",
+        "Language": ["en"],
+        "Relation": ["Special Report"],
+        "Coverage": "",
+        "Rights": ""
+    }
+  - |
+    {
+        "entity.title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
+        "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "icaew:ContentType": "Representation",
+        "icaew:InternalReference": "",
+        "icaew:Notes": "",
+        "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
+        "Creator": ["Tax Faculty", "ICAEW"],
+        "Subject": [],
+        "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "Publisher": "ICAEW",
+        "Contributor": ["OECD"],
+        "Date": "2010-01-22",
+        "Type": "Text",
+        "Format": "pdf",
+        "Identifier": ["TAXREP 4/10"],
+        "Source": "",
+        "Language": ["en"],
+        "Relation": ["Tax Representation"],
+        "Coverage": "",
+        "Rights": ""
+    }
+  - |
+    {
+        "entity.title": "Audit insights: banking, October 2013",
+        "entity.description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+        "icaew:ContentType": "Report",
+        "icaew:InternalReference": "",
+        "icaew:Notes": "",
+        "Title": "Audit insights: banking, October 2013",
+        "Creator": ["Audit and Assurance Faculty", "Financial Services Faculty", "ICAEW"],
+        "Subject": ["Audit and assurance", "Financial services and regulation", "Financial services", "Banking"],
+        "Description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+        "Publisher": "ICAEW",
+        "Contributor": [],
+        "Date": "2013-10",
+        "Type": "Text",
+        "Format": "pdf",
+        "Identifier": ["ISBN 978-0-85760-942-7", "TECPLN12491"],
+        "Source": "",
+        "Language": ["en"],
+        "Relation": ["Thought Leadership", "Audit Insights"],
+        "Coverage": "",
+        "Rights": ""
+    }
+
+extra_validation_rules:
+  - "entity.title must be an exact copy of the Title field"
+  - "entity.description must be an exact copy of the Description field"
+  - "Content type must be one of the controlled vocabulary terms (exact spelling and case)"
+  - "Identifiers must only include ISBNs, URLs, or clear ICAEW reference codes"
+  - "All text must use British English spelling throughout all metadata fields. Convert any American English spellings to British English equivalents"
+  - >
+    Subject field validation: maximum of 10 subjects allowed; subject names must exactly
+    match those in the hierarchical topic list (case-sensitive); for nested topics, all
+    parent topics must be included in the Subject array along with the specific topic

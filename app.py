@@ -26,6 +26,7 @@ from metadata_extractor import MetadataExtractor
 from json_metadata_writer import JSONMetadataWriter
 from json_to_csv_converter import JSONToCSVConverter
 from convert_documents import convert_directory, get_supported_formats, is_supported_format
+from config import list_profiles
 
 UPLOAD_TYPES = [ext.lstrip('.') for ext in get_supported_formats()]
 from metadata_extraction_wrapper import (
@@ -98,7 +99,7 @@ def run_subprocess(cmd: List[str]) -> Tuple[bool, str]:
 # ── page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="ICAEW Metadata Extractor",
+    page_title="Metadata Extractor",
     page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -110,12 +111,30 @@ st.set_page_config(
 with st.sidebar:
     st.header("⚙️ Settings")
 
+    # Profile selector
+    _available_profiles = list_profiles()
+    _profile_names = [name for name, _ in _available_profiles]
+    _profile_paths = {name: path for name, path in _available_profiles}
+
+    if len(_available_profiles) > 1:
+        selected_profile_name = st.selectbox(
+            "Profile",
+            options=_profile_names,
+            help="Select the metadata extraction profile that matches your organisation or archive.",
+        )
+    else:
+        selected_profile_name = _profile_names[0] if _profile_names else None
+
+    selected_profile_path = _profile_paths.get(selected_profile_name) if selected_profile_name else None
+
+    st.divider()
+
     # Subject classification  (--no-subjects)
     include_subjects = st.toggle(
         "Subject classification",
         value=True,
         help=(
-            "Classify documents against the ICAEW topic hierarchy. "
+            "Classify documents against the topic hierarchy defined in the profile. "
             "Disable to leave the Subject field empty."
         ),
     )
@@ -169,7 +188,7 @@ with st.sidebar:
 
 # ── main area ─────────────────────────────────────────────────────────────────
 
-st.title("ICAEW Metadata Extractor")
+st.title("Metadata Extractor")
 st.caption("Extract structured metadata from documents and images using AI.")
 
 input_mode = st.radio(
@@ -485,7 +504,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     # ── Extraction (shared across all modes) ──────────────────────────────────
 
     try:
-        extractor = MetadataExtractor(include_subjects=include_subjects)
+        extractor = MetadataExtractor(include_subjects=include_subjects, profile_path=selected_profile_path)
     except ValueError as e:
         st.error(f"Could not initialise extractor: {e}")
         st.stop()
@@ -501,7 +520,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
             except OSError:
                 pass
         tmp_fh = tempfile.NamedTemporaryFile(
-            suffix=".json", delete=False, prefix="icaew_metadata_"
+            suffix=".json", delete=False, prefix="metadata_"
         )
         tmp_fh.close()
         st.session_state.temp_json = tmp_fh.name

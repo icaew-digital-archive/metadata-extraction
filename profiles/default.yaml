@@ -1,0 +1,80 @@
+# Default generic Dublin Core metadata extraction profile.
+# Copy and customise this file to create your own organisation-specific profile.
+
+name: "Default"
+description: "Generic Dublin Core metadata extraction profile"
+
+# Opening role statement sent to the model.
+role: "You are a metadata archivist. Your task is to analyse uploaded documents and extract structured metadata following the Dublin Core schema."
+
+# Additional guidelines appended after the standard set (numbered automatically).
+extra_guidelines: []
+
+# Set to true to include entity.title and entity.description fields that mirror
+# the Dublin Core Title and Description fields (used by some repository systems).
+xip_fields: false
+
+# Custom metadata fields added before the Dublin Core section.
+# Each entry must have: id, reserved (bool).
+# Non-reserved entries must also have: prompt_text (the full field instruction).
+custom_fields: []
+
+# Path to a plain-text topic list for subject classification,
+# relative to the project root. Set to null to use free-text keywords instead.
+subject_topic_list_file: null
+
+# Maximum number of subjects to select (only used when subject_topic_list_file is set).
+subject_max: 10
+
+# Override the generic Publisher field description (full replacement, optional).
+publisher_override: null
+
+# Override the generic Contributor field description (full replacement, optional).
+contributor_override: null
+
+# Override the generic Identifier field description (full replacement, optional).
+identifier_override: null
+
+# Ordered list of fields included in the JSON output.
+# type: "string" | "array" | "subject" (subject is handled specially by include_subjects flag)
+# reserved: true means the field always returns "" or []
+output_fields:
+  - {name: "Title",       type: "string"}
+  - {name: "Creator",     type: "array"}
+  - {name: "Subject",     type: "subject"}
+  - {name: "Description", type: "string"}
+  - {name: "Publisher",   type: "string"}
+  - {name: "Contributor", type: "array"}
+  - {name: "Date",        type: "string"}
+  - {name: "Type",        type: "string"}
+  - {name: "Format",      type: "string"}
+  - {name: "Identifier",  type: "array"}
+  - {name: "Source",      type: "string", reserved: true}
+  - {name: "Language",    type: "array"}
+  - {name: "Relation",    type: "array"}
+  - {name: "Coverage",    type: "string", reserved: true}
+  - {name: "Rights",      type: "string", reserved: true}
+
+# One or more example JSON outputs shown to the model.
+examples:
+  - |
+    {
+        "Title": "Annual report 2023",
+        "Creator": ["Acme Corporation"],
+        "Subject": [],
+        "Description": "Annual report for Acme Corporation covering the financial year ending December 2023. Includes financial statements, governance information, and strategic overview. (AI generated description)",
+        "Publisher": "Acme Corporation",
+        "Contributor": [],
+        "Date": "2023",
+        "Type": "Text",
+        "Format": "pdf",
+        "Identifier": [],
+        "Source": "",
+        "Language": ["en"],
+        "Relation": [],
+        "Coverage": "",
+        "Rights": ""
+    }
+
+# Additional validation rules appended after the standard set.
+extra_validation_rules: []
