@@ -193,11 +193,13 @@ title_override: |
   - Single value only
   - Use the title as it appears in the document
   - Use sentence case (capitalise first word only), but acronyms (e.g., OECD, IFRS, FRC, HMRC, UK, VAT) must always be in all capitals, even at the start of the title or after a colon
-  - ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons
+  - ALWAYS use colons (:) to separate the main title from its subtitle only - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as title/subtitle separators with colons
+  - Do NOT use a colon before a date, issue/volume number, or reference code — use a comma instead (e.g., "A trustee perspective, 23rd July 2020" not "A trustee perspective: 23rd July 2020")
   - Do not capitalise the first letter after a colon
   - Do not use "&"; use "and"
   - Use question marks if applicable, but do not end with full stops
-  - The order and format should be: title, subtitle, issue/volume, date
+  - The order and format should be: title, subtitle, issue/volume, date — with commas separating each element after the subtitle
+  - ALWAYS append the date to the end of the title if a date has been identified for the document. Do not omit it. Use the same level of precision as the date found: year only (e.g., "2021"), month and year (e.g., "March 2021"), or full date (e.g., "15th March 2021")
   - If a title does not follow this format, reorganise it accordingly. For example:
     * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
   - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
@@ -211,6 +213,8 @@ title_override: |
     * "Audit firm governance: evidence gathering consultation paper, 5th February 2009"
     * "Tax Faculty newsletter, Issue 15, 15th March 2024"
     * "Technical release: IFRS 9 implementation, TECH 01/24, 15th January 2024"
+    * "A trustee perspective, 23rd July 2020" (comma before date — NOT a colon)
+    * "How to succeed in an interview, 2021" (date always appended, year-only precision when only a year is known)
 
 creator_override: |
   **Creator (REQUIRED)**
@@ -219,14 +223,14 @@ creator_override: |
     1. Individual authors (e.g., "John Smith")
     2. Faculty or department (e.g., "Financial Services Faculty")
     3. Institution or organisation (e.g., "ICAEW")
-  - For anonymous works, use "Anonymous" as the creator
+  - If the creator cannot be identified, return an empty array ([])
   - For corporate authors, list the organisation name
   - For letters and correspondence: include sender first, then recipient if both are clearly identified (e.g., ["John Smith", "Ernst and Young LLP"])
   - Use full names when available (e.g., "John Smith" not "J. Smith")
   - Use consistent formatting: "First Name Last Name" or "Organisation Name"
   - Examples:
     * ["John Smith", "Financial Services Faculty", "ICAEW"]
-    * ["Anonymous"]
+    * [] (if creator cannot be identified)
     * ["ICAEW Technical Department"]
     * ["Sarah Jones", "Tax Faculty", "Deloitte"]
     * ["David Tweedie", "Ernst and Young LLP"]

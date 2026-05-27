@@ -386,3 +386,44 @@ def get_system_prompt(include_subjects: bool = True, profile_path: str = None) -
     """Convenience function: load profile and build system prompt."""
     profile = load_profile(profile_path)
     return build_system_prompt(profile, include_subjects)
+
+
+# ── subject validation ────────────────────────────────────────────────────────
+
+def load_valid_topics(topic_file_path: str) -> set:
+    """Parse a topic list file and return a set of all valid topic name strings."""
+    valid = set()
+    try:
+        with open(topic_file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("- "):
+                    valid.add(stripped[2:])
+    except OSError:
+        pass
+    return valid
+
+
+def validate_subjects(subjects: list, valid_topics: set, max_count: int) -> list:
+    """Filter subjects to only those in valid_topics, then truncate to max_count."""
+    result = subjects
+    if valid_topics:
+        result = [s for s in result if s in valid_topics]
+    if max_count:
+        result = result[:max_count]
+    return result
+
+
+def get_subject_constraints(profile_path: str = None) -> tuple:
+    """Return (valid_topics_set, subject_max) for the given profile.
+
+    Returns (empty set, 0) when the profile has no topic list, meaning no
+    validation is applied.
+    """
+    profile = load_profile(profile_path)
+    topic_file = profile.get("subject_topic_list_file")
+    subject_max = profile.get("subject_max", 10)
+    if not topic_file:
+        return set(), 0
+    topic_path = os.path.join(_BASE_DIR, topic_file)
+    return load_valid_topics(topic_path), subject_max

@@ -117,9 +117,12 @@ with st.sidebar:
     _profile_paths = {name: path for name, path in _available_profiles}
 
     if len(_available_profiles) > 1:
+        _non_default = [n for n in _profile_names if n.lower() != "default"]
+        _default_index = _profile_names.index(_non_default[0]) if _non_default else 0
         selected_profile_name = st.selectbox(
             "Profile",
             options=_profile_names,
+            index=_default_index,
             help="Select the metadata extraction profile that matches your organisation or archive.",
         )
     else:
@@ -526,7 +529,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
         st.session_state.temp_json = tmp_fh.name
         active_json_path = st.session_state.temp_json
 
-    writer = JSONMetadataWriter(active_json_path)
+    writer = JSONMetadataWriter(active_json_path, profile_path=selected_profile_path)
 
     st.session_state.results   = []
     st.session_state.errors    = []
