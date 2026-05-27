@@ -7,14 +7,17 @@ import json
 import os
 from typing import Dict, List
 
+from config import get_subject_constraints, validate_subjects
+
 
 class MetadataWriter:
-    def __init__(self, csv_file: str) -> None:
+    def __init__(self, csv_file: str, profile_path: str = None) -> None:
         """
         Initialize the metadata writer.
 
         Args:
             csv_file (str): Path to the CSV file to write to
+            profile_path (str): Path to a YAML profile file (used for subject validation)
         """
         # Define the expected metadata fields in order, with assetId first
         self.fields: List[str] = [
@@ -41,6 +44,7 @@ class MetadataWriter:
             'dc:rights'
         ]
         self.csv_file = csv_file
+        self._valid_topics, self._subject_max = get_subject_constraints(profile_path)
         self._initialize_csv()
 
     def _initialize_csv(self) -> None:
@@ -126,6 +130,11 @@ class MetadataWriter:
             for field, value in metadata_dict.items():
                 mapped_field = field_map.get(field, field)
                 if mapped_field in self.fields:
+                    if field == 'Subject' and isinstance(value, list):
+                        validated = validate_subjects(value, self._valid_topics, self._subject_max)
+                        if len(validated) < len(value):
+                            print(f"  Subject validation: reduced from {len(value)} to {len(validated)} item(s)")
+                        value = validated
                     result[mapped_field] = self._clean_text(str(value) if value is not None else '')
             
             # Apply the mapping rules:

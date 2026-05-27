@@ -247,13 +247,17 @@ class JSONToCSVConverter:
                         elif field.startswith('dc:format'):
                             # For dc:format fields, use the value already set from original_format
                             value = csv_row.get(field, '')
+                        elif field in ('entity.title', 'entity.description'):
+                            # Use the pre-computed value (copied from dc:title / dc:description)
+                            # rather than looking up the model's raw entity field, which may be empty
+                            value = csv_row.get(field, '')
                         else:
                             # Calculate the field index based on position
                             field_index = 0
                             for j in range(i):
                                 if self.dynamic_fields[j] == field:
                                     field_index += 1
-                            
+
                             # Get the value for this field/index
                             value = self._get_field_value(metadata_dict, field, field_index)
                         

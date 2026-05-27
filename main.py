@@ -151,7 +151,7 @@ def main() -> None:
 
         # Initialize metadata extractor and writer
         extractor = MetadataExtractor(include_subjects=not args.no_subjects, profile_path=profile_path)
-        writer = JSONMetadataWriter(args.json_file)
+        writer = JSONMetadataWriter(args.json_file, profile_path=profile_path)
 
         # Track processed and failed files
         processed_files: Set[str] = set()

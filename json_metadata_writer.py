@@ -7,16 +7,20 @@ import os
 from typing import Dict, List, Any
 from datetime import datetime
 
+from config import get_subject_constraints, validate_subjects
+
 
 class JSONMetadataWriter:
-    def __init__(self, json_file: str) -> None:
+    def __init__(self, json_file: str, profile_path: str = None) -> None:
         """
         Initialize the JSON metadata writer.
 
         Args:
             json_file (str): Path to the JSON file to write to
+            profile_path (str): Path to a YAML profile file (used for subject validation)
         """
         self.json_file = json_file
+        self._valid_topics, self._subject_max = get_subject_constraints(profile_path)
         self._initialize_json()
 
     def _initialize_json(self) -> None:
@@ -92,10 +96,15 @@ class JSONMetadataWriter:
             # Parse JSON string into dictionary
             metadata_dict = json.loads(metadata_str)
             
-            # Clean all text values
+            # Clean all text values and validate subjects
             cleaned_dict = {}
             for key, value in metadata_dict.items():
-                if isinstance(value, str):
+                if key == 'Subject' and isinstance(value, list):
+                    validated = validate_subjects(value, self._valid_topics, self._subject_max)
+                    if len(validated) < len(value):
+                        print(f"  Subject validation: reduced from {len(value)} to {len(validated)} item(s)")
+                    cleaned_dict[key] = validated
+                elif isinstance(value, str):
                     cleaned_dict[key] = self._clean_text(value)
                 else:
                     cleaned_dict[key] = value

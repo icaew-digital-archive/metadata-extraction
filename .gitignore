@@ -43,4 +43,6 @@ temp_*.pdf    # Temporary PDF files created during processing
 
 # OS specific
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+error_log.txt
