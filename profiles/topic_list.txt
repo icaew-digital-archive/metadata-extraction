@@ -486,7 +486,7 @@
     - IFRS 17 Insurance contracts
     - IFRS 18 Presentation and disclosure in financial statements
     - IFRS 19 Subsidiaries without public accountability disclosures
-  - OLD UK GAAP
+  - Old UK GAAP
     - FRS 1 Cash flow statements
     - FRS 10 Goodwill and intangible assets
     - FRS 11 Impairment of fixed assets and goodwill

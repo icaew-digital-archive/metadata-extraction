@@ -293,7 +293,7 @@ identifier_override: |
     * ["TECPLN12949"]
     * ["https://www.icaew.com/123"]
 
-subject_topic_list_file: "topic_list.txt"
+subject_topic_list_file: "profiles/topic_list.txt"
 subject_max: 10
 
 output_fields:
