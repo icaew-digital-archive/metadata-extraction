@@ -27,6 +27,7 @@ from json_metadata_writer import JSONMetadataWriter
 from json_to_csv_converter import JSONToCSVConverter
 from convert_documents import convert_directory, get_supported_formats, is_supported_format
 from config import list_profiles
+from preservica_writer import apply_record, create_client
 
 UPLOAD_TYPES = [ext.lstrip('.') for ext in get_supported_formats()]
 from metadata_extraction_wrapper import (
@@ -82,6 +83,59 @@ def browse_for_folder() -> str:
     folder = filedialog.askdirectory(master=root)
     root.destroy()
     return folder or ""
+
+
+def apply_to_preservica(json_path: str, descriptive: bool, xip: bool, overwrite: bool) -> None:
+    """Apply every record in the JSON output to its Preservica asset, storing results in session state."""
+    records = JSONMetadataWriter(json_path).get_records()
+    outcomes = []
+    with st.status("Applying metadata to Preservica…", expanded=True) as apply_status:
+        try:
+            client = create_client()
+        except Exception as e:
+            apply_status.update(label=f"Could not connect to Preservica: {e}", state="error")
+            return
+        icons = {"applied": ":white_check_mark:", "skipped": ":fast_forward:", "error": ":x:"}
+        for record in records:
+            outcome = apply_record(client, record, descriptive=descriptive, xip=xip, overwrite=overwrite)
+            outcomes.append(outcome)
+            st.write(f"{icons[outcome['status']]} **{outcome['filename']}** — {outcome['message']}")
+        counts = {s: sum(o["status"] == s for o in outcomes) for s in icons}
+        label = f"Preservica update — {counts['applied']} applied"
+        if counts["skipped"]:
+            label += f", {counts['skipped']} skipped"
+        if counts["error"]:
+            label += f", {counts['error']} failed"
+        apply_status.update(label=label, state="error" if counts["error"] else "complete")
+    st.session_state.apply_results = outcomes
+
+
+def preservica_update_options(key_prefix: str, when: str) -> Tuple[bool, bool, bool]:
+    """Render the Preservica update checkboxes; returns (descriptive, xip, overwrite)."""
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        descriptive = st.checkbox(
+            f"Apply metadata to Preservica{when}",
+            value=False,
+            key=f"{key_prefix}_descriptive",
+            help="Add the extracted Dublin Core and ICAEW metadata to each asset it was extracted from.",
+        )
+    with col2:
+        xip = st.checkbox(
+            f"Update XIP in Preservica{when}",
+            value=False,
+            key=f"{key_prefix}_xip",
+            help="Set each asset's Preservica title and description from the extracted Title and Description.",
+        )
+    with col3:
+        overwrite = st.checkbox(
+            "Overwrite existing metadata",
+            value=False,
+            key=f"{key_prefix}_overwrite",
+            disabled=not descriptive,
+            help="Replace existing DC/ICAEW metadata. When unticked, assets that already have it are left unchanged.",
+        )
+    return descriptive, xip, overwrite
 
 
 def run_subprocess(cmd: List[str]) -> Tuple[bool, str]:
@@ -208,8 +262,12 @@ input_mode = st.radio(
 # Defaults for variables only set inside the Preservica block
 preservica_mode = input_mode == "Preservica"
 preservica_download_by = "Folder"
-preservica_folder_ref = ""
+preservica_folder_refs: List[str] = []
 preservica_asset_ids: List[str] = []
+auto_descriptive = False
+auto_xip = False
+overwrite_existing = False
+original_formats: dict = {}
 effective_output_dir = ""
 exclude_extensions: List[str] = []
 use_asset_ref = True
@@ -304,16 +362,20 @@ else:
         ["Folder", "Asset IDs"],
         horizontal=True,
         help=(
-            "**Folder** — download all assets in a Preservica folder using its UUID.  \n"
+            "**Folder** — download all assets in one or more Preservica folders using their UUIDs.  \n"
             "**Asset IDs** — supply one or more specific asset UUIDs."
         ),
     )
 
     if preservica_download_by == "Folder":
-        preservica_folder_ref = st.text_input(
-            "Preservica folder reference (UUID)",
-            placeholder="e.g. 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba",
+        folder_refs_raw = st.text_area(
+            "Preservica folder references (one per line)",
+            placeholder="e.g.\n0a5d69bc-d85b-4482-a45c-8b20c40ef1ba\nbb45f999-7c07-4471-9c30-54b057c500ff",
+            height=100,
         )
+        preservica_folder_refs = [
+            line.strip() for line in folder_refs_raw.splitlines() if line.strip()
+        ]
     else:
         asset_ids_raw = st.text_area(
             "Asset IDs (one per line)",
@@ -351,12 +413,18 @@ else:
     )
     exclude_extensions = exclude_ext_input.split() if exclude_ext_input.strip() else []
 
+    st.caption("Optionally write results back to Preservica once extraction finishes — or leave unticked to review first.")
+    auto_descriptive, auto_xip, overwrite_existing = preservica_update_options("auto", " after extraction")
+
     col_opt1, col_opt2 = st.columns(2)
     with col_opt1:
         use_asset_ref = st.checkbox(
             "Use asset reference in filenames",
             value=DEFAULT_USE_ASSET_REF,
-            help="Prefix downloaded filenames with the Preservica asset reference number.",
+            help=(
+                "Name downloaded files by their Preservica asset reference. "
+                "Required to apply metadata back to Preservica."
+            ),
         )
     with col_opt2:
         original_only = st.checkbox(
@@ -367,6 +435,10 @@ else:
 
     if not effective_output_dir:
         st.info("Enter an output directory, or click Browse.")
+        st.stop()
+
+    if (auto_descriptive or auto_xip) and not use_asset_ref:
+        st.error("Updating Preservica requires **Use asset reference in filenames**.")
         st.stop()
 
 
@@ -386,7 +458,7 @@ btn_label = "Download and Extract Metadata" if preservica_mode else "Extract Met
 
 if preservica_mode:
     preservica_ready = (
-        (preservica_download_by == "Folder" and bool(preservica_folder_ref)) or
+        (preservica_download_by == "Folder" and bool(preservica_folder_refs)) or
         (preservica_download_by == "Asset IDs" and bool(preservica_asset_ids))
     )
 else:
@@ -431,8 +503,16 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                     tmp_assets.close()
                     st.session_state['_assets_tmp'] = tmp_assets.name
                     download_cmd = [sys.executable, download_script, '--assets-file', tmp_assets.name]
+            elif len(preservica_folder_refs) == 1:
+                download_cmd = [sys.executable, download_script, '--folder', preservica_folder_refs[0]]
             else:
-                download_cmd = [sys.executable, download_script, '--folder', preservica_folder_ref]
+                tmp_folders = tempfile.NamedTemporaryFile(
+                    mode='w', suffix='.txt', delete=False, prefix='preservica_folders_'
+                )
+                tmp_folders.write('\n'.join(preservica_folder_refs))
+                tmp_folders.close()
+                st.session_state['_assets_tmp'] = tmp_folders.name
+                download_cmd = [sys.executable, download_script, '--folders-file', tmp_folders.name]
             if use_asset_ref:
                 download_cmd.append('--use-asset-ref')
             if original_only:
@@ -456,6 +536,13 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                 dl_status.update(label="Download failed", state="error")
                 st.stop()
             dl_status.update(label="Download complete", state="complete")
+
+        # Record each asset's downloaded format before conversion replaces it with a PDF
+        original_formats = {
+            p.stem: p.suffix.lstrip('.').lower()
+            for p in Path(effective_output_dir).iterdir()
+            if p.is_file() and is_supported_format(str(p))
+        }
 
         # Step 2: Convert documents to PDF
         with st.status("Converting documents to PDF…", expanded=True) as conv_status:
@@ -534,6 +621,8 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     st.session_state.results   = []
     st.session_state.errors    = []
     st.session_state.json_path = active_json_path
+    st.session_state.apply_results = None
+    st.session_state.can_apply = preservica_mode and use_asset_ref
 
     total          = len(pdf_paths)
     progress_slot  = st.empty()
@@ -553,7 +642,8 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                     context_prompt=context_prompt.strip() or None,
                 )
                 metadata = json.loads(strip_code_fences(raw))
-                writer.write_metadata(raw, pdf_path, "pdf")
+                fmt = original_formats.get(Path(pdf_path).stem, "pdf") if preservica_mode else "pdf"
+                writer.write_metadata(raw, pdf_path, fmt)
 
                 title = metadata.get("Title") or "—"
                 content_type = metadata.get("icaew:ContentType") or ""
@@ -602,6 +692,9 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
             st.info(f"CSV saved to `{csv_output_path}`")
         except Exception as e:
             st.warning(f"Could not save CSV: {e}")
+
+    if (auto_descriptive or auto_xip) and st.session_state.results:
+        apply_to_preservica(active_json_path, auto_descriptive, auto_xip, overwrite_existing)
 
 
 # ── results ───────────────────────────────────────────────────────────────────
@@ -743,3 +836,34 @@ with col2:
             )
         except Exception as e:
             st.warning(f"CSV generation failed: {e}")
+
+
+# ── apply to Preservica ───────────────────────────────────────────────────────
+
+if st.session_state.get("can_apply") and json_path and os.path.exists(json_path):
+    st.divider()
+    st.subheader("Apply to Preservica")
+
+    apply_results = st.session_state.get("apply_results")
+    if apply_results is None:
+        st.caption("Write the extracted metadata back to the assets it was extracted from.")
+        m_descriptive, m_xip, m_overwrite = preservica_update_options("manual", "")
+        if st.button(
+            "Update Preservica",
+            type="primary",
+            use_container_width=True,
+            disabled=not (m_descriptive or m_xip),
+        ):
+            apply_to_preservica(json_path, m_descriptive, m_xip, m_overwrite)
+            st.rerun()
+    else:
+        applied = [r for r in apply_results if r["status"] == "applied"]
+        skipped = [r for r in apply_results if r["status"] == "skipped"]
+        failed  = [r for r in apply_results if r["status"] == "error"]
+        if applied:
+            st.success(f"Updated {len(applied)} asset(s) in Preservica")
+        for r in applied + skipped:
+            if "skipped" in r["message"]:
+                st.warning(f"`{r['asset_ref']}` — {r['message']}")
+        for r in failed:
+            st.error(f"**{r['filename']}** — {r['message']}")

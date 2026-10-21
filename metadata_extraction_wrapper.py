@@ -8,7 +8,8 @@ This wrapper script:
 1. Downloads assets from Preservica using download_preservica_assets.py
 2. Converts any DOCX/DOC/XLSX/PPTX/PPT/TXT/SRT/VTT/image files to PDF using convert_documents.py
 3. Extracts metadata from the PDF files using main.py
-4. Handles the workflow between the scripts
+4. Optionally writes the extracted metadata back to Preservica (--apply-metadata / --update-xip)
+5. Handles the workflow between the scripts
 
 To use this script, edit the configuration variables at the top of the file or use CLI arguments.
 Script paths can be configured via environment variables or .env file.
@@ -20,6 +21,9 @@ import sys
 import subprocess
 import os
 from dotenv import load_dotenv
+
+from json_metadata_writer import JSONMetadataWriter
+from preservica_writer import apply_record, create_client
 
 # Load environment variables from .env file
 load_dotenv(override=True)
@@ -101,6 +105,10 @@ Examples:
   # With custom context for the extraction prompt:
   python metadata_extraction_wrapper.py --skip-download --output-dir ./my-downloads --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
 
+  # Write results back to Preservica (DC/ICAEW metadata and/or XIP title & description):
+  python metadata_extraction_wrapper.py --preservica-assets-file assets.txt --apply-metadata --update-xip
+  python metadata_extraction_wrapper.py --preservica-folder-ref 0a5d69bc-d85b-4482-a45c-8b20c40ef1ba --apply-metadata --overwrite-metadata
+
   # Disable subject classification (Subject field will be empty):
   python metadata_extraction_wrapper.py --skip-download --output-dir ./my-downloads --no-subjects
         """
@@ -173,6 +181,24 @@ Examples:
         type=str,
         default=None,
         help='Path to a YAML profile file, or a profile name inside profiles/ (e.g., "default")'
+    )
+
+    parser.add_argument(
+        '--apply-metadata',
+        action='store_true',
+        help='After extraction, add the DC and ICAEW metadata to each Preservica asset (requires USE_ASSET_REF)'
+    )
+
+    parser.add_argument(
+        '--update-xip',
+        action='store_true',
+        help='After extraction, set each Preservica asset\'s XIP title and description from the extracted Title/Description (requires USE_ASSET_REF)'
+    )
+
+    parser.add_argument(
+        '--overwrite-metadata',
+        action='store_true',
+        help='With --apply-metadata, replace existing DC/ICAEW metadata (by default assets that already have it are left unchanged)'
     )
 
     return parser.parse_args()
@@ -270,6 +296,13 @@ def main():
     profile = args.profile if args.profile else None
     if profile:
         print(f"Profile: {profile}")
+    update_preservica = args.apply_metadata or args.update_xip
+    if update_preservica:
+        print(f"Apply DC/ICAEW metadata: {args.apply_metadata} (overwrite existing: {args.overwrite_metadata})")
+        print(f"Update XIP title/description: {args.update_xip}")
+        if not USE_ASSET_REF:
+            print("Error: --apply-metadata/--update-xip require USE_ASSET_REF = True so asset IDs can be read from filenames.")
+            sys.exit(1)
 
     # Step 1: Run the download script (unless skipped)
     if not skip_download:
@@ -335,6 +368,9 @@ def main():
     # Step 4: Run the metadata extraction script (main.py now writes to JSON)
     print("\nStep 4: Extracting metadata from PDF files")
 
+    # main.py appends to an existing JSON file, so note where this run's records start
+    existing_records = JSONMetadataWriter(str(json_output)).get_record_count() if json_output.exists() else 0
+
     extract_cmd = [sys.executable, EXTRACTION_SCRIPT, '--folder',
                    str(output_dir), '--json-file', str(json_output)]
 
@@ -366,6 +402,21 @@ def main():
     if not run_command(convert_json_cmd, "JSON to CSV conversion"):
         print("JSON to CSV conversion step failed.")
         sys.exit(1)
+
+    # Step 6: Write results back to Preservica
+    if update_preservica:
+        print("\nStep 6: Updating Preservica")
+        records = JSONMetadataWriter(str(json_output)).get_records()[existing_records:]
+        client = create_client()
+        failures = 0
+        for record in records:
+            outcome = apply_record(client, record, descriptive=args.apply_metadata,
+                                   xip=args.update_xip, overwrite=args.overwrite_metadata)
+            print(f"[{outcome['status']}] {outcome['filename']}: {outcome['message']}")
+            failures += outcome['status'] == 'error'
+        print(f"Preservica update: {len(records) - failures} of {len(records)} record(s) processed without error")
+        if failures:
+            sys.exit(1)
 
     # Success
     print(f"\nOrchestration completed successfully!")
