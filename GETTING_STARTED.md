@@ -8,7 +8,7 @@ This guide walks you through installing the tool, running it for the first time,
 
 You give it a folder of documents — PDFs, Word files, images, spreadsheets, and more — and it uses AI (OpenAI's GPT) to read each one and produce structured metadata: title, creator, date, description, subject tags, and so on. The results are saved as a JSON file and a CSV file that you can open in Excel.
 
-If you use Preservica as your digital preservation system, the tool can also download documents directly from Preservica and link the extracted metadata back to the correct asset records.
+If you use Preservica as your digital preservation system, the tool can also download documents directly from Preservica and write the extracted metadata back to the correct asset records.
 
 ---
 
