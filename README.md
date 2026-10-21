@@ -10,7 +10,7 @@ An AI-powered tool that reads documents and extracts structured metadata — tit
 - Extracts structured Dublin Core metadata using an AI model
 - Applies organisation-specific conventions via configurable YAML profiles
 - Outputs results in JSON and CSV formats
-- Integrates with Preservica: download assets, extract metadata, and link results back to asset records
+- Integrates with Preservica: download assets, extract metadata, and write the results back to the original asset records
 
 ## Demo
 
@@ -36,7 +36,7 @@ The app opens automatically in your browser at `http://localhost:8501`.
 |------|-------------|
 | **Select files** | Upload PDFs, Office documents, or images directly from your computer |
 | **Local folder** | Point to a directory on disk; non-PDF files are converted to PDF automatically |
-| **Preservica** | Download and process assets from a Preservica repository using a folder reference UUID |
+| **Preservica** | Download and process assets from a Preservica repository using folder references or asset IDs, and optionally write the results back |
 
 ### Sidebar settings
 
@@ -54,16 +54,21 @@ After extraction, each document's metadata appears in an expandable card showing
 
 Use the **Download JSON** and **Download CSV** buttons to export results.
 
+For Preservica runs, an **Apply to Preservica** section also appears below the results, so you can review the metadata before writing it back (see [Writing metadata back to Preservica](#writing-metadata-back-to-preservica)).
+
 ### Preservica options
 
 When **Preservica** mode is selected, additional options appear:
 
-- **Download by** — choose between **Folder** (all assets under a folder UUID) or **Asset IDs** (one or more specific asset UUIDs entered one per line)
+- **Download by** — choose between **Folder** (all assets under one or more folder UUIDs, one per line) or **Asset IDs** (one or more specific asset UUIDs, one per line)
 - **Exclude file extensions** — skip specific file types during download (e.g. `mp4 avi mov`), space-separated
-- **Use asset reference in filenames** — prefix downloaded filenames with the Preservica asset reference number
+- **Apply metadata to Preservica after extraction** — add the extracted Dublin Core and ICAEW metadata to each asset
+- **Update XIP in Preservica after extraction** — set each asset's Preservica title and description from the extracted Title and Description
+- **Overwrite existing metadata** — replace existing DC/ICAEW metadata; when unticked, assets that already have it are left unchanged
+- **Use asset reference in filenames** — name each downloaded file `<asset UUID>.<ext>`; required for writing metadata back to Preservica
 - **Original files only** — download only the first-generation file for each asset
 
-> **Note:** Preservica credentials (`USERNAME`, `PASSWORD`, `TENANT`, `SERVER`) must be set in your `.env` file to enable Preservica downloads.
+> **Note:** Preservica credentials (`USERNAME`, `PASSWORD`, `TENANT`, `SERVER`) must be set in your `.env` file to enable Preservica downloads and updates.
 
 ---
 
@@ -147,7 +152,15 @@ python metadata_extraction_wrapper.py --preservica-assets-file assets.txt --outp
 
 # Skip download, process existing files
 python metadata_extraction_wrapper.py --skip-download --output-dir ./downloads
+
+# Write results back to Preservica (DC/ICAEW metadata and/or XIP title & description)
+python metadata_extraction_wrapper.py --preservica-assets-file assets.txt --apply-metadata --update-xip
+
+# Replace any existing DC/ICAEW metadata
+python metadata_extraction_wrapper.py --preservica-folder-ref <uuid> --apply-metadata --overwrite-metadata
 ```
+
+When writing back from the command line, only the records extracted in the current run are applied, even if the JSON file already contains records from earlier runs.
 
 Run any script with `--help` to see all available options.
 
@@ -159,7 +172,22 @@ The tool integrates with Preservica to:
 
 - Download assets using folder or asset references
 - Maintain Preservica asset IDs (`assetId`) throughout the pipeline — stored in the JSON output and as the first column in the CSV
-- Enable batch metadata updates back to Preservica using the CSV output
+- Write the extracted metadata back to each asset, from the web UI or the command line
+
+### Writing metadata back to Preservica
+
+There are two independent updates, and you can choose either or both:
+
+| Option | Web UI | CLI | What it writes |
+|--------|--------|-----|----------------|
+| **Apply metadata** | *Apply metadata to Preservica* | `--apply-metadata` | Dublin Core (`oai_dc`) and ICAEW (`https://www.icaew.com/metadata/`) descriptive metadata |
+| **Update XIP** | *Update XIP in Preservica* | `--update-xip` | The asset's Preservica title and description, from the extracted Title and Description |
+| **Overwrite** | *Overwrite existing metadata* | `--overwrite-metadata` | With Apply metadata, replace existing DC/ICAEW metadata instead of skipping those assets |
+
+- The asset ID is read from each file's name, so downloads must use **Use asset reference in filenames** (`USE_ASSET_REF = True` in the wrapper).
+- Overwrite only affects DC/ICAEW metadata. The XIP title and description are always updated when that option is selected.
+- `dc:format` records the format the file was downloaded in (e.g. `docx`), not `pdf` after conversion.
+- The XML matches what the standalone `c_add_metadata_from_csv.py` and `d_update_xip_from_csv.py` scripts produce, so the CSV output can still be used with those scripts if you prefer.
 
 ---
 
@@ -171,7 +199,7 @@ graph LR
     B --> C[AI Processing<br/>OpenAI API]
     C --> D[JSON Metadata<br/>with Asset IDs]
     D --> E[CSV Output]
-    E --> F[Update Preservica<br/>Metadata]
+    D --> F[Update Preservica<br/>Metadata]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
@@ -187,7 +215,12 @@ graph LR
 ```mermaid
 graph TD
     %% Main Components
+    App[app.py<br/>Streamlit UI] --> Extractor
+    App --> Converter
+    App --> JSONWriter
+    App --> PreservicaWriter[preservica_writer.py]
     Wrapper[metadata_extraction_wrapper.py] --> Main[main.py]
+    Wrapper --> PreservicaWriter
     Wrapper --> Converter[convert_documents.py]
     Wrapper --> JSONConverter[json_to_csv_converter.py]
     Main --> Extractor[metadata_extractor.py]
@@ -210,7 +243,8 @@ graph TD
     JSONWriter -->|JSON Output| JSONFile[JSON File]
     JSONFile -->|Convert| JSONConverter
     JSONConverter -->|CSV Output| CSVFile[CSV File]
-    CSVFile -->|Update| PreservicaUpdate[Update Preservica<br/>Metadata]
+    JSONFile -->|Apply| PreservicaWriter
+    PreservicaWriter -->|DC, ICAEW, XIP| PreservicaUpdate[Update Preservica<br/>Metadata]
     
     %% External Services
     OpenAIClient -->|API Calls| OpenAI[OpenAI API]
@@ -218,6 +252,7 @@ graph TD
     Converter -->|Text Conversion| ReportLab[ReportLab]
     
     subgraph Orchestration
+        App
         Wrapper
     end
     
@@ -227,6 +262,7 @@ graph TD
         JSONWriter
         Converter
         JSONConverter
+        PreservicaWriter
     end
     
     subgraph ExternalServices
@@ -254,8 +290,8 @@ graph TD
     classDef wrapper fill:#ff9,stroke:#333,stroke-width:2px
     classDef output fill:#fdd,stroke:#333,stroke-width:2px
     
-    class Wrapper wrapper
-    class Main,Extractor,JSONWriter,Converter,JSONConverter primary
+    class App,Wrapper wrapper
+    class Main,Extractor,JSONWriter,Converter,JSONConverter,PreservicaWriter primary
     class OpenAIClient,OpenAI,LibreOffice,ReportLab secondary
     class PDFUtils,Config,Env utility
     class JSONFile,CSVFile,PreservicaUpdate output
@@ -295,6 +331,7 @@ Key files:
 - `json_metadata_writer.py` — JSON output handling
 - `json_to_csv_converter.py` — JSON to CSV conversion
 - `download_preservica_assets.py` — Preservica asset download
+- `preservica_writer.py` — Writes extracted metadata back to Preservica (DC, ICAEW, XIP)
 - `profiles/icaew.yaml` — ICAEW digital archive extraction profile
 - `profiles/default.yaml` — Generic Dublin Core profile (starting point for customisation)
-- `topic_list.txt` — ICAEW subject topic hierarchy used by the ICAEW profile
+- `profiles/topic_list.txt` — ICAEW subject topic hierarchy used by the ICAEW profile
