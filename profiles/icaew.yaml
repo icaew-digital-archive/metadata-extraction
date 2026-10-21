@@ -43,6 +43,17 @@ extra_guidelines:
     "pyjamas" (not "pajamas"), "sceptical" (not "skeptical").
     This applies to all generated text, including descriptions and any text you create,
     even if the source document uses American English spelling.
+  - >
+    For identifiers, only include ISBNs, URLs, and clear ICAEW reference codes
+    (e.g., "TECH 01/24", "TECPLN12949").
+  - >
+    Acronyms commonly found in ICAEW documents (such as OECD, IFRS, FRC, HMRC, UK, VAT, etc.)
+    must ALWAYS be in all capitals. For example, always use "OECD" (not "Oecd"),
+    "IFRS" (not "Ifrs"), "FRC" (not "Frc").
+  - >
+    When using contextual background provided by the user, name the subject specifically
+    (e.g. "Photograph showing Chartered Accountant's Hall, with...") rather than using
+    generic terms ("a building", "an office block").
 
 xip_fields: true
 
@@ -101,83 +112,156 @@ custom_fields:
       - If the content type cannot be determined from the document, use "No content type"
       - Do not create new content types; only use the terms from this list
 
-      ### Content Type Selection Guidelines:
+      ### Content Type Selection Guidelines (based on SiteCore metadata guide):
 
-      **Annual report**: Use for annual reports and annual reviews (ICAEW annual report, faculty/district society annual reports). Do not use for any other content.
+      **Annual report**
+      - Use for: Annual reports and annual reviews
+      - Examples: ICAEW annual report, ICAEW annual review, Faculty/District Society annual reports
+      - Do not use for: Any other content
 
-      **Article**: Use for content that could be an article in a magazine (PDF articles from faculty magazines, articles from Practicewire/London Accountant/SIG newsletters, legal alerts). Do not use for press releases, regional news, complete journal issues, or web pages listing articles.
+      **Article**
+      - Use for: Content that could be an article in a magazine
+      - Examples: PDF articles from Faculty magazines, articles from Practicewire/London Accountant/SIG newsletters, legal alerts
+      - Do not use for: Press releases, regional news, complete journal issues, web pages that list articles
 
-      **Course**: Check before using — requires verification.
+      **Database**
+      - Check before using - requires verification
 
-      **Database**: Check before using — requires verification.
+      **eBook**
+      - Check before using - requires verification
 
-      **eBook**: Check before using — requires verification.
+      **eBook chapter**
+      - Check before using - requires verification
 
-      **eBook chapter**: Check before using — requires verification.
+      **Course**
+      - Check before using - requires verification
 
-      **Event**: Use for Events in the Configio database. Do not use for other event-like content.
+      **Event**
+      - Use for: Events in the Configio database
+      - Do not use for: Other event-like content
 
-      **Form**: Use for blank forms (online or PDF forms). Do not use for web pages that include forms alongside other information.
+      **Form**
+      - Use for: Blank forms (online forms or PDF forms)
+      - Examples: Online form web pages, media library PDF forms
+      - Do not use for: Web pages that include forms alongside other information
 
-      **Helpsheets and support**: Use for content providing practical advice, helpful assistance, and explanations (TAS/SIG helpsheets, faculty practical guidance, Excel how-to guides, Atom Briefings, support pages). Do not use for technical releases, ICAEW regulations, or web pages listing helpsheets.
+      **Helpsheets and support**
+      - Use for: Content providing practical advice, helpful assistance, and explanations
+      - Examples: TAS/SIG helpsheets, Faculty practical guidance, Excel how-to guides, Atom Briefings, support pages
+      - Do not use for: Technical releases, ICAEW regulations, web pages that list helpsheets
 
-      **Hub page**: Use for content using the SiteCore hub page template. Do not use for other page types.
+      **Hub page**
+      - Use for: Content using the SiteCore hub page template
+      - Do not use for: Other page types
 
-      **ICAEW consultation and response**: Check before using — requires verification.
+      **ICAEW consultation and response**
+      - Check before using - requires verification
 
-      **Industry profile**: Check before using — requires verification.
+      **Industry profile**
+      - Check before using - requires verification
 
-      **Internal ICAEW policy**: Check before using — requires verification.
+      **Internal ICAEW policy**
+      - Check before using - requires verification
 
-      **Journal**: Use for complete issues of journals (e.g., complete PDF issues of faculty magazines such as Taxline issues). Do not use for web pages listing articles or individual articles.
+      **Journal**
+      - Use for: Complete issues of journals
+      - Examples: Complete PDF issues of Faculty magazines (e.g., Taxline issues)
+      - Do not use for: Web pages that list articles from journals, individual articles
 
-      **Learning material**: Use for learning and exam materials (exam papers, mark schemes, syllabi, pass lists).
+      **Learning material**
+      - Use for: Learning and exam materials
+      - Examples: Exam papers, mark schemes, syllabi, pass lists
 
-      **Legal precedent**: Check before using — requires verification.
+      **Legal precedent**
+      - Check before using - requires verification
 
-      **Library book**: Check before using — requires verification.
+      **Library book**
+      - Check before using - requires verification
 
-      **Library journal**: Check before using — requires verification.
+      **Library journal**
+      - Check before using - requires verification
 
-      **Listing**: Use for content providing lists of links to other content (web pages listing articles, helpsheets, press releases, webinars, podcasts, A-Z listings). Do not use for web pages using SiteCore hub page template or web pages listing articles from journals.
+      **Listing**
+      - Use for: Content that provides lists of links to other content
+      - Examples: Web pages listing articles on topics, helpsheets, press releases, webinars, podcasts, A-Z listings
+      - Do not use for: Web pages using SiteCore hub page template, web pages listing articles from journals
 
-      **Member reward**: Check before using — requires verification.
+      **Member reward**
+      - Check before using - requires verification
 
-      **Minutes and board papers**: Check before using — requires verification.
+      **Minutes and board papers**
+      - Check before using - requires verification
 
-      **Newsletter**: Use for complete newsletters including several articles. Do not use for simple lists of articles from newsletters, individual newsletter articles, or complete journal issues.
+      **Newsletter**
+      - Use for: Complete newsletters including several articles
+      - Examples: Community newsletters, district society newsletters, complete issues of publications
+      - Do not use for: Simple lists of articles from newsletters, individual newsletter articles, complete journal issues
 
-      **No content type**: Use for content that does not conform to other content types and should not be exposed in queries (biographies of board members, administration pages, contact pages). Do not use for content that needs to be picked up by queries.
+      **No content type**
+      - Use for: Content that doesn't conform to other content types and shouldn't be exposed in queries
+      - Examples: Biographies of board members, administration pages, contact pages
+      - Do not use for: Content that needs to be picked up by queries and included on automatically generated pages
 
-      **Podcast**: Use for podcasts or content introducing a single podcast with a link. Do not use for web pages that list podcasts.
+      **Podcast**
+      - Use for: Podcasts or content introducing a single podcast with a link
+      - Do not use for: Web pages that list podcasts
 
-      **Press release**: Use for ICAEW press releases published on Press Releases pages. Do not use for web pages listing press releases or press release style content not on official Press Release pages.
+      **Press release**
+      - Use for: ICAEW press releases published on Press Releases pages
+      - Examples: Press releases from https://www.icaew.com/en/about-icaew/news/press-release-archive/
+      - Do not use for: Web pages listing press releases, press release style content not on official Press Release pages
 
-      **Promotional material**: Use for content promoting products, conferences, faculties, communities (member offers, join pages, benefits pages, flyers).
+      **Promotional material**
+      - Use for: Content promoting products, conferences, faculties, communities
+      - Examples: Member offers, join pages, benefits pages, flyers
 
-      **Regional news**: Use for press releases from ICAEW regions and district societies. Do not use for web pages listing regional news or London Accountant articles.
+      **Regional news**
+      - Use for: Press releases from ICAEW regions and district societies
+      - Examples: Regional press releases from https://www.icaew.com/en/about-icaew/news/press-release-archive/regions-2017/
+      - Do not use for: Web pages listing regional news, London Accountant articles
 
-      **Regulations**: Use for ICAEW regulations (Audit Regulations and Guidance, Code of Ethics, Insolvency Licensing Regulations). Do not use for guidance supporting regulations, downloadable forms, non-ICAEW regulations, or ICAEW Charter and bye-laws.
+      **Regulations**
+      - Use for: ICAEW regulations
+      - Examples: Audit Regulations and Guidance, Code of Ethics, Insolvency Licensing Regulations, Probate and Compensation Scheme Regulations
+      - Do not use for: Guidance supporting regulations, downloadable forms, non-ICAEW regulations, ICAEW Charter and bye-laws
 
-      **Report**: Use for content in report format (research reports, briefing documents). Do not use for technical releases, annual reports, or web pages listing reports.
+      **Report**
+      - Use for: Content in report format
+      - Examples: Research reports, briefing documents, web pages providing access to reports
+      - Do not use for: Technical releases, annual reports, web pages listing reports
 
-      **Representation**: Use for ICAEW representations to governments and other bodies (ICAEW REP PDFs). Do not use for web pages listing ICAEW REPs.
+      **Representation**
+      - Use for: ICAEW representations to governments and other bodies
+      - Examples: ICAEW REP PDFs
+      - Do not use for: Web pages listing ICAEW REPs
 
-      **Research guide**: Check before using — requires verification.
+      **Research guide**
+      - Check before using - requires verification
 
-      **Speech or presentation**: Check before using — requires verification.
+      **Speech or presentation**
+      - Check before using - requires verification
 
-      **Technical release**: Use for technical releases in any technical release series. Do not use for web pages listing technical releases.
+      **Technical release**
+      - Use for: Technical releases in any technical release series
+      - Examples: Technical release PDFs, web pages introducing single technical releases
+      - Do not use for: Web pages listing technical releases
 
-      **Thought leadership report**: Use for thought leadership initiative reports (must be labelled as thought leadership within the text). Do not use for web pages listing thought leadership reports or reports with thought leadership elements but not labelled as such.
+      **Thought leadership report**
+      - Use for: Thought leadership initiative reports (must be labelled as thought leadership within the text)
+      - Do not use for: Web pages listing thought leadership reports, reports with thought leadership elements but not labelled as such
 
-      **Transcript**: Check before using — requires verification.
+      **Transcript**
+      - Check before using - requires verification
 
-      **Video**: Check before using — requires verification.
+      **Video**
+      - Check before using - requires verification
 
-      **Webinar**: Use for webinars or content introducing a single webinar with a link. Do not use for web pages listing webinars.
+      **Webinar**
+      - Use for: Webinars or content introducing a single webinar with a link
+      - Do not use for: Web pages listing webinars
 
-      **Website**: Check before using — requires verification.
+      **Website**
+      - Check before using - requires verification
 
   - id: "icaew:Notes"
     reserved: false
@@ -244,6 +328,7 @@ description_override: |
   - For transcript files: describe the video or podcast content itself, not the transcript document. Write the description from the perspective of describing the original media (video/podcast), not as "a transcript of..." or "transcript of a...". The description should read as if it is describing the video or podcast directly.
   - Listing of contents may be helpful - but they are of secondary importance. Each item in the list of contents should be separated by a semicolon.
   - Should always finish with a full stop or question mark
+  - Use British English spelling throughout the description
   - After the description append the string "(AI generated description)"
   - Examples:
     * "Technical guidance on implementing IFRS 9 for financial instruments. (AI generated description)"
@@ -398,4 +483,5 @@ extra_validation_rules:
   - >
     Subject field validation: maximum of 10 subjects allowed; subject names must exactly
     match those in the hierarchical topic list (case-sensitive); for nested topics, all
-    parent topics must be included in the Subject array along with the specific topic
+    parent topics must be included in the Subject array along with the specific topic;
+    subject values must be arrays of strings, not empty values unless no relevant topics found
