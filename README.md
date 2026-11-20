@@ -343,7 +343,6 @@ Key files:
 - `profiles/icaew.yaml` — ICAEW digital archive extraction profile
 - `profiles/default.yaml` — Generic Dublin Core profile (starting point for customisation)
 - `profiles/topic_list.txt` — ICAEW subject topic hierarchy used by the ICAEW profile
-- `tests/` — Automated tests (no API key or network needed)
 
 ## Notes on behaviour
 
@@ -351,10 +350,4 @@ Key files:
 - Each document is uploaded to OpenAI for extraction and deleted from OpenAI file storage straight afterwards.
 - The model is asked for JSON-only output; if the reply is not valid JSON it is retried once before the file is reported as failed.
 - The JSON output file is saved safely after every record, so an interrupted run never leaves it half-written. If an existing output file cannot be read, the tool stops with an error rather than replacing it.
-- Typographic characters are normalised (curly quotes become straight quotes, dashes used as separators become colons, en dashes in number ranges become hyphens). Other characters such as £ and accented letters are kept.
-
-## Running the tests
-
-```bash
-venv/bin/python -m unittest discover tests
-```
+- Typographic characters are normalised (curly quotes become straight quotes). In titles only, dashes used as separators become colons and en dashes in number ranges become hyphens. Other characters such as £ and accented letters are kept.

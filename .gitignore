@@ -50,3 +50,7 @@ temp_*.pdf
 Thumbs.db
 
 error_log.txt
+
+# Local-only folders (kept on this machine, not in the repository)
+tests/
+review/
