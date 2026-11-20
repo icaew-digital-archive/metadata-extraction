@@ -4,11 +4,13 @@ Extracts metadata following conventions defined in a YAML profile (see profiles/
 """
 
 import argparse
+import json
 import sys
 import os
-from typing import List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 from metadata_extractor import MetadataExtractor
 from json_metadata_writer import JSONMetadataWriter
+from config import DEFAULT_MODEL
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -31,7 +33,7 @@ Examples:
   # Process first 3 pages of all PDFs in a directory:
   python main.py --folder path/to/pdf/directory --first 3 -j output.json
   # or
-  python main.py -d path/to/pdf/directory -f 3 -j output.json
+  python main.py -d path/to/pdf/directory -p 3 -j output.json
 
   # Process last 2 pages of all PDFs in a directory:
   python main.py --folder path/to/pdf/directory --last 2 -j output.json
@@ -40,6 +42,12 @@ Examples:
 
   # With custom context for the extraction prompt:
   python main.py --folder path/to/pdf/directory -j output.json --context-prompt "What follows is a series of photos showing Chartered Accountant's Hall"
+
+  # Use a different model:
+  python main.py --folder path/to/pdf/directory -j output.json --model gpt-6.2-astra
+
+  # Resume an interrupted run (skip files already in output.json):
+  python main.py --folder path/to/pdf/directory -j output.json --skip-existing
 
   # Disable subject classification (Subject field will be empty):
   python main.py --folder path/to/pdf/directory -j output.json --no-subjects
@@ -83,7 +91,60 @@ Examples:
                         help='Path to a YAML profile file (default: profiles/icaew.yaml). '
                              'Can be a filename inside profiles/ (e.g., "default") or a full path.')
 
+    parser.add_argument('--model',
+                        type=str,
+                        default=None,
+                        help=f'OpenAI model to use (default: {DEFAULT_MODEL}). '
+                             'Options include gpt-6.2-sol, gpt-6.2-astra, gpt-6-luna, gpt-5.')
+
+    parser.add_argument('--skip-existing',
+                        action='store_true',
+                        help='Skip files that already have a record in the JSON file '
+                             '(useful for resuming an interrupted run)')
+
     return parser
+
+
+def load_format_mapping(folder: str) -> Dict[str, str]:
+    """Read format_mapping.json (written by convert_documents.py) from a folder.
+
+    Keys are normalised to absolute paths so lookups work however the folder
+    path was written (e.g. "./downloads" vs "downloads").
+    """
+    mapping_file = os.path.join(folder, "format_mapping.json")
+    if not os.path.exists(mapping_file):
+        return {}
+    try:
+        with open(mapping_file, 'r', encoding='utf-8') as f:
+            raw = json.load(f)
+    except Exception as e:
+        print(f"Warning: Could not read format mapping: {e}")
+        return {}
+    mapping = {}
+    for key, fmt in raw.items():
+        # Keys may be bare filenames (current) or paths (older mapping files)
+        path = key if os.path.dirname(key) else os.path.join(folder, key)
+        mapping[os.path.abspath(path)] = fmt
+    return mapping
+
+
+ORIGINAL_FORMATS = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt',
+                    '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+
+
+def detect_original_format(pdf_path: str, format_mapping: Dict[str, str]) -> str:
+    """Return the format of the file a PDF was converted from, or 'pdf'."""
+    fmt = format_mapping.get(os.path.abspath(pdf_path))
+    if fmt:
+        print(f"Detected original format from mapping: {fmt}")
+        return fmt
+    # Fallback: look for a source file with the same name next to the PDF
+    base_name = os.path.splitext(pdf_path)[0]
+    for ext in ORIGINAL_FORMATS:
+        if os.path.exists(base_name + ext):
+            print(f"Detected original format: {ext[1:]}")
+            return ext[1:]
+    return 'pdf'
 
 
 def get_pdf_files(file_path: Optional[str] = None, folder_path: Optional[str] = None) -> List[str]:
@@ -112,7 +173,7 @@ def get_pdf_files(file_path: Optional[str] = None, folder_path: Optional[str] = 
             return []
 
         pdf_files = []
-        for file in os.listdir(folder_path):
+        for file in sorted(os.listdir(folder_path)):
             if file.lower().endswith('.pdf'):
                 full_path = os.path.join(folder_path, file)
                 pdf_files.append(full_path)
@@ -150,54 +211,35 @@ def main() -> None:
             profile_path = p
 
         # Initialize metadata extractor and writer
-        extractor = MetadataExtractor(include_subjects=not args.no_subjects, profile_path=profile_path)
+        extractor = MetadataExtractor(include_subjects=not args.no_subjects, profile_path=profile_path,
+                                      model=args.model)
+        print(f"Model: {extractor.model}")
         writer = JSONMetadataWriter(args.json_file, profile_path=profile_path)
 
-        # Track processed and failed files
-        processed_files: Set[str] = set()
+        already_done = set()
+        if args.skip_existing:
+            already_done = {os.path.abspath(r.get('file_path', '')) for r in writer.get_records()}
+
+        format_mappings: Dict[str, Dict[str, str]] = {}
+        processed_count = 0
+        skipped_count = 0
         failed_files: List[Tuple[str, str]] = []  # List of (file_path, error_message) tuples
 
         # Process each PDF file
         for index, pdf_path in enumerate(pdf_files, 1):
             try:
-                # Skip if already processed
-                if pdf_path in processed_files:
-                    print(f"\n[{index}/{total_files}] Skipping already processed file: {pdf_path}")
+                if os.path.abspath(pdf_path) in already_done:
+                    print(f"\n[{index}/{total_files}] Skipping (already in JSON): {pdf_path}")
+                    skipped_count += 1
                     continue
 
                 print(f"\n[{index}/{total_files}] Processing: {pdf_path}")
-                
-                # Determine original format by checking if this was a converted file
-                original_format = None
-                
-                # First, try to read from format mapping file (created by convert_documents.py)
-                mapping_file = os.path.join(os.path.dirname(pdf_path), "format_mapping.json")
-                if os.path.exists(mapping_file):
-                    try:
-                        import json
-                        with open(mapping_file, 'r') as f:
-                            format_mapping = json.load(f)
-                        if pdf_path in format_mapping:
-                            original_format = format_mapping[pdf_path]
-                            print(f"Detected original format from mapping: {original_format}")
-                    except Exception as e:
-                        print(f"Warning: Could not read format mapping: {e}")
-                
-                # Fallback: Check for common original formats that might have been converted
-                if not original_format:
-                    base_name = os.path.splitext(pdf_path)[0]
-                    supported_formats = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
-                    for ext in supported_formats:
-                        original_file = base_name + ext
-                        if os.path.exists(original_file):
-                            original_format = ext[1:]  # Remove the dot
-                            print(f"Detected original format: {original_format}")
-                            break
-                
-                # If no original format found, assume it's a native PDF
-                if not original_format:
-                    original_format = 'pdf'
-                
+
+                folder = os.path.dirname(pdf_path)
+                if folder not in format_mappings:
+                    format_mappings[folder] = load_format_mapping(folder)
+                original_format = detect_original_format(pdf_path, format_mappings[folder])
+
                 metadata, original_path, detected_format = extractor.extract_metadata(
                     pdf_path, args.first, args.last, original_format, context_prompt=args.context_prompt)
 
@@ -206,8 +248,8 @@ def main() -> None:
                 print(metadata)
 
                 # Write to JSON using the original path and format
-                writer.write_metadata(metadata, original_path, detected_format)
-                processed_files.add(pdf_path)
+                writer.write_metadata(metadata, original_path, detected_format, model=extractor.model)
+                processed_count += 1
                 print(f"[{index}/{total_files}] Successfully processed and added to JSON: {original_path}")
 
             except Exception as e:
@@ -219,7 +261,9 @@ def main() -> None:
         # Print detailed summary
         print(f"\nProcessing complete:")
         print(f"- Total files found: {total_files}")
-        print(f"- Successfully processed: {len(processed_files)}")
+        print(f"- Successfully processed: {processed_count}")
+        if args.skip_existing:
+            print(f"- Skipped (already in JSON): {skipped_count}")
         print(f"- Failed to process: {len(failed_files)}")
         print(f"- Metadata written to: {args.json_file}")
         

@@ -7,6 +7,7 @@ This script processes all Office documents and image files in a directory and co
 """
 
 import os
+import signal
 import tempfile
 import subprocess
 import time
@@ -78,6 +79,22 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
         raise
 
 
+def _kill_process_group(process: subprocess.Popen) -> None:
+    """Kill a process started with start_new_session=True, and its children."""
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, AttributeError, OSError):
+        # AttributeError: os.killpg is unavailable on Windows
+        try:
+            process.kill()
+        except Exception:
+            pass
+    try:
+        process.wait(timeout=5)
+    except Exception:
+        pass
+
+
 def _convert_with_libreoffice(input_path: Path) -> str:
     """
     Convert document to PDF using LibreOffice.
@@ -88,9 +105,13 @@ def _convert_with_libreoffice(input_path: Path) -> str:
     Returns:
         str: Path to the converted PDF file
     """
-    # Create temporary directory for output
+    # Create temporary directory for output, plus a private LibreOffice profile so
+    # this conversion never attaches to (or interferes with) the user's own
+    # LibreOffice windows
     temp_dir = tempfile.mkdtemp()
-    output_dir = Path(temp_dir)
+    output_dir = Path(temp_dir) / 'out'
+    output_dir.mkdir()
+    profile_url = (Path(temp_dir) / 'profile').as_uri()
     
     process = None
     try:
@@ -105,17 +126,21 @@ def _convert_with_libreoffice(input_path: Path) -> str:
             '--nolockcheck',
             '--nologo',
             '--norestore',
+            f'-env:UserInstallation={profile_url}',
             '--convert-to', 'pdf',
             '--outdir', str(output_dir),
             str(input_path)
         ]
         
         # Run conversion with Popen to get process handle
+        # start_new_session puts LibreOffice and its child processes in their
+        # own process group, so a timeout can stop exactly those processes
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            start_new_session=True
         )
         
         # Wait for completion with timeout
@@ -123,23 +148,10 @@ def _convert_with_libreoffice(input_path: Path) -> str:
             stdout, stderr = process.communicate(timeout=60)
             returncode = process.returncode
         except subprocess.TimeoutExpired:
-            # Kill the process and all its children
-            print(f"LibreOffice timed out, killing process...")
-            process.kill()
-            # Wait for it to actually die
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                # Force kill if it won't die gracefully
-                process.terminate()
-                process.wait(timeout=5)
-            
-            # Also kill any remaining LibreOffice processes (nuclear option)
-            try:
-                subprocess.run(['pkill', '-9', '-f', 'soffice'], capture_output=True, timeout=5)
-            except Exception:
-                pass
-            
+            # Stop the LibreOffice process group this call started (not other instances)
+            print(f"LibreOffice timed out, stopping conversion process...")
+            _kill_process_group(process)
+
             raise RuntimeError(f"LibreOffice conversion timed out for {input_path.name}")
         
         if returncode == 0:
@@ -157,11 +169,7 @@ def _convert_with_libreoffice(input_path: Path) -> str:
     except Exception as e:
         # Make sure to kill the process if something goes wrong
         if process and process.poll() is None:
-            try:
-                process.kill()
-                process.wait(timeout=5)
-            except Exception:
-                pass
+            _kill_process_group(process)
         raise
         
     finally:
@@ -443,7 +451,7 @@ def convert_directory(directory_path: str) -> List[str]:
                 # Store the original format mapping
                 original_ext = Path(file_path).suffix.lower()
                 if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
-                    format_mapping[str(pdf_path)] = original_ext[1:]  # Remove the dot
+                    format_mapping[Path(pdf_path).name] = original_ext[1:]  # Remove the dot
                 
                 # Small delay after LibreOffice conversions to ensure cleanup
                 if original_ext in ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt']:
@@ -451,21 +459,25 @@ def convert_directory(directory_path: str) -> List[str]:
                 
         except Exception as e:
             print(f"Failed to convert {file_path}: {str(e)}")
-            # If conversion fails, skip the file
-            # Kill any lingering LibreOffice processes before continuing
-            try:
-                subprocess.run(['pkill', '-9', '-f', 'soffice'], capture_output=True, timeout=5)
-                time.sleep(1)  # Give it a moment to clean up
-            except Exception:
-                pass
+            # If conversion fails, skip the file. Any LibreOffice process this
+            # script started has already been stopped by _convert_with_libreoffice.
             continue
     
     # Write format mapping to a JSON file
     if format_mapping:
         import json
         mapping_file = directory / "format_mapping.json"
-        with open(mapping_file, 'w') as f:
-            json.dump(format_mapping, f, indent=2)
+        # Keep entries from earlier runs (their source files may already be converted)
+        existing = {}
+        if mapping_file.exists():
+            try:
+                with open(mapping_file, 'r', encoding='utf-8') as f:
+                    existing = {Path(k).name: v for k, v in json.load(f).items()}
+            except Exception:
+                pass
+        existing.update(format_mapping)
+        with open(mapping_file, 'w', encoding='utf-8') as f:
+            json.dump(existing, f, indent=2)
         print(f"Format mapping saved to: {mapping_file}")
     
     print(f"Conversion complete: {converted_count} files converted to PDF")

@@ -115,7 +115,9 @@ The **ICAEW profile** additionally outputs:
 - `entity.title`, `entity.description` — mirror fields used by Preservica's XIP schema
 - `icaew:ContentType` — controlled vocabulary content type (Annual report, Article, Report, Technical release, etc.)
 - `icaew:InternalReference` — reserved for future use
-- `icaew:Notes` — free-text notes
+- `icaew:Notes` — entered by staff only; the AI never fills it, and an existing value in Preservica is kept when metadata is overwritten
+
+Reserved fields are always written empty, whatever the model returns. Dates in `Date` use YYYY-MM-DD (or YYYY-MM / YYYY when the document gives less), with numeric dates read in UK day/month order.
 
 ---
 
@@ -133,6 +135,12 @@ python main.py --folder ./my-documents --first 5 --last 3 -j output.json
 
 # Disable subject classification
 python main.py --folder ./my-documents --no-subjects -j output.json
+
+# Use a different OpenAI model (default: gpt-6.2-sol, set in config.py)
+python main.py --folder ./my-documents -j output.json --model gpt-6.2-astra
+
+# Resume an interrupted run (skip files already recorded in output.json)
+python main.py --folder ./my-documents -j output.json --skip-existing
 
 # Convert JSON output to CSV
 python json_to_csv_converter.py output.json output.csv
@@ -335,3 +343,11 @@ Key files:
 - `profiles/icaew.yaml` — ICAEW digital archive extraction profile
 - `profiles/default.yaml` — Generic Dublin Core profile (starting point for customisation)
 - `profiles/topic_list.txt` — ICAEW subject topic hierarchy used by the ICAEW profile
+
+## Notes on behaviour
+
+- The OpenAI model defaults to `gpt-6.2-sol` (`DEFAULT_MODEL` in `config.py`). It can be changed per run with `--model` or in the web UI sidebar, and the model used is recorded in each JSON record.
+- Each document is uploaded to OpenAI for extraction and deleted from OpenAI file storage straight afterwards.
+- The model is asked for JSON-only output; if the reply is not valid JSON it is retried once before the file is reported as failed.
+- The JSON output file is saved safely after every record, so an interrupted run never leaves it half-written. If an existing output file cannot be read, the tool stops with an error rather than replacing it.
+- Typographic characters are normalised (curly quotes become straight quotes). In titles only, dashes used as separators become colons and en dashes in number ranges become hyphens. Other characters such as £ and accented letters are kept.

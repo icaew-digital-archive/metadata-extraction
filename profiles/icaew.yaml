@@ -42,18 +42,12 @@ extra_guidelines:
     "cheque" (not "check" when referring to payment),
     "pyjamas" (not "pajamas"), "sceptical" (not "skeptical").
     This applies to all generated text, including descriptions and any text you create,
-    even if the source document uses American English spelling.
-  - >
-    For identifiers, only include ISBNs, URLs, and clear ICAEW reference codes
-    (e.g., "TECH 01/24", "TECPLN12949").
-  - >
-    Acronyms commonly found in ICAEW documents (such as OECD, IFRS, FRC, HMRC, UK, VAT, etc.)
-    must ALWAYS be in all capitals. For example, always use "OECD" (not "Oecd"),
-    "IFRS" (not "Ifrs"), "FRC" (not "Frc").
-  - >
-    When using contextual background provided by the user, name the subject specifically
-    (e.g. "Photograph showing Chartered Accountant's Hall, with...") rather than using
-    generic terms ("a building", "an office block").
+    even if the source document uses American English spelling. However, do not change the
+    spelling of names of people, organisations, products or quoted titles of other
+    publications (e.g. keep "Center for Audit Quality").
+
+# Acronyms common in ICAEW documents; shown as examples in the acronym guideline
+acronym_examples: ["OECD", "IFRS", "FRC", "HMRC", "UK", "VAT"]
 
 xip_fields: true
 
@@ -207,7 +201,7 @@ custom_fields:
       - Do not use for: Web pages that list podcasts
 
       **Press release**
-      - Use for: ICAEW press releases published on Press Releases pages
+      - Use for: ICAEW press releases: documents headed as an ICAEW press release or media release, typically with a 'Notes to editors' section
       - Examples: Press releases from https://www.icaew.com/en/about-icaew/news/press-release-archive/
       - Do not use for: Web pages listing press releases, press release style content not on official Press Release pages
 
@@ -263,42 +257,40 @@ custom_fields:
       **Website**
       - Check before using - requires verification
 
+  # User-entered field only: never filled in by the AI. The code also forces it
+  # empty, and never overwrites a value already entered in Preservica.
   - id: "icaew:Notes"
-    reserved: false
+    reserved: true
+    reserved_reason: "This field is entered by staff, never by the AI"
     multiple: false
-    prompt_text: |
-      **icaew:Notes (OPTIONAL)**
-      - Single value only
-      - Use for any additional notes or comments about the document
-      - If no notes are needed, return an empty string ("")
 
 title_override: |
   **Title (REQUIRED)**
   - Single value only
-  - Use the title as it appears in the document
-  - Use sentence case (capitalise first word only), but acronyms (e.g., OECD, IFRS, FRC, HMRC, UK, VAT) must always be in all capitals, even at the start of the title or after a colon
-  - ALWAYS use colons (:) to separate the main title from its subtitle only - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as title/subtitle separators with colons
+  - Start from the title as it appears in the document, then apply the rules below
+  - Use sentence case: capitalise the first word and proper nouns (names of people, organisations, places, faculties, named publications and standards, e.g. "Financial Reporting Council") and write everything else in lower case. Acronyms always stay in capitals
+  - Capitalise "Issue", "Volume" and "No." when they introduce a number (e.g. "Issue 15", "Volume 3")
+  - ALWAYS use colons (:) to separate the main title from its subtitle only - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as title/subtitle separators with colons, except in date or number ranges (keep "2008-09", do not write "2008:09")
   - Do NOT use a colon before a date, issue/volume number, or reference code — use a comma instead (e.g., "A trustee perspective, 23rd July 2020" not "A trustee perspective: 23rd July 2020")
-  - Do not capitalise the first letter after a colon
-  - Do not use "&"; use "and"
+  - Do not capitalise the first word after a colon, unless it is a proper noun or acronym
+  - Do not use "&"; use "and", except within the name of an organisation or publication
   - Use question marks if applicable, but do not end with full stops
   - The order and format should be: title, subtitle, issue/volume, date — with commas separating each element after the subtitle
-  - ALWAYS append the date to the end of the title if a date has been identified for the document. Do not omit it. Use the same level of precision as the date found: year only (e.g., "2021"), month and year (e.g., "March 2021"), or full date (e.g., "15th March 2021")
+  - If a date has been identified for the document, append it to the end of the title. If no date can be found, omit it. Use the same level of precision as the date found: year only (e.g., "2021"), month and year (e.g., "March 2021"), or full date (e.g., "15th March 2021")
   - If a title does not follow this format, reorganise it accordingly. For example:
     * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
   - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
-  - Indicate if the content is revised or time-limited
-  - Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols
+  - Indicate if the content is revised or time-limited e.g. add 'revised' before the date: 'Audit regulations, revised March 2021'.
   - Examples:
     * "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010"
-    * "IFRS 16 leases"
-    * "Audit firm governance: a project for the Financial Reporting Council, Ernst and Young LLP response, 3rd February 2009"
+    * "IFRS 16 leases" (no date found in the document, so none is added)
+    * "Audit firm governance: a project for the Financial Reporting Council, Ernst & Young LLP response, 3rd February 2009"
     * "Audit firm governance: second consultation paper"
     * "Audit firm governance: evidence gathering consultation paper, 5th February 2009"
     * "Tax Faculty newsletter, Issue 15, 15th March 2024"
     * "Technical release: IFRS 9 implementation, TECH 01/24, 15th January 2024"
     * "A trustee perspective, 23rd July 2020" (comma before date — NOT a colon)
-    * "How to succeed in an interview, 2021" (date always appended, year-only precision when only a year is known)
+    * "How to succeed in an interview, 2021" (year-only precision when only a year is known)
 
 creator_override: |
   **Creator (REQUIRED)**
@@ -309,7 +301,8 @@ creator_override: |
     3. Institution or organisation (e.g., "ICAEW")
   - If the creator cannot be identified, return an empty array ([])
   - For corporate authors, list the organisation name
-  - For letters and correspondence: include sender first, then recipient if both are clearly identified (e.g., ["John Smith", "Ernst and Young LLP"])
+  - Write external organisation names as the organisation writes them, including "&" (e.g., "Ernst & Young LLP"); always write ICAEW as "ICAEW"
+  - For letters and correspondence: include the sender(s) only (e.g., ["John Smith", "Ernst & Young LLP"] for a letter from John Smith of Ernst & Young LLP). Put the recipient in Contributor
   - Use full names when available (e.g., "John Smith" not "J. Smith")
   - Use consistent formatting: "First Name Last Name" or "Organisation Name"
   - Examples:
@@ -317,18 +310,17 @@ creator_override: |
     * [] (if creator cannot be identified)
     * ["ICAEW Technical Department"]
     * ["Sarah Jones", "Tax Faculty", "Deloitte"]
-    * ["David Tweedie", "Ernst and Young LLP"]
+    * ["David Tweedie", "Ernst & Young LLP"]
     * ["Mike Ashley", "KPMG Europe LLP"]
 
 description_override: |
   **Description (REQUIRED)**
   - Single value only
-  - Briefly summarise the content - quite often a summary will be present in the document itself, if so make use of it
+  - Summarise the content at the length and level of detail shown in the examples below - quite often a summary will be present in the document itself, if so make use of it
   - Every description should at least describe what the document is (e.g. what type of document it is, who authored it) and what it is about
   - For transcript files: describe the video or podcast content itself, not the transcript document. Write the description from the perspective of describing the original media (video/podcast), not as "a transcript of..." or "transcript of a...". The description should read as if it is describing the video or podcast directly.
-  - Listing of contents may be helpful - but they are of secondary importance. Each item in the list of contents should be separated by a semicolon.
+  - Listing of contents may be helpful - but they are of secondary importance. Introduce the list with "Contents include:" and separate each item with a semicolon.
   - Should always finish with a full stop or question mark
-  - Use British English spelling throughout the description
   - After the description append the string "(AI generated description)"
   - Examples:
     * "Technical guidance on implementing IFRS 9 for financial instruments. (AI generated description)"
@@ -358,9 +350,12 @@ publisher_override: |
 contributor_override: |
   **Contributor (OPTIONAL)**
   - Multiple values allowed (return as array)
-  - Used for external institutions involved (i.e. not ICAEW)
-  - Use full organisation names
-  - Examples: ["Deloitte"], ["The Pensions Regulator", "Financial Reporting Council"]
+  - People and organisations that contributed to the content but are not the main creator: co-authors, editors, interviewees, panel members, sponsors and research partners
+  - For letters and correspondence, include the recipient here
+  - Do not include organisations or people that are only the subject of, or the audience for, the document (e.g. the body a consultation response is addressed to)
+  - Do not repeat ICAEW here when it is already the creator or publisher
+  - Use full names for people and external organisations; always write ICAEW as "ICAEW"
+  - Examples: ["Deloitte"], ["The Pensions Regulator", "Financial Reporting Council"], ["Jane Brown", "Grant Thornton UK LLP"]
 
 identifier_override: |
   **Identifier (OPTIONAL)**
@@ -368,7 +363,7 @@ identifier_override: |
   - ONLY include the following types of identifiers:
     * ISBNs (e.g., "ISBN 978-1-78915-123-4")
     * URLs (e.g., "https://www.icaew.com/123")
-    * Clear ICAEW reference codes (e.g., "TECH 01/24", "TECPLN12949")
+    * Clear ICAEW reference codes in these formats: TECPLN#####, TECH ##/##, TAXREP ##/##, ICAEW REP ##/##, METCAH##### (e.g., "TECH 01/24", "TECPLN12949", "TAXREP 4/10")
   - Do NOT include random strings of letters and numbers
   - Do NOT include unclear or ambiguous codes
   - If no clear identifiers are found, return an empty array ([])
@@ -386,7 +381,7 @@ output_fields:
   - {name: "entity.description",    type: "string"}
   - {name: "icaew:ContentType",     type: "string"}
   - {name: "icaew:InternalReference", type: "string", reserved: true}
-  - {name: "icaew:Notes",           type: "string"}
+  - {name: "icaew:Notes",           type: "string", reserved: true}
   - {name: "Title",                 type: "string"}
   - {name: "Creator",               type: "array"}
   - {name: "Subject",               type: "subject"}
@@ -413,7 +408,7 @@ examples:
         "icaew:Notes": "",
         "Title": "Commercial insight: expanding the CFO's horizons, September 2020",
         "Creator": ["Business and Management Faculty", "ICAEW"],
-        "Subject": [],
+        "Subject": ["Finance management", "Finance function effectiveness", "Finance business partnering", "Job roles", "Finance director", "Business operations", "Coronavirus"],
         "Description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
         "Publisher": "Silverdart Publishing",
         "Contributor": [],
@@ -430,16 +425,16 @@ examples:
   - |
     {
         "entity.title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
-        "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD; includes introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
         "icaew:ContentType": "Representation",
         "icaew:InternalReference": "",
         "icaew:Notes": "",
         "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
         "Creator": ["Tax Faculty", "ICAEW"],
-        "Subject": [],
-        "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction, general points, information about ICAEW and the Tax Faculty, and the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "Subject": ["Taxation", "International taxation", "Double tax agreements"],
+        "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
         "Publisher": "ICAEW",
-        "Contributor": ["OECD"],
+        "Contributor": [],
         "Date": "2010-01-22",
         "Type": "Text",
         "Format": "pdf",
@@ -478,8 +473,6 @@ extra_validation_rules:
   - "entity.title must be an exact copy of the Title field"
   - "entity.description must be an exact copy of the Description field"
   - "Content type must be one of the controlled vocabulary terms (exact spelling and case)"
-  - "Identifiers must only include ISBNs, URLs, or clear ICAEW reference codes"
-  - "All text must use British English spelling throughout all metadata fields. Convert any American English spellings to British English equivalents"
   - >
     Subject field validation: maximum of 10 subjects allowed; subject names must exactly
     match those in the hierarchical topic list (case-sensitive); for nested topics, all
