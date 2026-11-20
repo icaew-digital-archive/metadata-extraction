@@ -54,7 +54,8 @@ from dotenv import load_dotenv
 from pyPreservica import *
 
 # Load credentials from this project's .env only
-load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
+# override=True: the .env values must win over the operating system's own USERNAME variable
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 USERNAME = os.getenv('USERNAME')
 PASSWORD = os.getenv('PASSWORD')
 TENANT = os.getenv('TENANT')

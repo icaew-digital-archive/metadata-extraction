@@ -23,11 +23,12 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), ov
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from metadata_extractor import MetadataExtractor
+from pipeline import run_pipeline
 from openai_client import strip_code_fences
 from json_metadata_writer import JSONMetadataWriter
 from json_to_csv_converter import JSONToCSVConverter
 from convert_documents import convert_directory, get_supported_formats, is_supported_format
-from config import list_profiles, MODEL_CHOICES, DEFAULT_MODEL
+from config import list_profiles, MODEL_CHOICES, DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS
 from preservica_writer import apply_record, create_client
 
 UPLOAD_TYPES = [ext.lstrip('.') for ext in get_supported_formats()]
@@ -185,6 +186,19 @@ with st.sidebar:
         index=_model_ids.index(DEFAULT_MODEL) if DEFAULT_MODEL in _model_ids else 0,
         format_func=lambda m: _model_labels.get(m, m),
         help="The OpenAI model used for extraction. The model used is recorded with each record in the JSON output.",
+    )
+
+    # Parallel processing  (--workers)
+    workers = st.number_input(
+        "Documents at the same time",
+        min_value=1,
+        max_value=MAX_WORKERS,
+        value=DEFAULT_WORKERS,
+        step=1,
+        help=(
+            "How many documents are sent to the model at once. Higher is much faster for large "
+            f"batches. Cost per document is the same. Default {DEFAULT_WORKERS}, maximum {MAX_WORKERS}."
+        ),
     )
 
     st.divider()
@@ -632,28 +646,36 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     progress_slot  = st.empty()
     progress       = progress_slot.progress(0, text="Starting…")
 
-    with st.status("Extracting metadata…", expanded=True) as ext_status:
-        for i, pdf_path in enumerate(pdf_paths, 1):
+    context_text = context_prompt.strip() or None
+
+    def _prepare(pdf_path: str):
+        """Local stage, one document at a time: check the PDF and cut it to the page range."""
+        return extractor.prepare(pdf_path, first_pages, last_pages)
+
+    def _extract_one(pdf_path: str, prepared) -> dict:
+        """OpenAI stage, several at a time. Runs in a worker thread, so no st.* calls here."""
+        raw = extractor.extract(prepared, context_prompt=context_text)
+        metadata = json.loads(strip_code_fences(raw))
+        fmt = original_formats.get(Path(pdf_path).stem, "pdf") if preservica_mode else "pdf"
+        writer.write_metadata(raw, pdf_path, fmt, model=extractor.model)
+        return metadata
+
+    n_workers = max(1, min(int(workers), MAX_WORKERS, total))
+    status_label = "Extracting metadata…" + (f" ({n_workers} at a time)" if n_workers > 1 else "")
+    progress.progress(0, text=f"Processing {total} document(s)" + (f", {n_workers} at a time…" if n_workers > 1 else "…"))
+
+    with st.status(status_label, expanded=True) as ext_status:
+        finished = [0]  # mutable counter (this code runs at script level)
+
+        def _on_result(pdf_path: str, metadata, error) -> None:
+            """Runs on Streamlit's thread as each document finishes."""
+            finished[0] += 1
             filename = os.path.basename(pdf_path)
-            progress.progress((i - 1) / total, text=f"Processing {i}/{total}: {filename}…")
-
-            try:
-                raw, original_path, detected_format = extractor.extract_metadata(
-                    pdf_path,
-                    first_pages,
-                    last_pages,
-                    "pdf",
-                    context_prompt=context_prompt.strip() or None,
-                )
-                metadata = json.loads(strip_code_fences(raw))
-                fmt = original_formats.get(Path(pdf_path).stem, "pdf") if preservica_mode else "pdf"
-                writer.write_metadata(raw, pdf_path, fmt, model=extractor.model)
-
+            if error is None:
                 title = metadata.get("Title") or "—"
                 content_type = metadata.get("icaew:ContentType") or ""
                 detail = f"{content_type} — {title}" if content_type else title
                 st.write(f":white_check_mark: **{filename}** — {detail}")
-
                 st.session_state.results.append(
                     {
                         "filename": filename,
@@ -661,11 +683,19 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                         "extracted_at": datetime.now().isoformat(),
                     }
                 )
-            except Exception as e:
-                st.write(f":x: **{filename}** — {e}")
-                st.session_state.errors.append({"filename": filename, "error": str(e)})
+            else:
+                st.write(f":x: **{filename}** — {error}")
+                st.session_state.errors.append({"filename": filename, "error": str(error)})
+            progress.progress(finished[0] / total, text=f"Processed {finished[0]}/{total}: {filename}")
 
-            progress.progress(i / total, text=f"Processed {i}/{total}: {filename}")
+        # Page-range cutting runs one document at a time; OpenAI calls run n_workers at a time.
+        # If the run is stopped, no more documents are started.
+        run_pipeline(pdf_paths, _prepare, _extract_one, _on_result, n_workers,
+                     cleanup=lambda prepared: prepared.cleanup())
+
+        # Documents finish in any order; show results in file order
+        st.session_state.results.sort(key=lambda r: r["filename"])
+        st.session_state.errors.sort(key=lambda r: r["filename"])
 
         n_ok  = len(st.session_state.results)
         n_err = len(st.session_state.errors)

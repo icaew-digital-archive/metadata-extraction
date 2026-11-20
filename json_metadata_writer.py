@@ -6,13 +6,19 @@ import json
 import os
 import re
 import tempfile
+import threading
 from typing import Dict, List, Any
 from datetime import datetime
 
-from config import get_reserved_fields, get_subject_constraints, validate_subjects
+from config import (get_description_suffix, get_reserved_fields, get_subject_constraints,
+                    get_topic_order, validate_subjects)
 
 
 class JSONMetadataWriter:
+    # One lock per output file, shared by every writer in this process, so
+    # documents processed in parallel never overwrite each other's records
+    _file_locks: Dict[str, threading.Lock] = {}
+    _file_locks_guard = threading.Lock()
     def __init__(self, json_file: str, profile_path: str = None) -> None:
         """
         Initialize the JSON metadata writer.
@@ -22,7 +28,14 @@ class JSONMetadataWriter:
             profile_path (str): Path to a YAML profile file (used for subject validation)
         """
         self.json_file = json_file
+        with JSONMetadataWriter._file_locks_guard:
+            self._lock = JSONMetadataWriter._file_locks.setdefault(
+                os.path.abspath(json_file), threading.Lock())
         self._valid_topics, self._subject_max = get_subject_constraints(profile_path)
+        # Subjects are saved in topic-list order, so the same set always reads the same way
+        self._topic_order = get_topic_order(profile_path)
+        # Every AI-written description must carry this marker; added if the model leaves it out
+        self._description_suffix = get_description_suffix(profile_path)
         # Fields the AI must never fill (e.g. user-entered icaew:Notes): forced empty
         self._reserved_fields = get_reserved_fields(profile_path)
         self._initialize_json()
@@ -158,9 +171,21 @@ class JSONMetadataWriter:
                     validated = validate_subjects(value, self._valid_topics, self._subject_max)
                     if len(validated) < len(value):
                         print(f"  Subject validation: reduced from {len(value)} to {len(validated)} item(s)")
+                    if self._topic_order:
+                        validated = sorted(validated, key=lambda t: self._topic_order.get(t, len(self._topic_order)))
                     cleaned_dict[key] = validated
                 else:
                     cleaned_dict[key] = self._clean_value(value, title=key in self._TITLE_FIELDS)
+
+            # Guarantee the AI marker on descriptions
+            for key in ('Description', 'entity.description'):
+                text = cleaned_dict.get(key)
+                if isinstance(text, str) and text and self._description_suffix \
+                        and not text.endswith(self._description_suffix):
+                    if text[-1] not in '.?!':
+                        text += '.'
+                    cleaned_dict[key] = f"{text} {self._description_suffix}"
+                    print(f"  {key}: added missing '{self._description_suffix}'")
             
             return cleaned_dict
 
@@ -197,17 +222,18 @@ class JSONMetadataWriter:
                 "metadata": metadata_dict
             }
 
-            # Read existing data
-            with open(self.json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            with self._lock:
+                # Read existing data
+                with open(self.json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
 
-            # Add new record
-            data["metadata"].append(record)
-            data["last_updated"] = datetime.now().isoformat()
-            data["total_records"] = len(data["metadata"])
+                # Add new record
+                data["metadata"].append(record)
+                data["last_updated"] = datetime.now().isoformat()
+                data["total_records"] = len(data["metadata"])
 
-            # Write back to file
-            self._write_atomic(data)
+                # Write back to file
+                self._write_atomic(data)
 
             print(f"Metadata written to JSON for: {pdf_path}")
 

@@ -43,6 +43,8 @@ The app opens automatically in your browser at `http://localhost:8501`.
 | Setting | Description |
 |---------|-------------|
 | **Profile** | Select the metadata extraction profile that defines the organisation-specific conventions and output fields (see [Profiles](#profiles)) |
+| **Model** | The OpenAI model used for extraction (default GPT-6.2 Sol); the model used is recorded in each JSON record |
+| **Documents at the same time** | How many documents are processed in parallel (1–64, default 32) |
 | **Subject classification** | Classify documents against the topic hierarchy defined in the active profile (enabled by default; disable to leave the Subject field empty) |
 | **Pages from start / end** | Restrict extraction to the opening and/or closing pages of each document; set both to 0 to process the full document |
 | **Context prompt** | Optional background text to help the model identify subjects — for example, the collection, event, or location the documents belong to |
@@ -138,6 +140,9 @@ python main.py --folder ./my-documents --no-subjects -j output.json
 
 # Use a different OpenAI model (default: gpt-6.2-sol, set in config.py)
 python main.py --folder ./my-documents -j output.json --model gpt-6.2-astra
+
+# Change how many documents are processed at the same time (default 32, maximum 64; 1 = one at a time)
+python main.py --folder ./my-documents -j output.json --workers 64
 
 # Resume an interrupted run (skip files already recorded in output.json)
 python main.py --folder ./my-documents -j output.json --skip-existing
@@ -338,6 +343,7 @@ Key files:
 - `config.py` — Prompt builder; loads profiles and assembles the AI system prompt
 - `json_metadata_writer.py` — JSON output handling
 - `json_to_csv_converter.py` — JSON to CSV conversion
+- `pipeline.py` — Runs local preparation one document at a time and OpenAI calls in parallel
 - `download_preservica_assets.py` — Preservica asset download
 - `preservica_writer.py` — Writes extracted metadata back to Preservica (DC, ICAEW, XIP)
 - `profiles/icaew.yaml` — ICAEW digital archive extraction profile
@@ -347,6 +353,7 @@ Key files:
 ## Notes on behaviour
 
 - The OpenAI model defaults to `gpt-6.2-sol` (`DEFAULT_MODEL` in `config.py`). It can be changed per run with `--model` or in the web UI sidebar, and the model used is recorded in each JSON record.
+- `--workers N` (or "Documents at the same time" in the web UI sidebar) processes N documents at the same time (default 32, maximum 64), which is much faster for large batches. Set it to 1 to process one document at a time, which also prints the full metadata for each. Local preparation (checking each PDF and cutting it to the `--first`/`--last` page range) always runs one document at a time; only the OpenAI upload and model calls run in parallel, so CPU-heavy work never piles up. Use this instead of running several terminals: parallel runs in separate terminals writing to the same JSON file can lose records. Cost per document is the same; only the speed changes.
 - Each document is uploaded to OpenAI for extraction and deleted from OpenAI file storage straight afterwards.
 - The model is asked for JSON-only output; if the reply is not valid JSON it is retried once before the file is reported as failed.
 - The JSON output file is saved safely after every record, so an interrupted run never leaves it half-written. If an existing output file cannot be read, the tool stops with an error rather than replacing it.

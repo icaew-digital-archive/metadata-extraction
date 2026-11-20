@@ -8,9 +8,10 @@ import json
 import sys
 import os
 from typing import Dict, List, Optional, Tuple
-from metadata_extractor import MetadataExtractor
+from metadata_extractor import MetadataExtractor, PreparedDocument
+from pipeline import run_pipeline
 from json_metadata_writer import JSONMetadataWriter
-from config import DEFAULT_MODEL
+from config import DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -45,6 +46,12 @@ Examples:
 
   # Use a different model:
   python main.py --folder path/to/pdf/directory -j output.json --model gpt-6.2-astra
+
+  # Process one document at a time (shows the full metadata for each):
+  python main.py --folder path/to/pdf/directory -j output.json --workers 1
+
+  # Process 64 documents at a time (default is 32):
+  python main.py --folder path/to/pdf/directory -j output.json --workers 64
 
   # Resume an interrupted run (skip files already in output.json):
   python main.py --folder path/to/pdf/directory -j output.json --skip-existing
@@ -96,6 +103,13 @@ Examples:
                         default=None,
                         help=f'OpenAI model to use (default: {DEFAULT_MODEL}). '
                              'Options include gpt-6.2-sol, gpt-6.2-astra, gpt-6-luna, gpt-5.')
+
+    parser.add_argument('--workers', '-w',
+                        type=int,
+                        default=DEFAULT_WORKERS,
+                        help=f'Number of documents to process at the same time '
+                             f'(default: {DEFAULT_WORKERS}, maximum: {MAX_WORKERS}). '
+                             f'Use 1 to process one at a time and see the full metadata for each.')
 
     parser.add_argument('--skip-existing',
                         action='store_true',
@@ -220,53 +234,86 @@ def main() -> None:
         if args.skip_existing:
             already_done = {os.path.abspath(r.get('file_path', '')) for r in writer.get_records()}
 
+        # Work out what to do before any requests are sent
         format_mappings: Dict[str, Dict[str, str]] = {}
-        processed_count = 0
+        jobs = []  # (index, pdf_path, original_format)
         skipped_count = 0
-        failed_files: List[Tuple[str, str]] = []  # List of (file_path, error_message) tuples
-
-        # Process each PDF file
         for index, pdf_path in enumerate(pdf_files, 1):
-            try:
-                if os.path.abspath(pdf_path) in already_done:
-                    print(f"\n[{index}/{total_files}] Skipping (already in JSON): {pdf_path}")
-                    skipped_count += 1
-                    continue
+            if os.path.abspath(pdf_path) in already_done:
+                print(f"[{index}/{total_files}] Skipping (already in JSON): {pdf_path}")
+                skipped_count += 1
+                continue
+            folder = os.path.dirname(pdf_path)
+            if folder not in format_mappings:
+                format_mappings[folder] = load_format_mapping(folder)
+            jobs.append((index, pdf_path, detect_original_format(pdf_path, format_mappings[folder])))
 
-                print(f"\n[{index}/{total_files}] Processing: {pdf_path}")
+        workers = max(1, min(args.workers, MAX_WORKERS, len(jobs)))
+        if args.workers > MAX_WORKERS:
+            print(f"Note: --workers is capped at {MAX_WORKERS}")
+        print(f"Workers: {workers}")
 
-                folder = os.path.dirname(pdf_path)
-                if folder not in format_mappings:
-                    format_mappings[folder] = load_format_mapping(folder)
-                original_format = detect_original_format(pdf_path, format_mappings[folder])
+        def prepare(job) -> PreparedDocument:
+            """Local stage, one document at a time: check the PDF and cut it to the page range."""
+            index, pdf_path, _original_format = job
+            print(f"[{index}/{total_files}] Preparing: {pdf_path}")
+            return extractor.prepare(pdf_path, args.first, args.last)
 
-                metadata, original_path, detected_format = extractor.extract_metadata(
-                    pdf_path, args.first, args.last, original_format, context_prompt=args.context_prompt)
-
-                # Print metadata to console
+        def process(job, prepared: PreparedDocument) -> str:
+            """OpenAI stage, several at a time: extract and save one document; returns its title."""
+            index, pdf_path, original_format = job
+            metadata = extractor.extract(prepared, context_prompt=args.context_prompt)
+            if workers == 1:
+                # Full output is only readable when documents run one at a time
                 print(f"\n[{index}/{total_files}] Extracted Metadata:")
                 print(metadata)
+            writer.write_metadata(metadata, pdf_path, original_format, model=extractor.model)
+            try:
+                return json.loads(metadata).get('Title') or ''
+            except (ValueError, AttributeError):
+                return ''
 
-                # Write to JSON using the original path and format
-                writer.write_metadata(metadata, original_path, detected_format, model=extractor.model)
+        processed_count = 0
+        failed_files: List[Tuple[str, str]] = []  # List of (file_path, error_message) tuples
+        interrupted = False
+
+        def on_result(job, title, error) -> None:
+            """Count and print the outcome of one finished document."""
+            nonlocal processed_count
+            index, pdf_path, _ = job
+            if error is None:
                 processed_count += 1
-                print(f"[{index}/{total_files}] Successfully processed and added to JSON: {original_path}")
+                done = processed_count + len(failed_files)
+                print(f"[{index}/{total_files}] Done ({done}/{len(jobs)}): "
+                      f"{os.path.basename(pdf_path)}" + (f" - {title}" if title else ""))
+            else:
+                failed_files.append((pdf_path, str(error)))
+                print(f"[{index}/{total_files}] Error processing {pdf_path}: {error}")
 
-            except Exception as e:
-                error_msg = str(e)
-                print(f"[{index}/{total_files}] Error processing {pdf_path}: {error_msg}")
-                failed_files.append((pdf_path, error_msg))
-                continue  # Continue with next file even if one fails
+        def on_interrupt() -> None:
+            nonlocal interrupted
+            interrupted = True
+            print("\nInterrupted: not starting any more documents. Waiting for those already "
+                  "in progress to finish (press Ctrl+C again to stop immediately)...")
+
+        try:
+            run_pipeline(jobs, prepare, process, on_result, workers,
+                         cleanup=lambda prepared: prepared.cleanup(), on_interrupt=on_interrupt)
+        except KeyboardInterrupt:
+            pass  # summary below reports what was and wasn't done
 
         # Print detailed summary
-        print(f"\nProcessing complete:")
+        print(f"\nProcessing {'stopped early' if interrupted else 'complete'}:")
         print(f"- Total files found: {total_files}")
         print(f"- Successfully processed: {processed_count}")
         if args.skip_existing:
             print(f"- Skipped (already in JSON): {skipped_count}")
         print(f"- Failed to process: {len(failed_files)}")
+        if interrupted:
+            print(f"- Not started: {len(jobs) - processed_count - len(failed_files)} "
+                  "(re-run with --skip-existing to continue)")
         print(f"- Metadata written to: {args.json_file}")
-        
+
         if failed_files:
             print("\nFailed files:")
             for file_path, error in failed_files:

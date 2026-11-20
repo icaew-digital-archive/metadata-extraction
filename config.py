@@ -11,6 +11,13 @@ import yaml
 # OpenAI API settings
 DEFAULT_MODEL = "gpt-6.2-sol"
 
+# Upper limit for the number of documents processed at the same time (--workers
+# and the web UI). OpenAI's limits on this account are far higher; this keeps
+# memory use, upload bandwidth and spending speed under control.
+MAX_WORKERS = 64
+# Default number of documents processed at the same time
+DEFAULT_WORKERS = 32
+
 # Models offered in the web UI (the CLI --model option accepts any model ID)
 MODEL_CHOICES = [
     ("gpt-6.2-sol", "GPT-6.2 Sol: everyday (default)"),
@@ -74,7 +81,7 @@ _GENERIC_TITLE = '''\
 - Do not capitalise the first word after a colon, unless it is a proper noun or acronym
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
-- The order and format should be: title, subtitle, issue/volume, date
+- The order and format should be: title, subtitle, issue/volume/part, date
 - If a title does not follow this format, reorganise it accordingly. For example:
   * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
 - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
@@ -115,6 +122,7 @@ _GENERIC_CONTRIBUTOR = '''\
 - Multiple values allowed (return as array)
 - Used for individuals or organisations who contributed to the document but are not the primary creator
 - For letters and correspondence, include the recipient here
+- List contributors in the order they appear in the document
 - Use full organisation names'''
 
 _GENERIC_DATE = '''\
@@ -123,6 +131,7 @@ _GENERIC_DATE = '''\
 - Always use the YYYY-MM-DD format, with zero-padding for single digits (e.g., "2009-02-05")
 - Only include the parts of the date the document gives: if the day is unknown, use YYYY-MM; if the month is also unknown, use YYYY. Never add a day or month that is not in the document (e.g., do not turn "March 2021" into "2021-03-01")
 - Use the date found within the document
+- For a season spanning two years (e.g. "winter 2011-12"), use the first year ("2011")
 - Always read numeric dates as day/month/year (UK convention), including in American documents: "10/7/2009" means 10 July 2009 and becomes "2009-07-10". Only when day/month is impossible (e.g. "12/25/2009", as there is no month 25) read it as month/day
 - Convert written dates the same way: "28 January 2009" and "January 28, 2009" both become "2009-01-28"; "March 2021" becomes "2021-03"
 - Examples: "2024-03-15", "2024-03", "2024", "2009-02-05"'''
@@ -158,6 +167,7 @@ _GENERIC_IDENTIFIER = '''\
 **Identifier (OPTIONAL)**
 - Multiple values allowed (return as array)
 - Only include ISBNs (e.g., "ISBN 978-1-78915-123-4") and URLs
+- Only include a URL if it is the address of this document itself; links mentioned in the text are not identifiers
 - Do not include random strings of letters and numbers
 - If no clear identifiers are found, return an empty array ([])'''
 
@@ -183,7 +193,7 @@ _GENERIC_VALIDATION_RULES = [
     'Output must be valid JSON',
     'Field values can be strings or arrays of strings (not null, numbers, or other types)',
     'Empty values must be empty strings ("") for single-value fields or empty arrays ([]) for multi-value fields, not null',
-    'Title field must follow the order: title, subtitle, issue/volume, date',
+    'Title field must follow the order: title, subtitle, issue/volume/part, date',
 ]
 
 
@@ -282,6 +292,7 @@ def build_system_prompt(profile: dict, include_subjects: bool = True) -> str:
             parts.append('- Format: for nested topics, include both the main topic and sub-topic (e.g., ["Financial reporting and accounting standards", "Accounting topics", "Accounting for assets"])')
             parts.append("- If selecting a deep topic, always include the full path from top-level down to that topic")
             parts.append("- Prefer more specific topics over general ones when appropriate")
+            parts.append("- Only assign topics the document covers in substance (at least a section or a main point), not passing mentions. Do not add topics just to reach the maximum")
             parts.append("- If a document covers multiple distinct topic areas, select the most relevant ones")
             parts.append("- If no relevant topics are found, return an empty array ([])")
             parts.append("- Examples of hierarchical selection:")
@@ -433,6 +444,33 @@ def get_reserved_fields(profile_path: str = None) -> set:
     reserved = {f["name"] for f in profile.get("output_fields") or [] if f.get("reserved")}
     reserved |= {f["id"] for f in profile.get("custom_fields") or [] if f.get("reserved")}
     return reserved
+
+
+def get_description_suffix(profile_path: str = None) -> str:
+    """Marker appended to every AI-written Description (profile setting description_suffix)."""
+    return load_profile(profile_path).get("description_suffix", "(AI generated description)")
+
+
+def get_topic_order(profile_path: str = None) -> dict:
+    """Return {topic name: position in the profile's topic list}, or {} if it has none.
+
+    Used to save subjects in a fixed order (the order of the topic list), so the
+    same set of subjects always reads the same way.
+    """
+    profile = load_profile(profile_path)
+    topic_file = profile.get("subject_topic_list_file")
+    if not topic_file:
+        return {}
+    order = {}
+    try:
+        with open(os.path.join(_BASE_DIR, topic_file), "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("- "):
+                    order.setdefault(stripped[2:], len(order))
+    except OSError:
+        pass
+    return order
 
 
 def get_subject_constraints(profile_path: str = None) -> tuple:

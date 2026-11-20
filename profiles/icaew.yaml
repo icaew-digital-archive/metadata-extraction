@@ -15,6 +15,13 @@ extra_guidelines:
     For the creator and contributor fields, always normalise
     "Institute of Chartered Accountants in England and Wales" to "ICAEW".
   - >
+    For organisation names in the creator, publisher and contributor fields, use the full
+    name, not an abbreviation (e.g. "Financial Reporting Council", not "FRC"; "Public Company
+    Accounting Oversight Board", not "PCAOB"). The only exception is ICAEW, which is always "ICAEW".
+  - >
+    For people's names in the creator and contributor fields, keep titles of honour
+    (Lord, Sir, Dame, Dr, Professor) as printed in the document (e.g. "Lord Digby Jones").
+  - >
     ALWAYS use British English spelling throughout all metadata fields. Examples:
     "organise" (not "organize"), "colour" (not "color"), "centre" (not "center"),
     "analyse" (not "analyze"), "recognise" (not "recognize"), "realise" (not "realize"),
@@ -48,6 +55,9 @@ extra_guidelines:
 
 # Acronyms common in ICAEW documents; shown as examples in the acronym guideline
 acronym_examples: ["OECD", "IFRS", "FRC", "HMRC", "UK", "VAT"]
+
+# Appended to every AI-written Description (added automatically if the model leaves it out)
+description_suffix: "(AI generated description)"
 
 xip_fields: true
 
@@ -268,14 +278,20 @@ title_override: |
   **Title (REQUIRED)**
   - Single value only
   - Start from the title as it appears in the document, then apply the rules below
+  - If the item has no title of its own (e.g. a photograph or other image), devise a short descriptive title in square brackets, in sentence case (e.g. "[Photograph of the Palace of Westminster]", "[Portrait of a man in a dark suit]")
+  - Do not include series or programme names in the title; record them in Relation instead (e.g. "Mixed messages: the state of the economy, Autumn 2013" becomes "Mixed messages, Autumn 2013" with Relation ["The State of the Economy"]; "Audit insights: banking, October 2013" becomes "Banking, October 2013" with Relation ["Audit Insights"]). If the title consists only of the series name with a date, issue or number, keep it as the title (e.g. "Quarterly briefing, March 2019", "The state of the economy, Autumn 2012")
+  - Keep the wording and hyphenation of the printed title; do not correct it (e.g. keep "Error free reporting" if that is how it is printed, not "Error-free reporting")
   - Use sentence case: capitalise the first word and proper nouns (names of people, organisations, places, faculties, named publications and standards, e.g. "Financial Reporting Council") and write everything else in lower case. Acronyms always stay in capitals
-  - Capitalise "Issue", "Volume" and "No." when they introduce a number (e.g. "Issue 15", "Volume 3")
+  - Capitalise "Issue", "Volume", "No.", "Section" and "Chapter" when they introduce a number (e.g. "Issue 15", "Volume 3", "Section 8, Chapter 2")
+  - Capitalise seasons (e.g. "Autumn 2013", "Spring 2015", "Winter 2011-12")
+  - Part numbers go after the subtitle and before the date, in lower case, separated by commas (e.g. "Audit and Brexit: key questions for a consistent approach, part 4, 27th November 2018" not "Audit and Brexit part 4: key questions for a consistent approach, 27th November 2018")
   - ALWAYS use colons (:) to separate the main title from its subtitle only - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as title/subtitle separators with colons, except in date or number ranges (keep "2008-09", do not write "2008:09")
-  - Do NOT use a colon before a date, issue/volume number, or reference code — use a comma instead (e.g., "A trustee perspective, 23rd July 2020" not "A trustee perspective: 23rd July 2020")
+  - Do NOT use a colon before a date, issue/volume/part number, or reference code — use a comma instead (e.g., "A trustee perspective, 23rd July 2020" not "A trustee perspective: 23rd July 2020")
   - Do not capitalise the first word after a colon, unless it is a proper noun or acronym
+  - If the main title ends with a question mark, keep it and still use a colon before the subtitle, because the colon always marks the divide between title and subtitle (e.g. "Too good to last?: a guide to managing uncertainty, Spring 2015")
   - Do not use "&"; use "and", except within the name of an organisation or publication
   - Use question marks if applicable, but do not end with full stops
-  - The order and format should be: title, subtitle, issue/volume, date — with commas separating each element after the subtitle
+  - The order and format should be: title, subtitle, issue/volume/part, date — with commas separating each element after the subtitle
   - If a date has been identified for the document, append it to the end of the title. If no date can be found, omit it. Use the same level of precision as the date found: year only (e.g., "2021"), month and year (e.g., "March 2021"), or full date (e.g., "15th March 2021")
   - If a title does not follow this format, reorganise it accordingly. For example:
     * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
@@ -288,7 +304,12 @@ title_override: |
     * "Audit firm governance: second consultation paper"
     * "Audit firm governance: evidence gathering consultation paper, 5th February 2009"
     * "Tax Faculty newsletter, Issue 15, 15th March 2024"
-    * "Technical release: IFRS 9 implementation, TECH 01/24, 15th January 2024"
+    * "Too good to last?: a guide to managing uncertainty, Spring 2015" (question mark kept, colon before the subtitle, season capitalised)
+    * "Mixed messages, Autumn 2013" (series name "The state of the economy" left out of the title and recorded in Relation)
+    * "Quarterly briefing, March 2019" (title is only the series name, so it is kept)
+    * "[Photograph of the Palace of Westminster]" (untitled image, so a descriptive title is devised in square brackets)
+    * "Audit and Brexit: key questions for a consistent approach, part 4, 27th November 2018" (part number after the subtitle, lower case)
+    * "IFRS 9 implementation, TECH 01/24, 15th January 2024" (series name "Technical release" left out of the title)
     * "A trustee perspective, 23rd July 2020" (comma before date — NOT a colon)
     * "How to succeed in an interview, 2021" (year-only precision when only a year is known)
 
@@ -299,9 +320,14 @@ creator_override: |
     1. Individual authors (e.g., "John Smith")
     2. Faculty or department (e.g., "Financial Services Faculty")
     3. Institution or organisation (e.g., "ICAEW")
-  - If the creator cannot be identified, return an empty array ([])
+  - For ICAEW-branded material with no named author, use ["ICAEW"]
+  - For ICAEW district societies, list the society followed by "ICAEW" (e.g. ["Beds, Bucks & Herts Society of Chartered Accountants", "ICAEW"])
+  - If the creator cannot be identified and the material is not ICAEW-branded, return an empty array ([])
   - For corporate authors, list the organisation name
+  - For newsletters, briefings and other publications made up of articles, Creator is the producing faculty or department and ICAEW; named article authors and introduction writers go in Contributor
+  - Use faculty and department names as printed on the document, even if they have since been renamed (e.g. "IT Faculty" on older documents, "Tech Faculty" on newer ones)
   - Write external organisation names as the organisation writes them, including "&" (e.g., "Ernst & Young LLP"); always write ICAEW as "ICAEW"
+  - For presentations, webinar slides and speeches by speakers from outside ICAEW: Creator is the speaker(s) followed by their own organisation(s) (e.g. ["Nick Wildgoose", "Zurich Global Corporate"]). Do not include the hosting ICAEW faculty or ICAEW here: put the hosting faculty in Contributor and use "ICAEW" as Publisher
   - For letters and correspondence: include the sender(s) only (e.g., ["John Smith", "Ernst & Young LLP"] for a letter from John Smith of Ernst & Young LLP). Put the recipient in Contributor
   - Use full names when available (e.g., "John Smith" not "J. Smith")
   - Use consistent formatting: "First Name Last Name" or "Organisation Name"
@@ -316,30 +342,38 @@ creator_override: |
 description_override: |
   **Description (REQUIRED)**
   - Single value only
-  - Summarise the content at the length and level of detail shown in the examples below - quite often a summary will be present in the document itself, if so make use of it
+  - Start with the kind of document and who produced it, in the form "[Guide / Checklist / Factsheet / Report / Memorandum...] from [creator]...", e.g. "Guide from ICAEW's Audit and Assurance Faculty on..."; refer to ICAEW faculties and departments as "ICAEW's [name]"
+  - Then summarise the content at the length and level of detail shown in the examples below (typically two or three sentences covering the purpose, the audience and the main points) - quite often a summary will be present in the document itself, if so make use of it
   - Every description should at least describe what the document is (e.g. what type of document it is, who authored it) and what it is about
   - For transcript files: describe the video or podcast content itself, not the transcript document. Write the description from the perspective of describing the original media (video/podcast), not as "a transcript of..." or "transcript of a...". The description should read as if it is describing the video or podcast directly.
   - Listing of contents may be helpful - but they are of secondary importance. Introduce the list with "Contents include:" and separate each item with a semicolon.
   - Should always finish with a full stop or question mark
   - After the description append the string "(AI generated description)"
   - Examples:
-    * "Technical guidance on implementing IFRS 9 for financial instruments. (AI generated description)"
-    * "This Audit and Assurance Faculty guidance sets out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides. (AI generated description)"
-    * "A quarterly special report published by the Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports. (AI generated description)"
-    * "This publication forms part of the FinanceDirection thought leadership programme of the ICAEW Business and Management Faculty; it provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function. (AI generated description)"
+    * "Guidance from ICAEW's Audit and Assurance Faculty setting out the steps auditors need to take to ascertain whether material uncertainty disclosures in relation to going concern in the financial statements are adequate, and how these disclosures will then impact the audit report. It supplements the guidance in the faculty's audit report guides. (AI generated description)"
+    * "Quarterly special report from ICAEW's Business and Management Faculty. Contents include: Motivating others is the key to courageous leadership; It is not just talk: you need to walk the walk; Leadership styles are changing, say directors; Courage in finance: how far can your leadership go?; Courage, compassion and the finance professional; What makes a CEO 'exceptional'?; How functional leaders become CEOs; The three most critical issues in business today; Previous special reports. (AI generated description)"
+    * "Thought leadership report from ICAEW's Business and Management Faculty, part of its FinanceDirection programme. It provides a foundation for considering the key challenges and a reference source for those analysing or researching the role of the finance function. (AI generated description)"
 
 relation_override: |
   **Relation (OPTIONAL)**
   - Multiple values allowed (return as array)
-  - Name of the collection or series the document belongs to
-  - Examples (not exhaustive): ["Technical Release"], ["Faculty Publication"], ["Annual Report"], ["Special Report"], ["Tax Representation"], ["Audit Insights"], ["Thought Leadership"]
+  - Name(s) of the collection, series or programme the document belongs to
+  - Include every series or programme name printed in the document's banner or header (e.g. ["ICAEW Know-How", "Brexit Guide"]), spelled and hyphenated exactly as printed (e.g. "ICAEW Know-How", "Brexit Guide", not "ICAEW KNOW-HOW", "BREXIT GUIDE" when the banner uses all capitals; "Rapid Error Free Reporting" if printed without a hyphen)
+  - If the document is one issue of a recurring publication (e.g. "The state of the economy", "Quarterly briefing"), include the publication name as a series (e.g. ["The State of the Economy"], ["ICAEW Know-How", "Quarterly Briefing"]), along with any banner names
+  - Otherwise, do not use the document's own title or headings as a series name
+  - Write series names in title case, with short words (a, and, of, the, to, in) in lower case (e.g. "Guidance to Good Practice", "The State of the Economy")
+  - Do not use a description of the type of document as a series (e.g. "Annual Report", "Minutes", "AGM Minutes", "Helpsheet", "Representation", "Thought Leadership"); only use series or programme names printed in the document
+  - If no series or programme name is printed, return an empty array ([])
+  - Examples (not exhaustive): ["ICAEW Know-How", "Brexit Guide"], ["Audit Insights"], ["The State of the Economy"], ["Guidance to Good Practice"], ["Special Report"]
 
 publisher_override: |
   **Publisher (REQUIRED)**
   - Single value only
   - Use publisher name as credited in the document
+  - Use the organisation name shown in the document's branding or cover, not a legal name from the small print (e.g. "Chartered Accountants Ireland", not "The Institute of Chartered Accountants in Ireland")
+  - For presentations, webinar slides and speeches by external speakers at ICAEW events, use "ICAEW", even if the slides carry the speaker's organisation's branding
   - If no publisher is explicitly credited:
-    - For ICAEW publications, use "ICAEW"
+    - For ICAEW publications, including ICAEW-branded material with no named author, use "ICAEW"
     - For external publications, use the organisation name if available
     - If no organisation is identified, return an empty string ("") rather than defaulting to "ICAEW"
   - Examples:
@@ -352,9 +386,12 @@ contributor_override: |
   - Multiple values allowed (return as array)
   - People and organisations that contributed to the content but are not the main creator: co-authors, editors, interviewees, panel members, sponsors and research partners
   - For letters and correspondence, include the recipient here
-  - Do not include organisations or people that are only the subject of, or the audience for, the document (e.g. the body a consultation response is addressed to)
+  - Do not include organisations or people that are only the subject of, or the audience for, the document (e.g. the body a consultation response is addressed to), or organisations whose guidance or legislation is summarised or quoted (e.g. HMRC, when a guide summarises HMRC guidance)
   - Do not repeat ICAEW here when it is already the creator or publisher
+  - For newsletters, briefings and other publications made up of articles, include the named article authors and the writer of any introduction or foreword, in the order they appear
+  - For presentations, webinar slides and speeches by speakers from outside ICAEW, include the hosting ICAEW faculty here (e.g. ["Finance and Management Faculty"])
   - Use full names for people and external organisations; always write ICAEW as "ICAEW"
+  - List contributors in the order they appear in the document
   - Examples: ["Deloitte"], ["The Pensions Regulator", "Financial Reporting Council"], ["Jane Brown", "Grant Thornton UK LLP"]
 
 identifier_override: |
@@ -363,7 +400,8 @@ identifier_override: |
   - ONLY include the following types of identifiers:
     * ISBNs (e.g., "ISBN 978-1-78915-123-4")
     * URLs (e.g., "https://www.icaew.com/123")
-    * Clear ICAEW reference codes in these formats: TECPLN#####, TECH ##/##, TAXREP ##/##, ICAEW REP ##/##, METCAH##### (e.g., "TECH 01/24", "TECPLN12949", "TAXREP 4/10")
+    * Clear ICAEW reference codes in these formats: TECPLN followed by 4 or 5 digits (e.g. TECPLN6855, TECPLN12949), TECH ##/##, TAXREP ##/##, ICAEW REP ##/##, METCAH##### (e.g., "TECH 01/24", "TECPLN12949", "TAXREP 4/10")
+  - Only include a URL if it is the address of this document itself; links mentioned in the text are not identifiers (e.g. do not include a link to a campaign or hub page such as "icaew.com/brexit")
   - Do NOT include random strings of letters and numbers
   - Do NOT include unclear or ambiguous codes
   - If no clear identifiers are found, return an empty array ([])
@@ -402,14 +440,14 @@ examples:
   - |
     {
         "entity.title": "Commercial insight: expanding the CFO's horizons, September 2020",
-        "entity.description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+        "entity.description": "Quarterly special report from ICAEW's Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
         "icaew:ContentType": "Report",
         "icaew:InternalReference": "",
         "icaew:Notes": "",
         "Title": "Commercial insight: expanding the CFO's horizons, September 2020",
         "Creator": ["Business and Management Faculty", "ICAEW"],
-        "Subject": ["Finance management", "Finance function effectiveness", "Finance business partnering", "Job roles", "Finance director", "Business operations", "Coronavirus"],
-        "Description": "Quarterly special report from the Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
+        "Subject": ["Business operations", "Coronavirus", "Finance management", "Finance business partnering", "Finance function effectiveness", "Job roles", "Finance director"],
+        "Description": "Quarterly special report from ICAEW's Business and Management Faculty featuring articles and insights on commercial leadership for CFOs and FDs. Contents include: Wanted urgently - the T-shaped finance director; UK CFO insight - no quick bounce back in the next year; Learning how to acquire a broader perspective; Does being a commercial FD just mean saying 'yes' to your CEO?; More pictures, fewer numbers - the CFO's agenda today; Global CFOs see need for agile planning in the downturn; Why collaboration between marketing and finance is essential; Lessons of COVID-19: building a resilient finance function; Recruiters step up search for FDs with commercial acumen; UK CEOs given a 'licence to change'; Employee engagement during COVID-19. (AI generated description)",
         "Publisher": "Silverdart Publishing",
         "Contributor": [],
         "Date": "2020-09",
@@ -425,14 +463,14 @@ examples:
   - |
     {
         "entity.title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
-        "entity.description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "entity.description": "Memorandum from ICAEW's Tax Faculty, submitted on 22 January 2010 in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
         "icaew:ContentType": "Representation",
         "icaew:InternalReference": "",
         "icaew:Notes": "",
         "Title": "OECD discussion draft on the application of tax treaties to state-owned entities: including sovereign wealth funds, TAXREP 4/10, 22nd January 2010",
         "Creator": ["Tax Faculty", "ICAEW"],
         "Subject": ["Taxation", "International taxation", "Double tax agreements"],
-        "Description": "Memorandum submitted on 22 January 2010 by the Tax Faculty of ICAEW in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
+        "Description": "Memorandum from ICAEW's Tax Faculty, submitted on 22 January 2010 in response to a consultation document published in November 2009 by OECD. Contents include: introduction; general points; information about ICAEW and the Tax Faculty; the Tax Faculty's ten tenets for a better tax system. (AI generated description)",
         "Publisher": "ICAEW",
         "Contributor": [],
         "Date": "2010-01-22",
@@ -441,21 +479,21 @@ examples:
         "Identifier": ["TAXREP 4/10"],
         "Source": "",
         "Language": ["en"],
-        "Relation": ["Tax Representation"],
+        "Relation": [],
         "Coverage": "",
         "Rights": ""
     }
   - |
     {
-        "entity.title": "Audit insights: banking, October 2013",
-        "entity.description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+        "entity.title": "Banking, October 2013",
+        "entity.description": "Report from ICAEW's Financial Services Faculty, working with the Audit and Assurance Faculty, in the Audit Insights series, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
         "icaew:ContentType": "Report",
         "icaew:InternalReference": "",
         "icaew:Notes": "",
-        "Title": "Audit insights: banking, October 2013",
+        "Title": "Banking, October 2013",
         "Creator": ["Audit and Assurance Faculty", "Financial Services Faculty", "ICAEW"],
         "Subject": ["Audit and assurance", "Financial services and regulation", "Financial services", "Banking"],
-        "Description": "Report in the Audit Insights series led by ICAEW's Financial Services Faculty working with the Audit and Assurance Faculty, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
+        "Description": "Report from ICAEW's Financial Services Faculty, working with the Audit and Assurance Faculty, in the Audit Insights series, presenting auditors' perspectives on the banking sector following the global financial crisis; highlights four long-term challenges: restoring trust and culture; adapting business models to tighter regulation and constrained revenues; improving the consistency and comparability of performance reporting and risk measures; and making major IT investment to address digital change, cyber risks and legacy systems; includes recommendations for boards on governance, reporting and technology investment. (AI generated description)",
         "Publisher": "ICAEW",
         "Contributor": [],
         "Date": "2013-10",
@@ -464,7 +502,7 @@ examples:
         "Identifier": ["ISBN 978-0-85760-942-7", "TECPLN12491"],
         "Source": "",
         "Language": ["en"],
-        "Relation": ["Thought Leadership", "Audit Insights"],
+        "Relation": ["Audit Insights"],
         "Coverage": "",
         "Rights": ""
     }
