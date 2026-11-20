@@ -22,6 +22,7 @@ import subprocess
 import os
 from dotenv import load_dotenv
 
+from config import DEFAULT_WORKERS
 from json_metadata_writer import JSONMetadataWriter
 from preservica_writer import apply_record, create_client
 
@@ -83,6 +84,7 @@ USE_ASSET_REF = True  # Set to True to use asset reference numbers in filenames
 ORIGINAL_ONLY = True
 FIRST_PAGES = 6  # Number of pages to include from the start (0 = no limit)
 LAST_PAGES = 4   # Number of pages to include from the end (0 = no limit)
+WORKERS = DEFAULT_WORKERS  # Documents processed at the same time (set in config.py; 1 = one at a time)
 # ===================================
 
 
@@ -195,6 +197,13 @@ Examples:
         type=str,
         default=None,
         help='OpenAI model to use (passed through to main.py; default set in config.py)'
+    )
+
+    parser.add_argument(
+        '--workers',
+        type=int,
+        default=WORKERS,
+        help=f'Number of documents to process at the same time (default: {WORKERS})'
     )
 
     parser.add_argument(
@@ -406,6 +415,9 @@ def main():
 
     if args.model:
         extract_cmd.extend(['--model', args.model])
+
+    if args.workers:
+        extract_cmd.extend(['--workers', str(args.workers)])
 
     if not run_command(extract_cmd, "Metadata extraction"):
         print("Metadata extraction step failed.")

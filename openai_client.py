@@ -58,9 +58,13 @@ class OpenAIClient:
             str: The file ID assigned by OpenAI
         """
         print(f"Uploading file: {file_path}")
+        # OpenAI only accepts lower-case extensions (".PDF" is rejected), so the
+        # name sent with the upload always uses a lower-case extension
+        stem, ext = os.path.splitext(os.path.basename(file_path))
+        upload_name = stem + ext.lower()
         with open(file_path, "rb") as file:
             uploaded_file = self.client.files.create(
-                file=file,
+                file=(upload_name, file),
                 purpose=FILE_PURPOSE
             )
         print(f"File uploaded successfully. File ID: {uploaded_file.id}")
