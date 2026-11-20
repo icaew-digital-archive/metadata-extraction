@@ -10,8 +10,9 @@ import os
 from typing import Dict, List, Optional, Tuple
 from metadata_extractor import MetadataExtractor, PreparedDocument
 from pipeline import run_pipeline
+from media import find_video_for_subtitles, load_media_mapping, video_overrides, video_source_note
 from json_metadata_writer import JSONMetadataWriter
-from config import DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS
+from config import DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS, get_video_source_note
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -236,7 +237,9 @@ def main() -> None:
 
         # Work out what to do before any requests are sent
         format_mappings: Dict[str, Dict[str, str]] = {}
-        jobs = []  # (index, pdf_path, original_format)
+        jobs = []  # (index, pdf_path, original_format, video or None)
+        media_mappings: Dict[str, dict] = {}
+        video_note_template = get_video_source_note(profile_path)
         skipped_count = 0
         for index, pdf_path in enumerate(pdf_files, 1):
             if os.path.abspath(pdf_path) in already_done:
@@ -246,7 +249,15 @@ def main() -> None:
             folder = os.path.dirname(pdf_path)
             if folder not in format_mappings:
                 format_mappings[folder] = load_format_mapping(folder)
-            jobs.append((index, pdf_path, detect_original_format(pdf_path, format_mappings[folder])))
+            original_format = detect_original_format(pdf_path, format_mappings[folder])
+            if folder not in media_mappings:
+                media_mappings[folder] = load_media_mapping(folder)
+            # Subtitles that belong to a video: the record describes the video
+            video = find_video_for_subtitles(pdf_path, original_format, media_mappings[folder])
+            if video:
+                print(f"[{index}/{total_files}] Subtitles of a video ({video.get('video_filename') or video['video_format']}): "
+                      f"will be described as the video")
+            jobs.append((index, pdf_path, original_format, video))
 
         workers = max(1, min(args.workers, MAX_WORKERS, len(jobs)))
         if args.workers > MAX_WORKERS:
@@ -255,19 +266,29 @@ def main() -> None:
 
         def prepare(job) -> PreparedDocument:
             """Local stage, one document at a time: check the PDF and cut it to the page range."""
-            index, pdf_path, _original_format = job
+            index, pdf_path, _original_format, video = job
             print(f"[{index}/{total_files}] Preparing: {pdf_path}")
+            if video:
+                # Subtitles are small: always use the whole transcript, ignoring page limits
+                return extractor.prepare(pdf_path, 0, 0)
             return extractor.prepare(pdf_path, args.first, args.last)
 
         def process(job, prepared: PreparedDocument) -> str:
             """OpenAI stage, several at a time: extract and save one document; returns its title."""
-            index, pdf_path, original_format = job
-            metadata = extractor.extract(prepared, context_prompt=args.context_prompt)
+            index, pdf_path, original_format, video = job
+            note = video_source_note(video, video_note_template) if video else None
+            metadata = extractor.extract(prepared, context_prompt=args.context_prompt, source_note=note)
             if workers == 1:
                 # Full output is only readable when documents run one at a time
                 print(f"\n[{index}/{total_files}] Extracted Metadata:")
                 print(metadata)
-            writer.write_metadata(metadata, pdf_path, original_format, model=extractor.model)
+            if video:
+                # Described as the video: its format and DC type, whatever the model returned
+                writer.write_metadata(metadata, pdf_path, video['video_format'], model=extractor.model,
+                                      overrides=video_overrides(video),
+                                      source_format=original_format)
+            else:
+                writer.write_metadata(metadata, pdf_path, original_format, model=extractor.model)
             try:
                 return json.loads(metadata).get('Title') or ''
             except (ValueError, AttributeError):
@@ -280,7 +301,7 @@ def main() -> None:
         def on_result(job, title, error) -> None:
             """Count and print the outcome of one finished document."""
             nonlocal processed_count
-            index, pdf_path, _ = job
+            index, pdf_path, _, _ = job
             if error is None:
                 processed_count += 1
                 done = processed_count + len(failed_files)

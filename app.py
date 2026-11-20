@@ -24,11 +24,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from metadata_extractor import MetadataExtractor
 from pipeline import run_pipeline
+from media import find_video_for_subtitles, video_overrides, video_source_note
+from main import detect_original_format, load_format_mapping
 from openai_client import strip_code_fences
 from json_metadata_writer import JSONMetadataWriter
 from json_to_csv_converter import JSONToCSVConverter
 from convert_documents import convert_directory, get_supported_formats, is_supported_format
-from config import list_profiles, MODEL_CHOICES, DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS
+from config import list_profiles, MODEL_CHOICES, DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS, get_video_source_note
 from preservica_writer import apply_record, create_client
 
 UPLOAD_TYPES = [ext.lstrip('.') for ext in get_supported_formats()]
@@ -287,6 +289,7 @@ overwrite_existing = False
 original_formats: dict = {}
 effective_output_dir = ""
 exclude_extensions: List[str] = []
+skip_video_with_subtitles = True
 use_asset_ref = True
 original_only = True
 
@@ -429,6 +432,15 @@ else:
         help="File types to skip during the Preservica download.",
     )
     exclude_extensions = exclude_ext_input.split() if exclude_ext_input.strip() else []
+    skip_video_with_subtitles = st.checkbox(
+        "For videos with subtitles, download only the subtitles",
+        value=True,
+        help=(
+            "Video assets that also hold a subtitle file (.srt/.vtt) are described from their "
+            "subtitles, so the video file itself isn't needed. The record still describes the "
+            "video (its format, and Type \"Moving Image\")."
+        ),
+    )
 
     st.caption("Optionally write results back to Preservica once extraction finishes — or leave unticked to review first.")
     auto_descriptive, auto_xip, overwrite_existing = preservica_update_options("auto", " after extraction")
@@ -534,6 +546,8 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                 download_cmd.append('--use-asset-ref')
             if original_only:
                 download_cmd.append('--original-only')
+            if skip_video_with_subtitles:
+                download_cmd.append('--skip-video-with-subtitles')
             if exclude_extensions:
                 download_cmd.extend(['--exclude-extensions', *exclude_extensions, '--'])
             download_cmd.append(effective_output_dir)
@@ -648,16 +662,39 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
 
     context_text = context_prompt.strip() or None
 
-    def _prepare(pdf_path: str):
-        """Local stage, one document at a time: check the PDF and cut it to the page range."""
-        return extractor.prepare(pdf_path, first_pages, last_pages)
+    video_note_template = get_video_source_note(selected_profile_path)
+    _format_mappings: dict = {}
 
-    def _extract_one(pdf_path: str, prepared) -> dict:
+    def _prepare(pdf_path: str):
+        """Local stage, one document at a time: check the PDF, cut it to the page range,
+        and work out its original format (and whether it is the subtitle track of a video)."""
+        folder = os.path.dirname(pdf_path)
+        if folder not in _format_mappings:
+            _format_mappings[folder] = load_format_mapping(folder)
+        stem = Path(pdf_path).stem
+        if preservica_mode and stem in original_formats:
+            fmt = original_formats[stem]
+        else:
+            fmt = detect_original_format(pdf_path, _format_mappings[folder])
+        video = find_video_for_subtitles(pdf_path, fmt)
+        # Subtitles are small: always use the whole transcript, ignoring page limits
+        pages = (0, 0) if video else (first_pages, last_pages)
+        return extractor.prepare(pdf_path, *pages), fmt, video
+
+    def _extract_one(pdf_path: str, job) -> dict:
         """OpenAI stage, several at a time. Runs in a worker thread, so no st.* calls here."""
-        raw = extractor.extract(prepared, context_prompt=context_text)
+        prepared, fmt, video = job
+        note = video_source_note(video, video_note_template) if video else None
+        raw = extractor.extract(prepared, context_prompt=context_text, source_note=note)
         metadata = json.loads(strip_code_fences(raw))
-        fmt = original_formats.get(Path(pdf_path).stem, "pdf") if preservica_mode else "pdf"
-        writer.write_metadata(raw, pdf_path, fmt, model=extractor.model)
+        if video:
+            # Described as the video: its format and DC type, whatever the model returned
+            overrides = video_overrides(video)
+            writer.write_metadata(raw, pdf_path, video["video_format"], model=extractor.model,
+                                  overrides=overrides, source_format=fmt)
+            metadata.update(overrides)
+        else:
+            writer.write_metadata(raw, pdf_path, fmt, model=extractor.model)
         return metadata
 
     n_workers = max(1, min(int(workers), MAX_WORKERS, total))
@@ -691,7 +728,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
         # Page-range cutting runs one document at a time; OpenAI calls run n_workers at a time.
         # If the run is stopped, no more documents are started.
         run_pipeline(pdf_paths, _prepare, _extract_one, _on_result, n_workers,
-                     cleanup=lambda prepared: prepared.cleanup())
+                     cleanup=lambda job: job[0].cleanup())
 
         # Documents finish in any order; show results in file order
         st.session_state.results.sort(key=lambda r: r["filename"])

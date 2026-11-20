@@ -344,6 +344,7 @@ Key files:
 - `json_metadata_writer.py` — JSON output handling
 - `json_to_csv_converter.py` — JSON to CSV conversion
 - `pipeline.py` — Runs local preparation one document at a time and OpenAI calls in parallel
+- `media.py` — Links subtitle files to their videos so videos are described from their subtitles
 - `download_preservica_assets.py` — Preservica asset download
 - `preservica_writer.py` — Writes extracted metadata back to Preservica (DC, ICAEW, XIP)
 - `profiles/icaew.yaml` — ICAEW digital archive extraction profile
@@ -354,6 +355,7 @@ Key files:
 
 - The OpenAI model defaults to `gpt-6.2-sol` (`DEFAULT_MODEL` in `config.py`). It can be changed per run with `--model` or in the web UI sidebar, and the model used is recorded in each JSON record.
 - `--workers N` (or "Documents at the same time" in the web UI sidebar) processes N documents at the same time (default 32, maximum 64), which is much faster for large batches. Set it to 1 to process one document at a time, which also prints the full metadata for each. Local preparation (checking each PDF and cutting it to the `--first`/`--last` page range) always runs one document at a time; only the OpenAI upload and model calls run in parallel, so CPU-heavy work never piles up. Use this instead of running several terminals: parallel runs in separate terminals writing to the same JSON file can lose records. Cost per document is the same; only the speed changes.
+- **Videos with subtitles:** when a Preservica video asset also holds a subtitle file (.srt/.vtt), the subtitles are used as the source, but the record describes the video: Format is the video's format (e.g. `mp4`), Type is `Moving Image`, and the AI is told to describe the video rather than a transcript. The whole transcript is always used (page limits don't apply). The download records the video's format in `media_mapping.json`, so the video file itself can be skipped: `--skip-video-with-subtitles` on `download_preservica_assets.py`, on by default in the wrapper (`--download-videos` to keep videos) and in the web UI. Locally, a subtitle file next to a video with the same name (`talk.srt` + `talk.mp4`) is handled the same way. Writing back to Preservica updates the video asset, because the subtitles belong to it.
 - Each document is uploaded to OpenAI for extraction and deleted from OpenAI file storage straight afterwards.
 - The model is asked for JSON-only output; if the reply is not valid JSON it is retried once before the file is reported as failed.
 - The JSON output file is saved safely after every record, so an interrupted run never leaves it half-written. If an existing output file cannot be read, the tool stops with an error rather than replacing it.

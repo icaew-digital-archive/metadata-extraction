@@ -84,6 +84,7 @@ USE_ASSET_REF = True  # Set to True to use asset reference numbers in filenames
 ORIGINAL_ONLY = True
 FIRST_PAGES = 6  # Number of pages to include from the start (0 = no limit)
 LAST_PAGES = 4   # Number of pages to include from the end (0 = no limit)
+SKIP_VIDEO_WITH_SUBTITLES = True  # For videos with subtitles, download only the subtitles (they are the source)
 WORKERS = DEFAULT_WORKERS  # Documents processed at the same time (set in config.py; 1 = one at a time)
 # ===================================
 
@@ -197,6 +198,13 @@ Examples:
         type=str,
         default=None,
         help='OpenAI model to use (passed through to main.py; default set in config.py)'
+    )
+
+    parser.add_argument(
+        '--download-videos',
+        action='store_true',
+        help='Also download video files that have subtitles (by default only the subtitles are '
+             'downloaded, as they are what the metadata is extracted from)'
     )
 
     parser.add_argument(
@@ -349,6 +357,9 @@ def main():
         else:
             print("Error: No download source specified. Provide --preservica-folder-ref, --preservica-asset-ref, or --preservica-assets-file.")
             sys.exit(1)
+
+        if SKIP_VIDEO_WITH_SUBTITLES and not args.download_videos:
+            download_cmd.append('--skip-video-with-subtitles')
 
         if exclude_extensions:
             download_cmd.extend(['--exclude-extensions', *exclude_extensions])
