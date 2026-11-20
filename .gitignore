@@ -35,8 +35,12 @@ ENV/
 # Project specific
 *.csv
 *.pdf
-!example.pdf  # Keep example PDFs if needed
-temp_*.pdf    # Temporary PDF files created during processing
+# Keep example PDFs if needed
+!example.pdf
+# Temporary PDF files created during processing
+temp_*.pdf
+# Temporary files from atomic JSON writes
+.tmp_*.json
 
 # Logs
 *.log

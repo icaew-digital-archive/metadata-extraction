@@ -23,10 +23,11 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), ov
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from metadata_extractor import MetadataExtractor
+from openai_client import strip_code_fences
 from json_metadata_writer import JSONMetadataWriter
 from json_to_csv_converter import JSONToCSVConverter
 from convert_documents import convert_directory, get_supported_formats, is_supported_format
-from config import list_profiles
+from config import list_profiles, MODEL_CHOICES, DEFAULT_MODEL
 from preservica_writer import apply_record, create_client
 
 UPLOAD_TYPES = [ext.lstrip('.') for ext in get_supported_formats()]
@@ -42,15 +43,6 @@ from metadata_extraction_wrapper import (
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
-
-def strip_code_fences(text: str) -> str:
-    """Remove markdown code fences from an OpenAI response if present."""
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        lines = stripped.splitlines()
-        stripped = "\n".join(lines[1:-1])
-    return stripped
-
 
 def get_pdfs_from_folder(folder_path: str) -> List[str]:
     """Return sorted list of PDF paths in a directory."""
@@ -183,6 +175,17 @@ with st.sidebar:
         selected_profile_name = _profile_names[0] if _profile_names else None
 
     selected_profile_path = _profile_paths.get(selected_profile_name) if selected_profile_name else None
+
+    # Model selector  (--model)
+    _model_ids = [m for m, _ in MODEL_CHOICES]
+    _model_labels = dict(MODEL_CHOICES)
+    selected_model = st.selectbox(
+        "Model",
+        options=_model_ids,
+        index=_model_ids.index(DEFAULT_MODEL) if DEFAULT_MODEL in _model_ids else 0,
+        format_func=lambda m: _model_labels.get(m, m),
+        help="The OpenAI model used for extraction. The model used is recorded with each record in the JSON output.",
+    )
 
     st.divider()
 
@@ -594,7 +597,8 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
     # ── Extraction (shared across all modes) ──────────────────────────────────
 
     try:
-        extractor = MetadataExtractor(include_subjects=include_subjects, profile_path=selected_profile_path)
+        extractor = MetadataExtractor(include_subjects=include_subjects, profile_path=selected_profile_path,
+                                      model=selected_model)
     except ValueError as e:
         st.error(f"Could not initialise extractor: {e}")
         st.stop()
@@ -643,7 +647,7 @@ if st.button(btn_label, type="primary", use_container_width=True, disabled=not p
                 )
                 metadata = json.loads(strip_code_fences(raw))
                 fmt = original_formats.get(Path(pdf_path).stem, "pdf") if preservica_mode else "pdf"
-                writer.write_metadata(raw, pdf_path, fmt)
+                writer.write_metadata(raw, pdf_path, fmt, model=extractor.model)
 
                 title = metadata.get("Title") or "—"
                 content_type = metadata.get("icaew:ContentType") or ""

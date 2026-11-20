@@ -9,7 +9,15 @@ import os
 import yaml
 
 # OpenAI API settings
-DEFAULT_MODEL = "gpt-5"
+DEFAULT_MODEL = "gpt-6.2-sol"
+
+# Models offered in the web UI (the CLI --model option accepts any model ID)
+MODEL_CHOICES = [
+    ("gpt-6.2-sol", "GPT-6.2 Sol: everyday (default)"),
+    ("gpt-6.2-astra", "GPT-6.2 Astra: highest quality, about 4x the cost"),
+    ("gpt-6-luna", "GPT-6 Luna: cheapest, for simple material"),
+    ("gpt-5", "GPT-5: previous default"),
+]
 FILE_PURPOSE = "user_data"
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -44,36 +52,33 @@ def list_profiles() -> list:
 
 _GENERIC_GUIDELINES = [
     'Always extract metadata from the document content, not from file metadata',
-    'If a field\'s value cannot be determined with high confidence from the document content, return an empty string ("") for single-value fields or empty array ([]) for multi-value fields',
+    'Do not invent values. Every value must be supported by the document itself, or produced by applying the rules below (for example, reformatting a title, converting a date, or normalising an organisation name). If neither applies, return an empty string ("") for single-value fields or an empty array ([]) for multi-value fields',
     'If a field is marked as "NOT USED" or "RESERVED", return an empty array ([]) for multi-value fields or empty string ("") for single-value fields',
-    'Do not make assumptions or infer values',
     'For dates, prefer dates found within the document over any other source',
-    'For titles, use the exact title as it appears in the document',
-    'For creators, use the exact names/entities as credited in the document',
-    'If multiple values exist for a field, ALWAYS return them as an array (e.g., ["Value 1", "Value 2", "Value 3"]) - NEVER use semicolons or other separators',
+    'For titles, start from the title as it appears in the document, then apply the Title rules below (capitalisation, punctuation, order and date)',
+    'For creators, use the people and organisations credited in the document, written according to the Creator rules below (e.g. full names, and the standard form of ICAEW)',
+    'For multi-value fields, ALWAYS return the values as an array (e.g., ["Value 1", "Value 2", "Value 3"]), never as one string joined with semicolons or other separators',
     'Do not add explanatory text or notes in the metadata values',
     'Maintain consistent formatting across all documents',
-    'Use only standard ASCII characters - avoid special Unicode characters, em-dashes, en-dashes, or smart quotes',
-    'Replace any em-dashes (—), en-dashes (–), or hyphens used as title separators with colons (:), with the exception when they show a date range, i.e. do not replace "2008-09" with "2008:09"',
-    'Acronyms (such as common abbreviations) must ALWAYS be in all capitals, regardless of their position in the sentence or title. Do NOT use title case for acronyms',
-    'When the user provides contextual background (e.g. "these are photos of Chartered Accountant\'s Hall"), use it to identify and name the subject in your description. Describe what is shown in the document but use the names, places, and events from the context rather than generic terms. Do not output a description that ignores the context and uses only generic wording.',
+    'Use straight quotes and apostrophes (not smart quotes); £, € and accented letters in names are allowed. Do not use emojis',
+    'Acronyms must ALWAYS be in all capitals wherever they appear, including at the start of a title or after a colon: {acronym_examples}. Do NOT use title case for acronyms. The exception is mixed-case brand names, which keep their own capitalisation (e.g. "eBook", "iXBRL")',
+    'When the user provides contextual background (e.g. "these are photos of Chartered Accountant\'s Hall"), use it to identify and name the subject in your description. Describe what is shown in the document using the names, places and events from the context (e.g. "Photograph showing Chartered Accountant\'s Hall, with...") rather than generic terms such as "a building" or "an office block".',
 ]
 
 _GENERIC_TITLE = '''\
 **Title (REQUIRED)**
 - Single value only
-- Use the title as it appears in the document
-- Use sentence case (capitalise first word only), but acronyms must always be in all capitals, even at the start of the title or after a colon
-- ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons
-- Do not capitalise the first letter after a colon
+- Start from the title as it appears in the document, then apply the rules below
+- Use sentence case: capitalise the first word and proper nouns (names of people, organisations, places, named publications and standards) and write everything else in lower case. Acronyms always stay in capitals
+- ALWAYS use colons (:) to separate title and subtitle - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as separators with colons, except in date or number ranges (keep "2008-09", do not write "2008:09")
+- Do not capitalise the first word after a colon, unless it is a proper noun or acronym
 - Do not use "&"; use "and"
 - Use question marks if applicable, but do not end with full stops
 - The order and format should be: title, subtitle, issue/volume, date
 - If a title does not follow this format, reorganise it accordingly. For example:
   * "UK business confidence monitor report: Q4 2012 Scotland" should become "UK business confidence monitor report: Scotland, Q4 2012"
 - Use readable date formatting in titles: "15th January 2024" format (e.g., "15th January 2024" not "2024-01-15" or "January 15, 2024")
-- Indicate if the content is revised or time-limited
-- Use only standard ASCII characters - avoid Unicode characters, smart quotes, or special symbols'''
+- Indicate if the content is revised or time-limited'''
 
 _GENERIC_CREATOR = '''\
 **Creator (REQUIRED)**
@@ -84,7 +89,7 @@ _GENERIC_CREATOR = '''\
   3. Institution or organisation (e.g., "Acme Corporation")
 - For anonymous works, use "Anonymous" as the creator
 - For corporate authors, list the organisation name
-- For letters and correspondence: include sender first, then recipient if both are clearly identified (e.g., ["John Smith", "Organisation Name"])
+- For letters and correspondence: include the sender(s) only; put the recipient in Contributor
 - Use full names when available (e.g., "John Smith" not "J. Smith")
 - Use consistent formatting: "First Name Last Name" or "Organisation Name"'''
 
@@ -109,16 +114,17 @@ _GENERIC_CONTRIBUTOR = '''\
 **Contributor (OPTIONAL)**
 - Multiple values allowed (return as array)
 - Used for individuals or organisations who contributed to the document but are not the primary creator
+- For letters and correspondence, include the recipient here
 - Use full organisation names'''
 
 _GENERIC_DATE = '''\
 **Date (REQUIRED)**
 - Single value only
-- Use YYYY-MM-DD format with zero-padding for single digits when the full date is known
-- If day is unknown, use YYYY-MM format
-- If month is unknown, use YYYY format
+- Always use the YYYY-MM-DD format, with zero-padding for single digits (e.g., "2009-02-05")
+- Only include the parts of the date the document gives: if the day is unknown, use YYYY-MM; if the month is also unknown, use YYYY. Never add a day or month that is not in the document (e.g., do not turn "March 2021" into "2021-03-01")
 - Use the date found within the document
-- Convert any date format to YYYY-MM-DD (e.g., "10/7/2009" becomes "2009-10-07", "January 28, 2009" becomes "2009-01-28")
+- Always read numeric dates as day/month/year (UK convention), including in American documents: "10/7/2009" means 10 July 2009 and becomes "2009-07-10". Only when day/month is impossible (e.g. "12/25/2009", as there is no month 25) read it as month/day
+- Convert written dates the same way: "28 January 2009" and "January 28, 2009" both become "2009-01-28"; "March 2021" becomes "2021-03"
 - Examples: "2024-03-15", "2024-03", "2024", "2009-02-05"'''
 
 _GENERIC_TYPE = '''\
@@ -168,10 +174,10 @@ _GENERIC_RELATION = '''\
 - Name of the collection or series the document belongs to'''
 
 _GENERIC_VALIDATION_RULES = [
-    'REQUIRED fields must not be empty: Title, Creator, Description, Publisher, Date, Type, Format, Language',
+    'REQUIRED fields (Title, Creator, Description, Publisher, Date, Type, Format, Language) should be filled whenever the document supports a value. If it does not, leave the field empty rather than guessing',
     'Dates must be in correct format (YYYY-MM-DD, YYYY-MM, or YYYY) with zero-padding for single digits',
     'Multiple values must be arrays of strings, not semicolon-separated strings',
-    'All text should be properly encoded (no special characters or emojis)',
+    'No emojis or decorative symbols',
     'No trailing or leading whitespace in any field',
     'No explanatory text or notes in the values',
     'Output must be valid JSON',
@@ -210,7 +216,10 @@ def build_system_prompt(profile: dict, include_subjects: bool = True) -> str:
     # 2. Guidelines
     parts.append("\nIMPORTANT GUIDELINES:")
     extra = profile.get("extra_guidelines") or []
-    all_guidelines = _GENERIC_GUIDELINES + [g.strip() for g in extra]
+    acronyms = profile.get("acronym_examples") or ["UK", "VAT"]
+    acronym_examples = ", ".join(f'"{a}" (not "{a.capitalize()}")' for a in acronyms)
+    all_guidelines = [g.replace("{acronym_examples}", acronym_examples) for g in _GENERIC_GUIDELINES]
+    all_guidelines += [g.strip() for g in extra]
     for i, g in enumerate(all_guidelines, 1):
         parts.append(f"{i}. {g}")
 
@@ -234,7 +243,7 @@ def build_system_prompt(profile: dict, include_subjects: bool = True) -> str:
                 multiple = cf.get("multiple", False)
                 empty = "[]" if multiple else '""'
                 parts.append(f"**{cf['id']} (RESERVED)**")
-                parts.append("- This field is reserved for future use")
+                parts.append(f"- {cf.get('reserved_reason', 'This field is reserved for future use')}")
                 parts.append(f"- Always return an empty {('array (' + empty + ')') if multiple else ('string (' + empty + ')')} for this field")
                 parts.append("- Do not attempt to extract or infer values for this field")
                 parts.append("")
@@ -277,7 +286,7 @@ def build_system_prompt(profile: dict, include_subjects: bool = True) -> str:
             parts.append("- If no relevant topics are found, return an empty array ([])")
             parts.append("- Examples of hierarchical selection:")
             parts.append('  * For a document about IFRS implementation: ["Financial reporting and accounting standards", "IFRSs", "IFRS 15 Revenue from contracts with customers"]')
-            parts.append('  * For audit guidance: ["Audit and assurance", "Audit best practice", "Audit documentation"]')
+            parts.append('  * For audit guidance: ["Audit and assurance", "Audit process", "Audit documentation"]')
         else:
             parts.append("**Subject (OPTIONAL)**")
             parts.append("- Multiple values allowed (return as array)")
@@ -377,7 +386,7 @@ def build_system_prompt(profile: dict, include_subjects: bool = True) -> str:
     for i, rule in enumerate(all_rules, 1):
         parts.append(f"{i}. {rule}")
 
-    parts.append("\nIf you encounter any issues or ambiguities in the document, use an empty string (\"\") for single-value fields or empty array ([]) for multi-value fields rather than making assumptions.")
+    parts.append("\nIf something in the document is ambiguous and the rules above do not resolve it, leave that field empty rather than guessing.")
 
     return "\n".join(parts)
 
@@ -412,6 +421,18 @@ def validate_subjects(subjects: list, valid_topics: set, max_count: int) -> list
     if max_count:
         result = result[:max_count]
     return result
+
+
+def get_reserved_fields(profile_path: str = None) -> set:
+    """Return the names of fields the AI must leave empty for this profile.
+
+    Covers reserved output_fields and reserved custom_fields. Subject is not
+    included: it is controlled separately by include_subjects.
+    """
+    profile = load_profile(profile_path)
+    reserved = {f["name"] for f in profile.get("output_fields") or [] if f.get("reserved")}
+    reserved |= {f["id"] for f in profile.get("custom_fields") or [] if f.get("reserved")}
+    return reserved
 
 
 def get_subject_constraints(profile_path: str = None) -> tuple:

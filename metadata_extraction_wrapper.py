@@ -41,20 +41,27 @@ load_dotenv(override=True)
 # export METADATA_EXTRACTION_SCRIPT="/path/to/main.py"
 # export CONVERT_DOCUMENTS_SCRIPT="/path/to/convert_documents.py"
 
-# Download script path
-DOWNLOAD_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'download_preservica_assets.py')
+# Each script defaults to the copy next to this file, so the wrapper works
+# without any .env settings and from any current directory.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Convert script path (relative to current directory by default)
+# Download script path
+DOWNLOAD_SCRIPT = os.path.join(SCRIPT_DIR, 'download_preservica_assets.py')
+
+# Convert script path
 CONVERT_SCRIPT = os.getenv(
     'CONVERT_DOCUMENTS_SCRIPT',
-    "fallback_path_here"
+    os.path.join(SCRIPT_DIR, 'convert_documents.py')
 )
 
 # Metadata extraction script path
 EXTRACTION_SCRIPT = os.getenv(
     'METADATA_EXTRACTION_SCRIPT',
-    "fallback_path_here"
+    os.path.join(SCRIPT_DIR, 'main.py')
 )
+
+# JSON to CSV converter path
+JSON_TO_CSV_SCRIPT = os.path.join(SCRIPT_DIR, 'json_to_csv_converter.py')
 
 # ===== HARDCODED CONFIGURATION =====
 # Change these variables as needed
@@ -181,6 +188,13 @@ Examples:
         type=str,
         default=None,
         help='Path to a YAML profile file, or a profile name inside profiles/ (e.g., "default")'
+    )
+
+    parser.add_argument(
+        '--model',
+        type=str,
+        default=None,
+        help='OpenAI model to use (passed through to main.py; default set in config.py)'
     )
 
     parser.add_argument(
@@ -390,6 +404,9 @@ def main():
     if profile:
         extract_cmd.extend(['--profile', profile])
 
+    if args.model:
+        extract_cmd.extend(['--model', args.model])
+
     if not run_command(extract_cmd, "Metadata extraction"):
         print("Metadata extraction step failed.")
         sys.exit(1)
@@ -397,7 +414,7 @@ def main():
     # Step 5: Convert JSON to CSV
     print("\nStep 5: Converting JSON metadata to CSV format")
 
-    convert_json_cmd = [sys.executable, 'json_to_csv_converter.py', str(json_output), str(csv_output)]
+    convert_json_cmd = [sys.executable, JSON_TO_CSV_SCRIPT, str(json_output), str(csv_output)]
 
     if not run_command(convert_json_cmd, "JSON to CSV conversion"):
         print("JSON to CSV conversion step failed.")

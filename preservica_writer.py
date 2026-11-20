@@ -27,6 +27,10 @@ XIP = 'http://preservica.com/XIP/v7.6'
 # ICAEW elements in the order c_add_metadata_from_csv.py writes them (CSV column order)
 ICAEW_FIELDS = ['icaew:ContentType', 'icaew:InternalReference', 'icaew:Notes']
 
+# Entered by people in Preservica, never by the AI: when an existing ICAEW
+# fragment is overwritten, the values already in Preservica are kept
+USER_FIELDS = ['icaew:InternalReference', 'icaew:Notes']
+
 # Model output keys -> DC element names, in the order they are written
 DC_FIELDS = {
     'Title': 'title',
@@ -92,6 +96,20 @@ def build_icaew_xml(metadata: Dict[str, Any]) -> Optional[str]:
     return ET.tostring(root, encoding='unicode') if len(root) else None
 
 
+def existing_user_values(icaew_xml: Optional[str]) -> Dict[str, List[str]]:
+    """Return the USER_FIELDS values found in an existing ICAEW XML fragment."""
+    if not icaew_xml:
+        return {}
+    root = ET.fromstring(icaew_xml)
+    values = {}
+    for key in USER_FIELDS:
+        found = [el.text.strip() for el in root.iter(f'{{{ICAEW}}}{key.split(":", 1)[1]}')
+                 if el.text and el.text.strip()]
+        if found:
+            values[key] = found
+    return values
+
+
 def apply_record(client: EntityAPI, record: Dict[str, Any], descriptive: bool = True,
                  xip: bool = True, overwrite: bool = False) -> Dict[str, str]:
     """
@@ -102,6 +120,8 @@ def apply_record(client: EntityAPI, record: Dict[str, Any], descriptive: bool = 
         xip: Update the asset's XIP title and description from Title/Description
         overwrite: Replace existing DC/ICAEW fragments; when False, an asset that
             already has either is left unchanged (XIP is still updated if requested)
+            User-entered ICAEW fields (USER_FIELDS) already in Preservica are
+            always kept when the ICAEW fragment is replaced.
 
     Returns:
         Dict with keys: filename, asset_ref, status ('applied'|'skipped'|'error'), message
@@ -125,6 +145,11 @@ def apply_record(client: EntityAPI, record: Dict[str, Any], descriptive: bool = 
             if not overwrite and existing & {OAI_DC, ICAEW}:
                 skipped.append('DC/ICAEW (existing metadata)')
             else:
+                if ICAEW in existing:
+                    # Keep user-entered fields (e.g. Notes) from the fragment being replaced
+                    kept = existing_user_values(client.metadata_for_entity(asset, ICAEW))
+                    if kept:
+                        metadata = {**metadata, **kept}
                 fragments = [
                     ('DC', OAI_DC, build_dc_xml(metadata, record.get('original_format'))),
                     ('ICAEW', ICAEW, build_icaew_xml(metadata)),

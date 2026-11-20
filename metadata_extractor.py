@@ -9,14 +9,17 @@ from openai_client import OpenAIClient
 
 
 class MetadataExtractor:
-    def __init__(self, include_subjects: bool = True, profile_path: str = None) -> None:
+    def __init__(self, include_subjects: bool = True, profile_path: str = None,
+                 model: Optional[str] = None) -> None:
         """Initialize the metadata extractor with an OpenAI client.
 
         Args:
             include_subjects: Whether to include subject classification. Defaults to True.
             profile_path: Path to a YAML profile file. Defaults to the ICAEW profile.
+            model: OpenAI model ID. Defaults to config.DEFAULT_MODEL.
         """
-        self.client = OpenAIClient(include_subjects=include_subjects, profile_path=profile_path)
+        self.client = OpenAIClient(include_subjects=include_subjects, profile_path=profile_path, model=model)
+        self.model = self.client.model
 
     def extract_metadata(self, pdf_path: str, first_pages: int = 0, last_pages: int = 0, original_format: str = None, context_prompt: Optional[str] = None) -> Tuple[str, str, str]:
         """
@@ -47,7 +50,11 @@ class MetadataExtractor:
 
                 # Upload the file and extract metadata
                 file_id = self.client.upload_file(pdf_path)
-                metadata = self.client.extract_metadata(file_id, context_prompt=context_prompt)
+                try:
+                    metadata = self.client.extract_metadata(file_id, context_prompt=context_prompt)
+                finally:
+                    # Don't leave copies of documents in OpenAI file storage
+                    self.client.delete_file(file_id)
 
                 return metadata, original_path, original_format
 
