@@ -78,7 +78,8 @@ class OpenAIClient:
         except Exception as e:
             print(f"Warning: could not delete uploaded file {file_id} from OpenAI: {e}")
 
-    def extract_metadata(self, file_id: str, context_prompt: Optional[str] = None) -> str:
+    def extract_metadata(self, file_id: str, context_prompt: Optional[str] = None,
+                         source_note: Optional[str] = None) -> str:
         """
         Extract metadata from an uploaded file using OpenAI's API.
 
@@ -92,6 +93,9 @@ class OpenAIClient:
         """
         print(f"Extracting metadata with {self.model}...")
         user_text = "Please analyse this document and extract metadata according to the conventions specified. Return the metadata in the specified JSON format."
+        if source_note:
+            # e.g. the document is the subtitle track of a video
+            user_text = f"{source_note.strip()}\n\n{user_text}"
         if context_prompt:
             user_text = (
                 "The following is background context that identifies the subject, place, or event. "

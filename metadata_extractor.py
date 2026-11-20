@@ -59,7 +59,8 @@ class MetadataExtractor:
                 prepared.temp_path = partial
         return prepared
 
-    def extract(self, prepared: PreparedDocument, context_prompt: Optional[str] = None) -> str:
+    def extract(self, prepared: PreparedDocument, context_prompt: Optional[str] = None,
+                source_note: Optional[str] = None) -> str:
         """
         Stage 2 (network): upload a prepared document, get the metadata JSON from
         the model, and delete the upload from OpenAI. The temporary page-limited
@@ -68,7 +69,8 @@ class MetadataExtractor:
         try:
             file_id = self.client.upload_file(prepared.upload_path)
             try:
-                return self.client.extract_metadata(file_id, context_prompt=context_prompt)
+                return self.client.extract_metadata(file_id, context_prompt=context_prompt,
+                                                    source_note=source_note)
             finally:
                 # Don't leave copies of documents in OpenAI file storage
                 self.client.delete_file(file_id)

@@ -56,6 +56,17 @@ extra_guidelines:
 # Acronyms common in ICAEW documents; shown as examples in the acronym guideline
 acronym_examples: ["OECD", "IFRS", "FRC", "HMRC", "UK", "VAT"]
 
+# Sent with the request when the document is the subtitle track of a video (see media.py).
+# {video_format} and {video_filename} are filled in automatically.
+video_source_note: >-
+  This document is the subtitle track of a video ({video_format} file; original filename:
+  {video_filename}). Describe the video itself, not the subtitle file or a transcript: write the
+  Title and Description as for the video, use "Moving Image" for Type, "{video_format}" for Format
+  and "Video" for icaew:ContentType. Start the Description with the kind of video, e.g. "Video from
+  ICAEW's Tax Faculty on..." or "Video interview with...". The filename may help identify the
+  subject, but prefer what the subtitles say, and only name speakers or events that the subtitles
+  or the filename make clear. Title: subtitles rarely state a title. If they do (e.g. a presenter announces the title of the talk or webinar), use it as printed, without brackets. Otherwise infer a title and always put it in square brackets: base it on the video's filename when the filename is meaningful, turning underscores into spaces and applying sentence case (e.g. "Alfred_Hitchcock_Extended_Interview.mp4" gives "[Alfred Hitchcock extended interview]"), and use the subtitles to confirm or correct it; if the filename is not meaningful (e.g. a code such as "VID_0042" or "final_v2"), base the title on what the subtitles show. Leave Relation empty ([]).
+
 # Appended to every AI-written Description (added automatically if the model leaves it out)
 description_suffix: "(AI generated description)"
 

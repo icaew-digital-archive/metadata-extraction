@@ -195,7 +195,8 @@ class JSONMetadataWriter:
             raise ValueError(f"Error parsing metadata: {str(e)}")
 
     def write_metadata(self, metadata_str: str, pdf_path: str, original_format: str = None,
-                       model: str = None) -> None:
+                       model: str = None, overrides: Dict[str, Any] = None,
+                       source_format: str = None) -> None:
         """
         Write metadata to JSON file, appending a new record.
 
@@ -204,6 +205,10 @@ class JSONMetadataWriter:
             pdf_path (str): Path to the source PDF file
             original_format (str): Original file format if the file was converted (e.g., 'docx', 'txt')
             model (str): The model that produced the metadata, recorded for provenance
+            overrides (dict): Fields set by the code whatever the model returned
+                (e.g. {"Type": "Moving Image", "Format": "mp4"} for a video described from its subtitles)
+            source_format (str): Format of the file actually read, when it differs from
+                original_format (e.g. "srt" subtitles for an "mp4" video), recorded for provenance
 
         Raises:
             ValueError: If the metadata cannot be parsed or is invalid
@@ -211,6 +216,8 @@ class JSONMetadataWriter:
         try:
             # Parse the metadata
             metadata_dict = self._parse_metadata(metadata_str)
+            if overrides:
+                metadata_dict.update(overrides)
 
             # Create a complete record with additional metadata
             record = {
@@ -219,6 +226,7 @@ class JSONMetadataWriter:
                 "original_format": original_format or "pdf",
                 "extracted_at": datetime.now().isoformat(),
                 **({"model": model} if model else {}),
+                **({"source_format": source_format} if source_format else {}),
                 "metadata": metadata_dict
             }
 

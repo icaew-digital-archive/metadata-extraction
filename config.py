@@ -446,6 +446,29 @@ def get_reserved_fields(profile_path: str = None) -> set:
     return reserved
 
 
+# Added to the request when the document is the subtitle track of a video (see media.py).
+# {video_format} and {video_filename} are filled in. Profiles can replace it with video_source_note.
+DEFAULT_VIDEO_SOURCE_NOTE = (
+    "This document is the subtitle track of a video ({video_format} file; original filename: "
+    "{video_filename}). Describe the video itself, not the subtitle file or a transcript: write the "
+    "Title and Description as for the video, use \"Moving Image\" for Type and \"{video_format}\" for "
+    "Format. The filename may help identify the subject, but prefer what the subtitles say, and only "
+    "name speakers or events that the subtitles or the filename make clear. "
+    "Title: subtitles rarely state a title. If they do (e.g. a presenter announces the title of the "
+    "talk or webinar), use it as printed, without brackets. Otherwise infer a title and always put it "
+    "in square brackets: base it on the video's filename when the filename is meaningful, turning "
+    "underscores into spaces and applying sentence case (e.g. \"Alfred_Hitchcock_Extended_Interview.mp4\" "
+    "gives \"[Alfred Hitchcock extended interview]\"), and use the subtitles to confirm or correct it; "
+    "if the filename is not meaningful (e.g. a code such as \"VID_0042\" or \"final_v2\"), base the "
+    "title on what the subtitles show. Leave Relation empty ([])."
+)
+
+
+def get_video_source_note(profile_path: str = None) -> str:
+    """Template for the note sent when a document is a video's subtitle track."""
+    return load_profile(profile_path).get("video_source_note") or DEFAULT_VIDEO_SOURCE_NOTE
+
+
 def get_description_suffix(profile_path: str = None) -> str:
     """Marker appended to every AI-written Description (profile setting description_suffix)."""
     return load_profile(profile_path).get("description_suffix", "(AI generated description)")

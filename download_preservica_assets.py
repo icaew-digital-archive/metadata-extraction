@@ -52,6 +52,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from pyPreservica import *
+from media import SUBTITLE_EXTENSIONS, VIDEO_EXTENSIONS, save_media_mapping
 
 # Load credentials from this project's .env only
 # override=True: the .env values must win over the operating system's own USERNAME variable
@@ -114,14 +115,23 @@ def get_download_path(download_folder, bitstream, asset_ref, use_asset_ref):
         return Path(download_folder) / bitstream.filename
 
 
-def download_asset(client, asset_ref, download_folder, use_asset_ref=False, original_only=False, exclude_extensions=None):
-    """Download a single asset and return True if successful, False if there were errors."""
+def download_asset(client, asset_ref, download_folder, use_asset_ref=False, original_only=False,
+                   exclude_extensions=None, skip_video_with_subtitles=False):
+    """Download a single asset and return True if successful, False if there were errors.
+
+    If the asset holds a video and a subtitle file, the video's format and filename
+    are recorded in media_mapping.json (see media.py) so the subtitles can be used to
+    describe the video. With skip_video_with_subtitles, the video file itself is not
+    downloaded, since the subtitles are the source for metadata extraction.
+    """
     error_count = 0
     if exclude_extensions:
         exclude_extensions = [ext.lower().lstrip('.') for ext in exclude_extensions]
 
     try:
         asset = client.asset(asset_ref)
+        # First collect every bitstream to download, so videos with subtitles can be recognised
+        bitstreams = []
         for representation in client.representations(asset):
             if original_only:
                 rep_name = (getattr(representation, 'name', '') or '').lower()
@@ -138,36 +148,58 @@ def download_asset(client, asset_ref, download_folder, use_asset_ref=False, orig
                     generations = [generations[0]]
                     logging.info(f"Downloading only original generation for asset {asset_ref} in Preservation representation")
                 for generation in generations:
-                    for bitstream in generation.bitstreams:
-                        if exclude_extensions:
-                            file_ext = Path(bitstream.filename).suffix.lstrip('.').lower()
-                            if file_ext in exclude_extensions:
-                                logging.info(f"Skipping {bitstream.filename} (excluded extension: .{file_ext})")
-                                continue
+                    bitstreams.extend(generation.bitstreams)
 
-                        for algorithm, value in bitstream.fixity.items():
-                            algorithm = algorithm.lower()
-                            value = value.lower()
-                        download_path = get_download_path(
-                            download_folder, bitstream, asset_ref, use_asset_ref)
-                        if download_path.exists():
-                            if value == calculate_file_hash(download_path, algorithm):
-                                logging.info(
-                                    f"{download_path.name} already exists locally with matching {algorithm}.")
-                            else:
-                                logging.info(
-                                    f"{download_path.name} already exists locally but the {algorithm} does not match.")
-                                logging.info(
-                                    f'Re-downloading {download_path.name} ({asset_ref})')
-                                if download_bitstream(client, bitstream, download_path):
-                                    if not check_fixity(download_path, value, algorithm, download_path.name):
-                                        error_count += 1
-                        else:
-                            logging.info(
-                                f'Downloading {download_path.name} ({asset_ref})')
-                            if download_bitstream(client, bitstream, download_path):
-                                if not check_fixity(download_path, value, algorithm, download_path.name):
-                                    error_count += 1
+        videos = [b for b in bitstreams if Path(b.filename).suffix.lower() in VIDEO_EXTENSIONS]
+        subtitles = [b for b in bitstreams if Path(b.filename).suffix.lower() in SUBTITLE_EXTENSIONS]
+        if videos and subtitles:
+            video = videos[0]
+            entries = {}
+            for sub in subtitles:
+                stem = get_download_path(download_folder, sub, asset_ref, use_asset_ref).stem
+                entries[stem] = {
+                    'video_format': Path(video.filename).suffix.lower().lstrip('.'),
+                    'video_filename': video.filename,
+                    'asset_ref': asset_ref,
+                }
+            save_media_mapping(str(download_folder), entries)
+            logging.info(f"Asset {asset_ref} is a video with subtitles ({video.filename}); "
+                         f"the subtitles will be used to describe the video")
+
+        for bitstream in bitstreams:
+            if exclude_extensions:
+                file_ext = Path(bitstream.filename).suffix.lstrip('.').lower()
+                if file_ext in exclude_extensions:
+                    logging.info(f"Skipping {bitstream.filename} (excluded extension: .{file_ext})")
+                    continue
+            if skip_video_with_subtitles and subtitles and bitstream in videos:
+                logging.info(f"Skipping {bitstream.filename} (video with subtitles; "
+                             f"only the subtitles are needed)")
+                continue
+
+            for algorithm, value in bitstream.fixity.items():
+                algorithm = algorithm.lower()
+                value = value.lower()
+            download_path = get_download_path(
+                download_folder, bitstream, asset_ref, use_asset_ref)
+            if download_path.exists():
+                if value == calculate_file_hash(download_path, algorithm):
+                    logging.info(
+                        f"{download_path.name} already exists locally with matching {algorithm}.")
+                else:
+                    logging.info(
+                        f"{download_path.name} already exists locally but the {algorithm} does not match.")
+                    logging.info(
+                        f'Re-downloading {download_path.name} ({asset_ref})')
+                    if download_bitstream(client, bitstream, download_path):
+                        if not check_fixity(download_path, value, algorithm, download_path.name):
+                            error_count += 1
+            else:
+                logging.info(
+                    f'Downloading {download_path.name} ({asset_ref})')
+                if download_bitstream(client, bitstream, download_path):
+                    if not check_fixity(download_path, value, algorithm, download_path.name):
+                        error_count += 1
         return error_count == 0
     except Exception as e:
         logging.error(
@@ -175,7 +207,8 @@ def download_asset(client, asset_ref, download_folder, use_asset_ref=False, orig
         return False
 
 
-def process_folder(client, folder_ref, download_folder, use_asset_ref=False, original_only=False, exclude_extensions=None):
+def process_folder(client, folder_ref, download_folder, use_asset_ref=False, original_only=False, exclude_extensions=None,
+                   skip_video_with_subtitles=False):
     """Process a single folder and return True if successful, False if there were errors."""
     error_count = 0
     try:
@@ -185,7 +218,8 @@ def process_folder(client, folder_ref, download_folder, use_asset_ref=False, ori
             folder = client.folder(folder_ref)
 
         for asset in filter(only_assets, client.all_descendants(folder)):
-            if not download_asset(client, asset.reference, download_folder, use_asset_ref, original_only, exclude_extensions):
+            if not download_asset(client, asset.reference, download_folder, use_asset_ref, original_only, exclude_extensions,
+                                  skip_video_with_subtitles):
                 error_count += 1
         return error_count == 0
     except Exception as e:
@@ -249,14 +283,15 @@ def main(args):
     error_count = 0
     start_time = datetime.now()
     exclude_extensions = getattr(args, 'exclude_extensions', None)
+    skip_video = getattr(args, 'skip_video_with_subtitles', False)
 
     try:
         if args.folder:
-            if not process_folder(client, args.folder, download_path, args.use_asset_ref, args.original_only, exclude_extensions):
+            if not process_folder(client, args.folder, download_path, args.use_asset_ref, args.original_only, exclude_extensions, skip_video):
                 error_count += 1
 
         elif args.asset:
-            if not download_asset(client, args.asset, download_path, args.use_asset_ref, args.original_only, exclude_extensions):
+            if not download_asset(client, args.asset, download_path, args.use_asset_ref, args.original_only, exclude_extensions, skip_video):
                 error_count += 1
 
         elif args.assets_file:
@@ -267,7 +302,7 @@ def main(args):
             logging.info(f"Found {total_assets} assets to process")
             for i, asset_id in enumerate(asset_ids, 1):
                 logging.info(f"Processing asset {i}/{total_assets}: {asset_id}")
-                if download_asset(client, asset_id, download_path, args.use_asset_ref, args.original_only, exclude_extensions):
+                if download_asset(client, asset_id, download_path, args.use_asset_ref, args.original_only, exclude_extensions, skip_video):
                     successful_downloads += 1
                 else:
                     error_count += 1
@@ -282,7 +317,7 @@ def main(args):
             logging.info(f"Found {total_folders} folders to process")
             for i, folder_id in enumerate(folder_ids, 1):
                 logging.info(f"Processing folder {i}/{total_folders}: {folder_id}")
-                if process_folder(client, folder_id, download_path, args.use_asset_ref, args.original_only, exclude_extensions):
+                if process_folder(client, folder_id, download_path, args.use_asset_ref, args.original_only, exclude_extensions, skip_video):
                     successful_folders += 1
                 else:
                     error_count += 1
@@ -336,6 +371,10 @@ if __name__ == "__main__":
     parser.add_argument('--exclude-extensions',
                         nargs='+',
                         help='File extensions to exclude from download (e.g., --exclude-extensions mp4 avi mov).')
+    parser.add_argument('--skip-video-with-subtitles',
+                        action='store_true',
+                        help='For video assets that also hold subtitles (.srt/.vtt), download only the subtitles. '
+                             'The video is still described correctly, because its format is recorded in media_mapping.json.')
 
     args = parser.parse_args()
     main(args)
