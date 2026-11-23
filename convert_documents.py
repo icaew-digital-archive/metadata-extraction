@@ -15,9 +15,17 @@ from pathlib import Path
 from typing import List, Tuple
 
 
+# Supported input formats (one list, used everywhere in this module)
+OFFICE_FORMATS = ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt']
+TEXT_FORMATS = ['.txt', '.srt', '.vtt']
+IMAGE_FORMATS = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.gif']
+WEB_FORMATS = ['.htm', '.html']
+CONVERTIBLE_FORMATS = OFFICE_FORMATS + TEXT_FORMATS + IMAGE_FORMATS + WEB_FORMATS
+
+
 def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
     """
-    Convert a DOCX/DOC/DOT/XLSX/XLS/XLSM/PPTX/PPT/TXT/SRT/VTT or image file to PDF format.
+    Convert an Office document (DOCX/DOC/DOT/XLSX/XLS/XLSM/PPTX/PPT), text (TXT/SRT/VTT), image (JPG/PNG/TIFF/BMP/GIF) or web page (HTM/HTML) to PDF.
     
     Args:
         input_path (str): Path to the input file (DOCX, DOC, DOT, XLSX, XLS, XLSM, PPTX, PPT, TXT, SRT, VTT, JPG, JPEG, PNG, or TIFF)
@@ -38,7 +46,7 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
         return str(input_path), False
     
     # Check if it's a supported format
-    supported_formats = ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    supported_formats = CONVERTIBLE_FORMATS
     if input_path.suffix.lower() not in supported_formats:
         raise ValueError(f"Unsupported file format: {input_path.suffix}. Supported formats: {', '.join(supported_formats)}")
     
@@ -53,13 +61,13 @@ def convert_to_pdf(input_path: str) -> Tuple[str, bool]:
                 return pdf_path, True
         
         # For image files, use image-to-PDF conversion
-        if input_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.tiff', '.tif']:
+        if input_path.suffix.lower() in IMAGE_FORMATS:
             pdf_path = _convert_image_to_pdf(input_path)
             if pdf_path:
                 print(f"Successfully converted {input_path.name} to PDF using image conversion")
                 return pdf_path, True
         
-        # For Office documents, try LibreOffice first
+        # For Office documents and web pages, try LibreOffice first
         pdf_path = _convert_with_libreoffice(input_path)
         if pdf_path:
             print(f"Successfully converted {input_path.name} to PDF using LibreOffice")
@@ -390,7 +398,7 @@ def get_supported_formats() -> list:
     Returns:
         list: List of supported file extensions
     """
-    return ['.pdf', '.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt', '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+    return ['.pdf'] + CONVERTIBLE_FORMATS
 
 
 def is_supported_format(file_path: str) -> bool:
@@ -450,11 +458,11 @@ def convert_directory(directory_path: str) -> List[str]:
                 converted_count += 1
                 # Store the original format mapping
                 original_ext = Path(file_path).suffix.lower()
-                if original_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.txt', '.srt', '.vtt']:
+                if original_ext in CONVERTIBLE_FORMATS:
                     format_mapping[Path(pdf_path).name] = original_ext[1:]  # Remove the dot
                 
                 # Small delay after LibreOffice conversions to ensure cleanup
-                if original_ext in ['.docx', '.doc', '.dot', '.xlsx', '.xls', '.xlsm', '.pptx', '.ppt']:
+                if original_ext in OFFICE_FORMATS + WEB_FORMATS:
                     time.sleep(0.5)
                 
         except Exception as e:

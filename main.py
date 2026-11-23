@@ -10,6 +10,7 @@ import os
 from typing import Dict, List, Optional, Tuple
 from metadata_extractor import MetadataExtractor, PreparedDocument
 from pipeline import run_pipeline
+from convert_documents import CONVERTIBLE_FORMATS
 from media import find_video_for_subtitles, load_media_mapping, video_overrides, video_source_note
 from json_metadata_writer import JSONMetadataWriter
 from config import DEFAULT_MODEL, DEFAULT_WORKERS, MAX_WORKERS, get_video_source_note
@@ -143,8 +144,8 @@ def load_format_mapping(folder: str) -> Dict[str, str]:
     return mapping
 
 
-ORIGINAL_FORMATS = ['.docx', '.doc', '.xlsx', '.pptx', '.ppt', '.txt', '.srt', '.vtt',
-                    '.jpg', '.jpeg', '.png', '.tiff', '.tif']
+# Formats a PDF may have been converted from (see convert_documents.py)
+ORIGINAL_FORMATS = CONVERTIBLE_FORMATS
 
 
 def detect_original_format(pdf_path: str, format_mapping: Dict[str, str]) -> str:

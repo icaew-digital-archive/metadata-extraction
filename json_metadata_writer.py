@@ -216,6 +216,9 @@ class JSONMetadataWriter:
         try:
             # Parse the metadata
             metadata_dict = self._parse_metadata(metadata_str)
+            # Format is the original file's format (e.g. docx, htm), never the model's guess
+            if original_format:
+                metadata_dict['Format'] = original_format.lower()
             if overrides:
                 metadata_dict.update(overrides)
 

@@ -17,7 +17,9 @@ extra_guidelines:
   - >
     For organisation names in the creator, publisher and contributor fields, use the full
     name, not an abbreviation (e.g. "Financial Reporting Council", not "FRC"; "Public Company
-    Accounting Oversight Board", not "PCAOB"). The only exception is ICAEW, which is always "ICAEW".
+    Accounting Oversight Board", not "PCAOB"), without a leading "The" (e.g. "Stock Exchange",
+    "South Wales Society of Chartered Accountants", not "The Stock Exchange"). The only exception
+    is ICAEW, which is always "ICAEW".
   - >
     For people's names in the creator and contributor fields, keep titles of honour
     (Lord, Sir, Dame, Dr, Professor) as printed in the document (e.g. "Lord Digby Jones").
@@ -289,11 +291,16 @@ title_override: |
   **Title (REQUIRED)**
   - Single value only
   - Start from the title as it appears in the document, then apply the rules below
-  - If the item has no title of its own (e.g. a photograph or other image), devise a short descriptive title in square brackets, in sentence case (e.g. "[Photograph of the Palace of Westminster]", "[Portrait of a man in a dark suit]")
+  - If the item has no title of its own (e.g. a photograph or other image), devise a title in square brackets using the formula "[<kind of image> of <main subject>]", in sentence case. The kind is one or two words (e.g. Photograph, Illustration, Portrait, Advertisement, Ledger page, Index page). Name only the main subject, in as few words as possible: no descriptive adjectives (colours, sizes, "close-up") and no secondary details (e.g. "[Photograph of calculator keys]", "[Photograph of the back of a picture frame]", "[Photograph of the Palace of Westminster]", "[Portrait of a man]")
   - Do not include series or programme names in the title; record them in Relation instead (e.g. "Mixed messages: the state of the economy, Autumn 2013" becomes "Mixed messages, Autumn 2013" with Relation ["The State of the Economy"]; "Audit insights: banking, October 2013" becomes "Banking, October 2013" with Relation ["Audit Insights"]). If the title consists only of the series name with a date, issue or number, keep it as the title (e.g. "Quarterly briefing, March 2019", "The state of the economy, Autumn 2012")
+  - Do not add the kind of document to the title (e.g. "Role profile", "Minutes", "Guide") unless it is printed as part of the title
+  - A quoted title of another publication keeps its own capitalisation (e.g. 'Note to subscribers to "Admission of Securities to Listing", Amendment No. 1, May 1985')
+  - For early printed works (e.g. books and letters printed before 1800), use the full title as printed, however long, keeping its original spelling
   - Keep the wording and hyphenation of the printed title; do not correct it (e.g. keep "Error free reporting" if that is how it is printed, not "Error-free reporting")
-  - Use sentence case: capitalise the first word and proper nouns (names of people, organisations, places, faculties, named publications and standards, e.g. "Financial Reporting Council") and write everything else in lower case. Acronyms always stay in capitals
-  - Capitalise "Issue", "Volume", "No.", "Section" and "Chapter" when they introduce a number (e.g. "Issue 15", "Volume 3", "Section 8, Chapter 2")
+  - Use sentence case: capitalise the first word and proper nouns (names of people, organisations, places, faculties and standards, e.g. "Financial Reporting Council") and write everything else in lower case. Acronyms always stay in capitals
+  - Names of publications, journals, newsletters, exams, exam levels and exam modules are not treated as proper nouns in titles: they follow sentence case like the rest of the title (e.g. "By all accounts, January 2018", "Professional level: business strategy and technology, June 2018"). Series names in Relation still use title case
+  - Capitalise "Issue", "Volume", "No.", "Section", "Schedule" and "Chapter" when they introduce a number (e.g. "Issue 15", "Volume 3", "Section 8, Chapter 2"). Keep whatever word the document prints before the number (e.g. "Bulletin 73", "No. 8", "Issue 15"), capitalised; never change one word for another, and never leave a number on its own
+  - Section, Schedule and Chapter numbers go after the title (and subtitle) and before the date, separated by commas, like part numbers (e.g. "Distribution statements 1-4, Section 2, Schedule 2, December 1990", not "Section 2, schedule 2: distribution statements 1-4, December 1990")
   - Capitalise seasons (e.g. "Autumn 2013", "Spring 2015", "Winter 2011-12")
   - Part numbers go after the subtitle and before the date, in lower case, separated by commas (e.g. "Audit and Brexit: key questions for a consistent approach, part 4, 27th November 2018" not "Audit and Brexit part 4: key questions for a consistent approach, 27th November 2018")
   - ALWAYS use colons (:) to separate the main title from its subtitle only - replace any em-dashes (—), en-dashes (–), or hyphens (-) used as title/subtitle separators with colons, except in date or number ranges (keep "2008-09", do not write "2008:09")
@@ -372,6 +379,7 @@ relation_override: |
   - Include every series or programme name printed in the document's banner or header (e.g. ["ICAEW Know-How", "Brexit Guide"]), spelled and hyphenated exactly as printed (e.g. "ICAEW Know-How", "Brexit Guide", not "ICAEW KNOW-HOW", "BREXIT GUIDE" when the banner uses all capitals; "Rapid Error Free Reporting" if printed without a hyphen)
   - If the document is one issue of a recurring publication (e.g. "The state of the economy", "Quarterly briefing"), include the publication name as a series (e.g. ["The State of the Economy"], ["ICAEW Know-How", "Quarterly Briefing"]), along with any banner names
   - Otherwise, do not use the document's own title or headings as a series name
+  - Section or column headings inside a publication (e.g. the sections of a magazine issue) are not series
   - Write series names in title case, with short words (a, and, of, the, to, in) in lower case (e.g. "Guidance to Good Practice", "The State of the Economy")
   - Do not use a description of the type of document as a series (e.g. "Annual Report", "Minutes", "AGM Minutes", "Helpsheet", "Representation", "Thought Leadership"); only use series or programme names printed in the document
   - If no series or programme name is printed, return an empty array ([])
@@ -397,13 +405,14 @@ contributor_override: |
   - Multiple values allowed (return as array)
   - People and organisations that contributed to the content but are not the main creator: co-authors, editors, interviewees, panel members, sponsors and research partners
   - For letters and correspondence, include the recipient here
+  - Do not include designers, printers, photographers credited for production, or production agencies
   - Do not include organisations or people that are only the subject of, or the audience for, the document (e.g. the body a consultation response is addressed to), or organisations whose guidance or legislation is summarised or quoted (e.g. HMRC, when a guide summarises HMRC guidance)
   - Do not repeat ICAEW here when it is already the creator or publisher
   - For newsletters, briefings and other publications made up of articles, include the named article authors and the writer of any introduction or foreword, in the order they appear
   - For presentations, webinar slides and speeches by speakers from outside ICAEW, include the hosting ICAEW faculty here (e.g. ["Finance and Management Faculty"])
   - Use full names for people and external organisations; always write ICAEW as "ICAEW"
   - List contributors in the order they appear in the document
-  - Examples: ["Deloitte"], ["The Pensions Regulator", "Financial Reporting Council"], ["Jane Brown", "Grant Thornton UK LLP"]
+  - Examples: ["Deloitte"], ["Pensions Regulator", "Financial Reporting Council"], ["Jane Brown", "Grant Thornton UK LLP"]
 
 identifier_override: |
   **Identifier (OPTIONAL)**
@@ -514,6 +523,86 @@ examples:
         "Source": "",
         "Language": ["en"],
         "Relation": ["Audit Insights"],
+        "Coverage": "",
+        "Rights": ""
+    }
+  - |
+    {
+        "entity.title": "[Photograph of the Palace of Westminster]",
+        "entity.description": "Photograph showing the Gothic Revival exterior of the Palace of Westminster in London. The upward view captures a large pointed-arch window, rows of tall windows and ornate stone pinnacles against a blue sky. (AI generated description)",
+        "icaew:ContentType": "No content type",
+        "icaew:InternalReference": "",
+        "icaew:Notes": "",
+        "Title": "[Photograph of the Palace of Westminster]",
+        "Creator": [],
+        "Subject": [],
+        "Description": "Photograph showing the Gothic Revival exterior of the Palace of Westminster in London. The upward view captures a large pointed-arch window, rows of tall windows and ornate stone pinnacles against a blue sky. (AI generated description)",
+        "Publisher": "",
+        "Contributor": [],
+        "Date": "",
+        "Type": "Still Image",
+        "Format": "jpg",
+        "Identifier": [],
+        "Source": "",
+        "Language": [],
+        "Relation": [],
+        "Coverage": "",
+        "Rights": ""
+    }
+  - |
+    {
+        "entity.title": "Quarterly briefing, September 2020",
+        "entity.description": "Quarterly briefing from ICAEW's Business and Management Faculty highlighting resources for members, including articles from the June and July/August 2020 issues of Business & Management. It covers economic recovery after COVID-19 lockdowns, the impact on agriculture, retail and tourism, and practical advice on remote working, virtual recruitment, resilience and inclusive returns to the office. It also reviews Brexit negotiations, lists the most-clicked resources in faculty emails and previews forthcoming webinars. (AI generated description)",
+        "icaew:ContentType": "Newsletter",
+        "icaew:InternalReference": "",
+        "icaew:Notes": "",
+        "Title": "Quarterly briefing, September 2020",
+        "Creator": [
+            "Business and Management Faculty",
+            "ICAEW"
+        ],
+        "Subject": [
+            "Business operations",
+            "Coronavirus",
+            "Business sectors",
+            "Consumer goods and retail",
+            "Farming forestry and rural business",
+            "Economics",
+            "Economic recovery",
+            "Employment and human resources",
+            "Recruitment",
+            "Remote working"
+        ],
+        "Description": "Quarterly briefing from ICAEW's Business and Management Faculty highlighting resources for members, including articles from the June and July/August 2020 issues of Business & Management. It covers economic recovery after COVID-19 lockdowns, the impact on agriculture, retail and tourism, and practical advice on remote working, virtual recruitment, resilience and inclusive returns to the office. It also reviews Brexit negotiations, lists the most-clicked resources in faculty emails and previews forthcoming webinars. (AI generated description)",
+        "Publisher": "ICAEW",
+        "Contributor": [
+            "Alison Coleman",
+            "Alison Reynolds",
+            "Debbie Wayth",
+            "Stephen Frost",
+            "Jenny Campbell",
+            "David Adams",
+            "Nick Wildgoose",
+            "Paul Golden",
+            "Xenia Taliotis",
+            "Melanie Coeshott",
+            "Christian Doherty",
+            "Peter Taylor-Whiffen"
+        ],
+        "Date": "2020-09",
+        "Type": "Text",
+        "Format": "pdf",
+        "Identifier": [
+            "METCAH20205"
+        ],
+        "Source": "",
+        "Language": [
+            "en"
+        ],
+        "Relation": [
+            "ICAEW Know-How",
+            "Quarterly Briefing"
+        ],
         "Coverage": "",
         "Rights": ""
     }
