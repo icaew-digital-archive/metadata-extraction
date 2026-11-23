@@ -40,7 +40,8 @@ class OpenAIClient:
             model: OpenAI model ID. Defaults to config.DEFAULT_MODEL.
         """
         self.model = model or DEFAULT_MODEL
-        load_dotenv()
+        # Always this project's .env, whatever folder the tool is run from
+        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
         if not os.getenv('OPENAI_API_KEY'):
             raise ValueError("OPENAI_API_KEY environment variable not set")
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'),

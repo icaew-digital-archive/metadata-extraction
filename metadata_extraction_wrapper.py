@@ -27,7 +27,8 @@ from json_metadata_writer import JSONMetadataWriter
 from preservica_writer import apply_record, create_client
 
 # Load environment variables from .env file
-load_dotenv(override=True)
+# Always this project's .env, whatever folder the tool is run from
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 
 # ===== CONFIGURATION FROM ENVIRONMENT VARIABLES =====
 # Script paths - read from environment variables with fallbacks
