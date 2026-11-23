@@ -54,3 +54,6 @@ error_log.txt
 # Local-only folders (kept on this machine, not in the repository)
 tests/
 review/
+
+# Presentations and exports (kept locally, not in the repository)
+*.pptx
