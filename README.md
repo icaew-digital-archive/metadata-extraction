@@ -118,6 +118,7 @@ The **ICAEW profile** additionally outputs:
 - `icaew:ContentType` — controlled vocabulary content type (Annual report, Article, Report, Technical release, etc.)
 - `icaew:InternalReference` — reserved for future use
 - `icaew:Notes` — entered by staff only; the AI never fills it, and an existing value in Preservica is kept when metadata is overwritten
+- `icaew:QA` — set by the code, not the model, to `AI (<model>)`, e.g. `AI (gpt-6.2-sol)`, in the CSV and the Preservica write-back
 
 Reserved fields are always written empty, whatever the model returns. Dates in `Date` use YYYY-MM-DD (or YYYY-MM / YYYY when the document gives less), with numeric dates read in UK day/month order.
 
@@ -184,7 +185,7 @@ Run any script with `--help` to see all available options.
 The tool integrates with Preservica to:
 
 - Download assets using folder or asset references
-- Maintain Preservica asset IDs (`assetId`) throughout the pipeline — stored in the JSON output and as the first column in the CSV
+- Maintain Preservica asset IDs (`assetId`) throughout the pipeline — stored in the JSON output and as the first column in the CSV (without the `.pdf` extension)
 - Write the extracted metadata back to each asset, from the web UI or the command line
 
 ### Writing metadata back to Preservica

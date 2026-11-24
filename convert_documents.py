@@ -7,6 +7,7 @@ This script processes all Office documents and image files in a directory and co
 """
 
 import os
+import shutil
 import signal
 import tempfile
 import subprocess
@@ -169,7 +170,8 @@ def _convert_with_libreoffice(input_path: Path) -> str:
                 pdf_path = pdf_files[0]
                 # Move to the same directory as the original file
                 final_pdf_path = input_path.with_suffix('.pdf')
-                pdf_path.rename(final_pdf_path)
+                # shutil.move copies across drives (e.g. /tmp to an external disk)
+                shutil.move(str(pdf_path), str(final_pdf_path))
                 return str(final_pdf_path)
         
         raise RuntimeError(f"LibreOffice conversion failed for {input_path.name}")
@@ -183,7 +185,6 @@ def _convert_with_libreoffice(input_path: Path) -> str:
     finally:
         # Clean up temporary directory
         try:
-            import shutil
             shutil.rmtree(temp_dir)
             print(f"Cleaned up temporary directory: {temp_dir}")
         except Exception as e:
