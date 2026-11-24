@@ -7,6 +7,8 @@ import json
 import os
 from typing import Dict, List, Any, Optional
 
+from config import QA_FIELD, qa_value
+
 
 class JSONToCSVConverter:
     def __init__(self) -> None:
@@ -19,6 +21,7 @@ class JSONToCSVConverter:
             'icaew:ContentType',
             'icaew:InternalReference',
             'icaew:Notes',
+            QA_FIELD,
             'dc:title',
             'dc:creator',
             'dc:subject',
@@ -222,8 +225,11 @@ class JSONToCSVConverter:
                     # Map fields for CSV using dynamic columns
                     csv_row = self._map_metadata_fields(metadata_dict)
                     
-                    # Set assetId
-                    csv_row['assetId'] = record.get("asset_id", "")
+                    # Set assetId: the Preservica reference, without the converted file's .pdf
+                    asset_id = record.get("asset_id", "")
+                    if asset_id.lower().endswith('.pdf'):
+                        asset_id = asset_id[:-4]
+                    csv_row['assetId'] = asset_id
                     
                     # Override format if specified
                     if original_format_override:
@@ -244,6 +250,9 @@ class JSONToCSVConverter:
                         # Handle assetId specially since it's not in metadata_dict
                         if field == 'assetId':
                             value = csv_row.get('assetId', '')
+                        elif field == QA_FIELD:
+                            # Marks the metadata as AI-made, with the model that made it
+                            value = qa_value(record.get("model"))
                         elif field.startswith('dc:format'):
                             # For dc:format fields, use the value already set from original_format
                             value = csv_row.get(field, '')

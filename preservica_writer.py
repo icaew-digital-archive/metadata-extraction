@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional
 
 from pyPreservica import EntityAPI
 
+from config import QA_FIELD, qa_value
+
 OAI_DC = 'http://www.openarchives.org/OAI/2.0/oai_dc/'
 DC = 'http://purl.org/dc/elements/1.1/'
 XSI = 'http://www.w3.org/2001/XMLSchema-instance'
@@ -25,7 +27,7 @@ ICAEW = 'https://www.icaew.com/metadata/'
 XIP = 'http://preservica.com/XIP/v7.6'
 
 # ICAEW elements in the order c_add_metadata_from_csv.py writes them (CSV column order)
-ICAEW_FIELDS = ['icaew:ContentType', 'icaew:InternalReference', 'icaew:Notes']
+ICAEW_FIELDS = ['icaew:ContentType', 'icaew:InternalReference', 'icaew:Notes', QA_FIELD]
 
 # Entered by people in Preservica, never by the AI: when an existing ICAEW
 # fragment is overwritten, the values already in Preservica are kept
@@ -86,8 +88,13 @@ def build_dc_xml(metadata: Dict[str, Any], original_format: Optional[str] = None
     return ET.tostring(root, encoding='unicode') if len(root) else None
 
 
-def build_icaew_xml(metadata: Dict[str, Any]) -> Optional[str]:
-    """Build an icaew:ICAEW XML string from icaew:* keys, or None if there are no values."""
+def build_icaew_xml(metadata: Dict[str, Any], model: Optional[str] = None) -> Optional[str]:
+    """Build an icaew:ICAEW XML string from icaew:* keys, or None if there are no values.
+
+    icaew:QA is always set to "AI (<model>)" (just "AI" without a model),
+    whatever the record holds.
+    """
+    metadata = {**metadata, QA_FIELD: qa_value(model)}
     root = ET.Element('icaew:ICAEW', {"xmlns:icaew": ICAEW, "xmlns": XIP})
     extra = [k for k in metadata if k.startswith('icaew:') and k not in ICAEW_FIELDS]
     for key in ICAEW_FIELDS + extra:
@@ -152,7 +159,7 @@ def apply_record(client: EntityAPI, record: Dict[str, Any], descriptive: bool = 
                         metadata = {**metadata, **kept}
                 fragments = [
                     ('DC', OAI_DC, build_dc_xml(metadata, record.get('original_format'))),
-                    ('ICAEW', ICAEW, build_icaew_xml(metadata)),
+                    ('ICAEW', ICAEW, build_icaew_xml(metadata, record.get('model'))),
                 ]
                 for label, schema, xml in fragments:
                     if not xml:

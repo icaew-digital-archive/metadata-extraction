@@ -18,6 +18,17 @@ MAX_WORKERS = 64
 # Default number of documents processed at the same time
 DEFAULT_WORKERS = 32
 
+# icaew:QA is set on every asset the tool describes (CSV and Preservica write-back):
+# "AI (<model>)", e.g. "AI (gpt-6.2-sol)", or just "AI" if the record has no model
+QA_FIELD = 'icaew:QA'
+QA_VALUE = 'AI'
+
+
+def qa_value(model=None):
+    """Return the icaew:QA value for metadata produced by the given model."""
+    model = (model or '').strip()
+    return f"{QA_VALUE} ({model})" if model else QA_VALUE
+
 # Models offered in the web UI (the CLI --model option accepts any model ID)
 MODEL_CHOICES = [
     ("gpt-6.2-sol", "GPT-6.2 Sol: everyday (default)"),
